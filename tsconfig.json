@@ -1,21 +1,21 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
-  "compilerOptions": {
-    /* Required for InversifyJS Decorators */
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+	"extends": "@tsconfig/node22/tsconfig.json",
+	"compilerOptions": {
+		/* Required for InversifyJS Decorators */
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
 
-    /* File Structure */
-    "rootDir": "src",
-    "outDir": "dist",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    /* Output Options */
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "types": ["node"]
-  },
-  "include": ["src/**/*"]
+		/* File Structure */
+		"rootDir": "src",
+		"outDir": "dist",
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		/* Output Options */
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"types": ["node"]
+	},
+	"include": ["src/**/*", "env.d.ts"]
 }

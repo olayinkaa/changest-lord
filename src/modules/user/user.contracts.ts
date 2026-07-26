@@ -1,3 +1,2 @@
-export interface IUserRepository {}
-
-export interface IUserService {}
+// export interface IUserRepository {}
+// export interface IUserService {}

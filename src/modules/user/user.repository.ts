@@ -1,5 +1,6 @@
-import { injectable } from "inversify";
-import { IUserRepository } from "./user.contracts";
+import { injectable } from "inversify"
+// import type { IUserRepository } from "./user.contracts";
 
 @injectable()
-export class UserRepository implements IUserRepository {}
+export class UserRepository {}
+// export class UserRepository implements IUserRepository {}
