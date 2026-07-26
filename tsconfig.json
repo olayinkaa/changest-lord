@@ -6,6 +6,8 @@
 		"emitDecoratorMetadata": true,
 
 		/* File Structure */
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"rootDir": "src",
 		"outDir": "dist",
 		"paths": {
