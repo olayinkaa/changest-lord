@@ -1,1 +1,1 @@
-FROM node:20-slim AS base
+FROM node:22.20-slim AS base
