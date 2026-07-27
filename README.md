@@ -2,6 +2,17 @@
 MY CHANGE
 
 # About the project
+Is a digital financial platform designed to help users collect, save, and 
+spend their transaction change digitally.
+It eliminates the stress of searching for physical cash notes or 
+leaving small balance amounts behind during daily transactions.
+
+Key Features of MyChange
+- Digital Change Collection: Customers can easily collect their balance digitally using just their phone number at point-of-sale (POS) terminals.
+- USSD & App Integration: The service operates via mobile applications and simple USSD codes (*7006*86#), making it accessible on any phone without requiring internet connectivity.
+- High-Yield Savings: Users can choose to lock away their collected change into a targeted "Keep Plan" to earn up to 15% interest over a set period.
+- Merchant Ecosystem: Merchants can quickly return change via a POS terminal or facial recognition, helping them serve customers faster and maximize transaction flow.
+- Direct Vendor Payments: Accumulated digital change can be spent directly to pay vendors for everyday goods and services.
 
 
 # Technologies Used
