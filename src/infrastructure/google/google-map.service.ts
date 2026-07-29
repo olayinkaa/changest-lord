@@ -1,0 +1,53 @@
+import axios, { type AxiosInstance } from "axios"
+import { injectable } from "inversify"
+import { config } from "@/config/env"
+import { pinoLogger } from "@/config/pino-logger"
+import { BadRequestException } from "@/core/errors/exceptions"
+import type { ApiResponse } from "@/types/base"
+import type { IGoogleMapsService, IPlacePrediction } from "./google-map.type"
+
+const AUTOCOMPLETE_COUNTRY_RESTRICTION = "country:ng"
+
+@injectable()
+export class GoogleMapsService implements IGoogleMapsService {
+	private readonly apiKey = config.GOOGLE_MAPS_API_KEY
+	private readonly api: AxiosInstance
+
+	constructor() {
+		this.api = axios.create({
+			baseURL: "https://maps.googleapis.com/maps/api",
+		})
+	}
+
+	//   getPlacePredictions
+	async getPlacePredictions(input: string) {
+		try {
+			const res: ApiResponse<{ predictions: IPlacePrediction[] }> = await this.api.get(
+				"/place/autocomplete/json",
+				{
+					params: {
+						input,
+						key: this.apiKey,
+						// types: "address",
+						components: AUTOCOMPLETE_COUNTRY_RESTRICTION,
+					},
+				},
+			)
+			return res?.data.predictions
+		} catch (error) {
+			pinoLogger.error({ error }, "Error in fetching place predictions")
+			throw new BadRequestException("Error in fetching place predictions")
+		}
+	}
+
+	async getPlaceDetails(placeId: string) {
+		const res = await this.api.get("/place/details/json", {
+			params: {
+				place_id: placeId,
+				key: this.apiKey,
+				fields: "formatted_address,geometry,address_component,place_id",
+			},
+		})
+		return res
+	}
+}

@@ -1,36 +1,35 @@
-import { z } from "zod";
-import type { ZodObject, ZodRawShape } from "zod";
+import type { ZodObject, ZodRawShape } from "zod"
+import { z } from "zod"
 
 interface EnvOptions {
-  source?: NodeJS.ProcessEnv;
-  serviceName?: string;
+	source?: NodeJS.ProcessEnv
+	serviceName?: string
 }
 
-type SchemaOutput<TSchema extends ZodRawShape> = ZodObject<TSchema>["_output"];
+type SchemaOutput<TSchema extends ZodRawShape> = ZodObject<TSchema>["_output"]
 
 export const createEnv = <TSchema extends ZodRawShape>(
-  schema: ZodObject<TSchema>,
-  options: EnvOptions = {},
+	schema: ZodObject<TSchema>,
+	options: EnvOptions = {},
 ): SchemaOutput<TSchema> => {
-  const { source = process.env, serviceName = "service" } = options;
+	const { source = process.env, serviceName = "service" } = options
 
-  const parsed = schema.safeParse(source);
+	const parsed = schema.safeParse(source)
 
-  if (!parsed.success) {
-    // 1. Recommended: Use z.treeifyError for structured nested errors
-    // const formattedErrors = z.treeifyError(parsed.error);
-     const formattedErrors = z.flattenError(parsed.error);
+	if (!parsed.success) {
+		// 1. Recommended: Use z.treeifyError for structured nested errors
+		// const formattedErrors = z.treeifyError(parsed.error);
+		const formattedErrors = z.flattenError(parsed.error)
 
-    // 2. Alternative: Use z.prettifyError for a human-readable string
-    const prettyMessage = z.prettifyError(parsed.error);
+		// 2. Alternative: Use z.prettifyError for a human-readable string
+		const prettyMessage = z.prettifyError(parsed.error)
 
-  
-    throw new Error(
-      `[${serviceName}] Environment variable validation failed:\n${prettyMessage}\nDetails: ${JSON.stringify(formattedErrors.fieldErrors)}`,
-    );
-  }
+		throw new Error(
+			`[${serviceName}] Environment variable validation failed:\n${prettyMessage}\nDetails: ${JSON.stringify(formattedErrors.fieldErrors)}`,
+		)
+	}
 
-  return parsed.data;
-};
+	return parsed.data
+}
 
-export type EnvSchema<TShape extends ZodRawShape> = ZodObject<TShape>;
+export type EnvSchema<TShape extends ZodRawShape> = ZodObject<TShape>

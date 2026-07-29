@@ -13,6 +13,8 @@ const envSchema = z.object({
 	// JWT configuration
 	JWT_TOKEN_SECRET: z.string().min(32),
 	JWT_TOKEN_EXPIRES_IN: z.string().default(constants.TOKEN_EXPIRES_IN),
+	// Google configuration
+	GOOGLE_MAPS_API_KEY: z.string(),
 	// Redis configuration
 	// Email configuration
 	// Other configuration
