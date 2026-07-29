@@ -2,7 +2,7 @@ import { Readable } from "node:stream"
 import type { UploadApiResponse } from "cloudinary"
 import { v2 as Cloudinary, type ConfigOptions } from "cloudinary"
 import { pinoLogger } from "@/config/pino-logger"
-import type { ICloudinaryService } from "./cloudinary.contract"
+import type { ICloudinaryService } from "./cloudinary.types"
 
 export class CloudinaryService implements ICloudinaryService {
 	private readonly cloudinary: typeof Cloudinary

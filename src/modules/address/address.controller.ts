@@ -7,6 +7,7 @@ import {
 	next,
 	queryParam,
 } from "inversify-express-utils"
+import { ApiResponse } from "@/utils/http-response"
 import { ADDRESS_TYPES, type IAddressService } from "./address.type"
 
 @controller("/address")
@@ -18,13 +19,13 @@ export class AddressController extends BaseHttpController {
 		super()
 	}
 
-	@httpGet("/predictions")
-	async getPredictions(@queryParam("search") search: string, @next() nt: NextFunction) {
+	@httpGet("/autocomplete")
+	async getPredictions(@queryParam("search") search: string, @next() nxt: NextFunction) {
 		try {
-			const result = this._addressService.getLocationAddress(search)
-			return result
+			const data = await this._addressService.getLocationAddress(search)
+			return this.json(ApiResponse.success(data), 200)
 		} catch (error) {
-			nt(error)
+			nxt(error)
 		}
 	}
 }

@@ -33,7 +33,7 @@ export class GoogleMapsService implements IGoogleMapsService {
 					},
 				},
 			)
-			return res?.data.predictions
+			return res?.data
 		} catch (error) {
 			pinoLogger.error({ error }, "Error in fetching place predictions")
 			throw new BadRequestException("Error in fetching place predictions")

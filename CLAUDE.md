@@ -132,3 +132,21 @@ Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from 
 - Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController` GET/POST (mock data).
 - Stubs / to be implemented: `user.service.ts`, `user.repository.ts`, `user.contracts.ts`, `auth/*`, `address/*`, `Anchor` SDK wiring, `Cloudinary` wiring, full Prisma schema.
 - Swagger URL is referenced in the README but not yet wired in code.
+
+### Documentation & Planning
+- All technical plan or plans must be stored in the `_plans/` directory.
+- Never store planning documents in root folders or typo-prone folders like `plan/` or `plans/`.
+- Always use Context7 when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+
+### Documentation & Change Tracking
+- **Post-Change Reporting:** After every code modification, you MUST provide a brief, clear explanation of the changes made.
+- **Change Log Requirement**:
+    - Create/Update a folder named `.dev_history` in the root directory.
+    - Inside this folder, create a markdown file named `change_log.md`,
+    - Persistence: If `change_log.md` already exists, you MUST load its existing content and append new changes to it, ensuring historical data is preserved.
+    - Append behavior: For every session or modification, append the changes to change_log.md. If you prefer to group by date, check if an entry for the current date exists; if not, add a new date header, or simply append the new entry under the current date section.
+    - Append a summary of the changes to this file, including:
+        1. A high-level description of what was done.
+        2. A bulleted list of files modified.
+        3. A brief rationale for the changes.
+- **Visibility:** Always display the summary of these changes in your final chat response immediately after completing the task.

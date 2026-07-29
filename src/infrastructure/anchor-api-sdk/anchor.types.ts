@@ -1,5 +1,3 @@
-// src/interfaces/anchor-api-sdk.interface.ts
-
 export type MobileProvider = "mtn" | "airtel" | "glo" | "9mobile"
 
 export interface GenerateVirtualAccountParams {
