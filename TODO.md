@@ -2,11 +2,13 @@
 ## Setup
 - [ ] prisma model/ database schema
 - [ ] Postgre DB setup
-- [ ] Linting [biomejs]
-- [ ] Logging
+- [X] Linting [biomejs]
+- [X] Logging
 - [ ] Redis
-- [ ] zod schema validation
+- [X] class validator
 - [ ] Bullmq
+- [X] helmet
+- [ ] cors
 
 
 ## Endpoints

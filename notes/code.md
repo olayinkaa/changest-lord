@@ -38,3 +38,20 @@ export class UserController {
 }
 
 ```
+
+##
+```ts
+process.on("unhandledRejection", (err)=> {
+  console.error("Unhanded Rejection:", err);
+  server.close(async ()=> {
+    await disconnectDB();
+    process.exit(1)
+  })
+})
+
+process.on("uncaughtException", (err)=> {
+  console.error("Uncaught Exception:", err);
+  await disconnectDB();
+  process.exit(1)
+})
+```

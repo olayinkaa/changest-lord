@@ -1,9 +1,11 @@
-import { z } from "zod"
+import { IsNotEmpty, IsString } from "class-validator"
 
-export const userSchema = z.object({
-	firstName: z.string().min(1, "First name is required"),
-	lastName: z.string().min(1, "Last name is required"),
-	email: z.string().min(1, "Email is required"),
-})
+export class UserRequest {
+	@IsNotEmpty({ message: "First name is required" })
+	@IsString({ message: "First name must be a string" })
+	firstName!: string
 
-export type userInputs = z.infer<typeof userSchema>
+	@IsNotEmpty({ message: "Last name is required" })
+	@IsString({ message: "Last name must be a string" })
+	lastName!: string
+}

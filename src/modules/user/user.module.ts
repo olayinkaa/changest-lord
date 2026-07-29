@@ -1,10 +1,6 @@
-import { ContainerModule, type ContainerModuleLoadOptions } from "inversify"
+import { ContainerModule } from "inversify"
 import { UserController } from "./user.controller"
 
-export class UserModule extends ContainerModule {
-	constructor() {
-		super((options: ContainerModuleLoadOptions) => {
-			options.bind(UserController).toSelf()
-		})
-	}
-}
+export const UserModule = new ContainerModule((bind) => {
+	bind(UserController).toSelf()
+})

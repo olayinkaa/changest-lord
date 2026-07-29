@@ -1,56 +1,78 @@
 import "reflect-metadata"
-import type { Server } from "node:http"
-import { InversifyExpressHttpAdapter } from "@inversifyjs/http-express"
-import { InversifyValidationErrorFilter } from "@inversifyjs/http-validation"
-import { StandardSchemaValidationPipe } from "@inversifyjs/standard-schema-validation"
-import type { Application as ExpressApplication } from "express"
+import express from "express"
+import helmet from "helmet"
 import type { Container } from "inversify"
-import { config } from "@/config"
+import { InversifyExpressServer } from "inversify-express-utils"
+import pinoHttp from "pino-http"
+import { config } from "@/config/env"
+import { pinoLogger } from "@/config/pino-logger"
+import { errorHandler } from "@/core/errors/error-handler"
+import { Application } from "@/utils/application"
 import AppModules from "./app.module"
-import { Application } from "./utils/application"
-// import { ZodValidationErrorFilter } from "@/core/errors/zod-validation-error.filter";
-// import { ClassValidationPipe } from "@inversifyjs/class-validation";
+import { configureCors } from "./config/cors"
+import { prisma } from "./core/database/db"
 
 export class App extends Application {
-	private httpServer!: Server
-
 	configureService(container: Container): void {
 		container.load(...AppModules)
-		container.bind(InversifyValidationErrorFilter).toSelf().inSingletonScope()
-		// container.bind(ZodValidationErrorFilter).toSelf().inSingletonScope()
 	}
 
 	async setup() {
-		const adapter = new InversifyExpressHttpAdapter(this.container, {
-			logger: true,
-			useCookies: false,
-			useJson: true,
-			useUrlEncoded: true,
+		try {
+			await prisma.$connect()
+			pinoLogger.info("✅ Database connected")
+		} catch (error) {
+			pinoLogger.error({ error }, "❌ Database connection failed:")
+			process.exit(1)
+		}
+		const server = new InversifyExpressServer(
+			this.container,
+			null, // Router
+			{
+				rootPath: "/api/v1",
+			},
+		)
+
+		server.setConfig((app) => {
+			app.use(express.json())
+			app.use(configureCors())
+			app.use(
+				helmet({
+					contentSecurityPolicy: false,
+				}),
+			)
+			//   app.use((req, res, next) => {
+			//     RequestLogger.handler(req, res, next);
+			//   });
+			app.use(pinoHttp({ logger: pinoLogger }))
 		})
 
-		adapter.useGlobalFilters(InversifyValidationErrorFilter)
-		adapter.useGlobalPipe(new StandardSchemaValidationPipe())
-		// adapter.useGlobalPipe(new ClassValidationPipe());
-		// adapter.useGlobalFilters(ZodValidationErrorFilter);
+		server.setErrorConfig((app) => {
+			app.use(errorHandler)
+		})
 
-		const app: ExpressApplication = await adapter.build()
-		this.httpServer = app.listen(config.SERVICE_PORT, () => {
-			console.log(
+		const app = server.build()
+
+		const serverInstance = app.listen(config.SERVICE_PORT, () => {
+			pinoLogger.info(
 				`🛜 ${config.SERVICE_NAME} is running on http://localhost:${config.SERVICE_PORT}`,
 			)
 		})
 
+		const handleShutdown = async (signal: string) => {
+			pinoLogger.info(`${signal} received, shutting down gracefully...`)
+
+			serverInstance.close(() => process.exit(0))
+		}
+
 		//
-		this.httpServer.timeout = 35_000
 		// ─── Graceful shutdown ───────────────────────────────────
 		process.on("SIGTERM", async () => {
-			console.log("SIGTERM received, shutting down...")
-			process.exit(0)
+			handleShutdown("SIGTERM")
 		})
 
 		process.on("SIGINT", async () => {
-			console.log("SIGINT received, shutting down...")
-			process.exit(0)
+			handleShutdown("SIGINT")
 		})
 	}
 }

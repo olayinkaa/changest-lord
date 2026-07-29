@@ -1,0 +1,18 @@
+enum UserRole {
+  user
+  admin
+  merchant
+}
+
+enum UserStatus {
+  active
+  deleted
+  restricted
+  pending
+  banned
+}
+
+enum MerchantType {
+  individual
+  branch
+}
