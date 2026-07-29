@@ -27,7 +27,7 @@ All commands run from the repo root. The Makefile wraps the most common ones.
 ```sh
 pnpm run dev:local       # watch mode with .env.local (most common)
 pnpm run dev:staging     # watch mode with .env.staging
-make dev                 # alias for dev:local
+make dev                 # alias for pnpm run dev (uses .env)
 make secret              # generate a JWT secret: openssl rand -base64 32
 ```
 
@@ -40,8 +40,11 @@ pnpm run dev:clean       # rm -rf dist
 
 ### Lint / Format
 ```sh
-pnpm run lint:check:fix  # biome check --write on src/
+pnpm run lint:check:fix  # biome check --write ./src (also runs via husky pre-commit on staged files)
 ```
+
+### Tests
+There is no test runner configured yet — no `test` script in `package.json`. Add one (e.g. Vitest) before introducing test suites.
 
 ### Database (Prisma)
 ```sh
@@ -51,7 +54,7 @@ make drop-db             # prisma migrate reset --force
 pnpm exec prisma generate   # regenerate client (output: src/generated/prisma)
 ```
 
-The Prisma schema entrypoint is `prisma/schema.prisma` which composes models from `prisma/models/*.prisma` (e.g. `user.prisma`, `enum.prisma`). Generated client lives at `src/generated/prisma` — it is committed-friendly code but should be regenerated after schema changes.
+The Prisma schema entrypoint is `prisma/schema.prisma`, which should compose models from `prisma/models/*.prisma` (e.g. `user.prisma`, `enum.prisma`). Generated client lives at `src/generated/prisma` — it is committed-friendly code but should be regenerated after schema changes. Currently `prisma/schema.prisma` only declares `datasource db` and `generator client` — the per-model files in `prisma/models/` exist but are not yet composed into the schema.
 
 ### Hooks
 Husky pre-commit hook runs via `lint-staged` (see `lint-staged.config.js`). `pnpm install` triggers `prepare` automatically.
@@ -75,7 +78,7 @@ Env is validated at boot via Zod (`src/config/env.ts` + `src/utils/env.ts`). The
 ### Bootstrap flow (`src/index.ts`)
 1. Import `reflect-metadata` (required for Inversify decorators).
 2. `Application` abstract class (`src/utils/application.ts`) creates an Inversify `Container` (default scope: `Singleton`) and calls abstract `configureService()` and `setup()`.
-3. `App.configureService` loads all `AppModules` (currently `UserModule`, `LoggerModule`) into the container.
+3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `InfrastructureModule`, `AddressModule`) into the container.
 4. `App.setup`:
    - Connects Prisma (`prisma.$connect`); exits on failure.
    - Builds an `InversifyExpressServer` rooted at `/api/v1`.
@@ -90,48 +93,52 @@ Each domain under `src/modules/<name>/` follows the same shape:
 - `<name>.service.ts` — `@injectable()`; depends on repository.
 - `<name>.repository.ts` — `@injectable()`; wraps Prisma access.
 - `<name>.dto.ts` — `class-validator` DTOs validated via `@validateSchema(DtoClass)`.
-- `<name>.tokens.ts` — `Symbol.for(...)` identifiers used in `@inject(TYPES.X)`.
-- `<name>.contracts.ts` — interfaces (currently empty for `user`; define them here when adding business logic).
+- `<name>.types.ts` — `Symbol.for(...)` DI tokens used in `@inject(TYPES.X)` and service/repository interfaces. (Naming convention migrated from the older `*.tokens.ts` + `*.contracts.ts` split.)
+- `<name>.interfaces.ts` (optional) — additional contracts split out from `types.ts` when the file grows.
 
-`UserModule` is wired but its service / repository are empty stubs — the controller currently returns mock data without DB access. The wiring skeleton is in place to fill in real logic.
+Currently wired domains: `user/`, `auth/`, `address/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from infrastructure).
 
 ### Cross-cutting concerns
-- **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.tokens.ts`.
+- **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.types.ts`. Infrastructure tokens are unified in `src/infrastructure/infrastructure.types.ts`.
 - **Logger**: `src/config/pino-logger.ts` exports `pinoLogger` (singleton) and a `LoggerModule` that binds `TYPES.Logger` to a request-scoped child logger (each request gets a `requestId`). Inject as `private logger: pino.Logger` in controllers. The `logService` decorator (`src/common/injectable/service.ts`) is provided for use on services/properties.
 - **Validation**: `validateSchema(DtoClass)` (`src/core/middleware/validate-schema.ts`) is applied as `withMiddleware(...)` to controller methods. It uses `class-transformer` + `class-validator` with `whitelist` + `forbidNonWhitelisted`. The validated DTO instance replaces `req.body`.
 - **Errors**: throw `HttpException` subclasses from `src/core/errors/exceptions.ts` (`BadRequestException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ConflictException`). The global handler in `error-handler.ts` serializes them as `{ code, status: "error", message, data? }`. Unknown errors become 500.
+- **API responses**: standardize on `ApiResponse<T>` from `src/utils/http-response.ts` (`ApiResponse.success(...)` / `ApiResponse.error(...)`). Controllers should wrap outgoing payloads in this shape rather than returning raw values.
 - **CORS**: `src/config/cors.ts` whitelists localhost ports 3000/5005/5173/4006 with credentials.
 - **Prisma client**: `src/core/database/db.ts` exports a shared `prisma` instance (driver-adapter for Postgres) that hot-reloads in dev via `globalThis`.
 
 ### Infrastructure modules (`src/infrastructure/`)
-- `anchor-api-sdk/` — contract for the Anchor API (banks, virtual accounts, transfers, airtime, data) with TypeScript ambient interfaces in `src/types/global.d.ts` (`AnchorBank`, `AnchorVirtualAccount`, etc.).
-- `cloudinary/` — service + contract for image upload.
+Wired via `InfrastructureModule` (see `src/infrastructure/ infrastructure.module.ts`) and exported from `src/app.module.ts`.
+- `anchor-api-sdk/` — Anchor API client (banks, virtual accounts, transfers, airtime, data) with ambient types in `src/types/global.d.ts` (`AnchorBank`, `AnchorVirtualAccount`, etc.).
+- `cloudinary/` — image upload service + interface.
+- `google/` — Google Maps Places autocomplete. `GoogleMapsService.getPlacePredictions(input)` returns `{ predictions }`; downstream code (e.g. `AddressService`) flattens to `{ placeId, description, mainText, secondaryText }`.
 
-These are not yet wired into `AppModules`.
+### Skills
+`skills-lock.json` pins Prisma-related skills (CLI, client API, compute, database setup, driver adapter, MongoDB/Postgres upgrades). Use `context7` for ad-hoc library docs and the `prisma-*` skills for any Prisma operation.
 
 ### Path alias
 `@/*` maps to `./src/*` (see `tsconfig.json`). Use it for cross-folder imports, e.g. `import { config } from "@/config/env"`.
 
 ## Code Conventions
 
-- Biome enforces tabs, double quotes, 90-char line width, no semicolons where optional. Organize imports is on.
+- Biome enforces tabs, double quotes, 90-char line width, no semicolons where optional. Organize imports is on (see `biome.json`). `unsafeParameterDecoratorsEnabled` is enabled so Inversify parameter decorators work.
 - Controllers are thin; put business logic in `*.service.ts`.
 - Always throw `HttpException` subclasses (not raw `Error`) so the error handler renders them correctly.
 - New domain code goes in `src/modules/<name>/` with the standard files; bind via a `ContainerModule` and add it to `src/app.module.ts`.
-- For each module, populate `*.tokens.ts` for DI identifiers and `*.contracts.ts` for service/repository interfaces; bind in the module's `*.module.ts`.
+- Per-module DI tokens and interfaces live in `*.types.ts` (migrated from the older `*.tokens.ts` + `*.contracts.ts` split; prefer `*.types.ts` for new modules).
 - Use `validateSchema(DtoClass)` decorator on any controller method that accepts a body.
+- Wrap response payloads in `ApiResponse.success(...)` from `src/utils/http-response.ts` so every endpoint returns a consistent envelope.
 - For Prisma schema additions, add a new file under `prisma/models/` and ensure it's referenced from `prisma/schema.prisma` (currently the schema is minimal — only `datasource db` and `generator client` — so new models need to be wired in).
 - Logs: `pinoLogger` already redacts `req.headers.authorization`, `password`, and `pin` — keep secrets out of other log fields.
 
 ## API Surface
 
-Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from `@controller("/users")` + `rootPath: "/api/v1"`).
+Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from `@controller("/users")` + `rootPath: "/api/v1"`). Currently exposed slices: `users`, `auth`, `address` (the `address` autocomplete endpoint is `/api/v1/address/autocomplete`).
 
 ## Current State (snapshot)
 
-- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController` GET/POST (mock data).
-- Stubs / to be implemented: `user.service.ts`, `user.repository.ts`, `user.contracts.ts`, `auth/*`, `address/*`, `Anchor` SDK wiring, `Cloudinary` wiring, full Prisma schema.
-- Swagger URL is referenced in the README but not yet wired in code.
+- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete via Google Maps), `InfrastructureModule` (Anchor / Cloudinary / Google Maps), `ApiResponse` envelope.
+- Stubs / to be implemented: Prisma schema is not yet composed (per-model files exist in `prisma/models/` but `schema.prisma` doesn't reference them); `user.service.ts` / `user.repository.ts` / `auth.repository.ts` are skeleton files; Passport JWT strategy not yet wired; Swagger URL is referenced in the README but not yet wired in code.
 
 ### Documentation & Planning
 - All technical plan or plans must be stored in the `_plans/` directory.

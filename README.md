@@ -19,7 +19,7 @@ Key Features of MyChange
 - [Node.js](https://nodejs.org/en)
 - [Express.js](https://expressjs.com/en/5x/starter/installing/)
 - [Inversify](https://inversify.io/docs/introduction/getting-started/)
-- [Inversify Framework](https://inversify.io/framework/docs/introduction/getting-started/)
+- [Inversify Express Utils](https://github.com/inversify/inversify-express-utils#readme)
 
 ## ⚙️ Prerequisites
 - [Node.js](https://nodejs.org/) (v22.22.3)
