@@ -1,5 +1,30 @@
 # Change Log
 
+## 2026-07-30
+
+### Feat: Address `/geometry` endpoint, AWS Rekognition skeleton, infra token rename
+
+- **High-level description:** Extended the address module with a Place Details geometry lookup, added an AWS Rekognition wrapper as scaffolding for face comparison, renamed the infrastructure DI token object to `INFRA_TYPES` (with a new `AwsRekognitionService` symbol), disabled the Express server timeout for long-running calls, and bumped Prisma + AWS SDK deps. Also reformatted `tsconfig.json` (2-space indent) and added a `prisma/seed.ts` plus Makefile `db-gen` / `seed` targets.
+- **Files modified:**
+  - `src/infrastructure/infrastructure.types.ts` — `TYPES` → `INFRA_TYPES`, added `AwsRekognitionService: Symbol.for("AwsRekognitionService")`.
+  - `src/infrastructure/ infrastructure.module.ts` — binds `IGoogleMapsService` against `INFRA_TYPES.GoogleMapsService`; switched to semicolons + 2-space indent.
+  - `src/infrastructure/google/google-map.type.ts` — added `IPlaceDetails` interface (geometry, address_components, formatted_address, etc.); typed `getPlaceDetails` on `IGoogleMapsService`.
+  - `src/infrastructure/google/google-map.service.ts` — `getPlaceDetails(placeId, fields?)` now returns the typed `IPlaceDetails` payload (was returning `res` raw); formatting normalized.
+  - `src/infrastructure/aws-rekognition/aws-rekognition.ts` (new) — `AwsRekognition` injectable wrapping `@aws-sdk/client-rekognition` with `compareFaces()` stub. **Not yet bound in `InfrastructureModule`** — symbol and dependency are in place but the binding still needs wiring.
+  - `src/common/injectable/service.ts` — removed the unused `logService` decorator export.
+  - `src/index.ts` — `serverInstance.timeout = 0` after the InversifyExpressServer build so long-running calls aren't cut off.
+  - `src/modules/address/address.type.ts` — exported `TGetLocationAddress`; `IAddressService.getLocationAddress` now returns `Promise<TGetLocationAddress[]>`; added `getLocationGeometry(placeId: string)`.
+  - `src/modules/address/address.service.ts` — `getLocationAddress` returns typed predictions; new `getLocationGeometry(placeId)` validates input and calls `getPlaceDetails(placeId, "geometry")`, returning `result.result.geometry`.
+  - `src/modules/address/address.controller.ts` — added `GET /geometry?placeId=...` returning `ApiResponse.success(...)`.
+  - `src/modules/user/user.controller.ts` — added `POST /users/validate` echoing the validated body.
+  - `src/modules/user/user.dto.ts` — new `UserPhoneRequest` class with `phoneNumber: string` field.
+  - `Makefile` — added `db-gen` (`pnpm prisma generate`) and `seed` (`pnpm prisma db seed`) targets.
+  - `prisma/seed.ts` (new) — seeds a single demo user via `PrismaPg` driver adapter. **Caveat:** imports `../src/generated/prisma/client`, which doesn't match the current `generator client { output = "../src/generated/prisma" }` — needs to be repointed once the schema is composed and the client is regenerated.
+  - `package.json` — added `@aws-sdk/client-rekognition ^3.1097.0`; bumped `@prisma/client` and `prisma` to `^7.9.1`.
+  - `pnpm-lock.yaml` — updated to match `package.json`.
+  - `tsconfig.json` — re-indented from tabs to 2 spaces (semantic content unchanged).
+- **Rationale:** Make `/address/geometry` available to clients (mirrors Google's Place Details API for downstream reverse-geocoding) and prepare the project for face-comparison flows via AWS Rekognition. Renaming the token object to `INFRA_TYPES` avoids collision with the global `TYPES` map in `src/types/di-types.ts`. Disabling the server timeout and removing the unused `logService` decorator are small cleanups that came along for the ride.
+
 ## 2026-07-29
 
 ### Docs: Sync `CLAUDE.md` to current codebase state
