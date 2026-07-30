@@ -4,6 +4,11 @@ enum UserRole {
   merchant
 }
 
+enum UserType {
+  customer
+  seller
+}
+
 enum UserStatus {
   active
   deleted

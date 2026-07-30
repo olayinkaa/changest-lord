@@ -2,3 +2,20 @@
 Build an endpoint to validate the user phone.
 if the user phone number exist and the user has completed onboarding,
 it should throw an error; otherwise it should allow the user to continue the onboarding process.
+
+---
+create the following endpoint for business type
+- GET business type
+- Create business type
+- Update business type
+- Delete business type
+
+The business type model should include:
+- id
+- business type
+- business type description
+
+A user can has just one business type, 
+there should be a one to one relationship
+
+---
