@@ -12,6 +12,8 @@ model User {
     address           String?
     nin               String?
     bvn               String?
+    businessTypeId   String?
+    businessType       BusinessType? @relation(fields: [businessTypeId], references: [id], onDelete: SetNull)
     kyc               UserKyc?
     createdAt         DateTime @default(now())
     updatedAt         DateTime @updatedAt

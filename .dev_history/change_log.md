@@ -2,6 +2,42 @@
 
 ## 2026-07-30
 
+### Refactor: Move Business Type relation to User model
+
+- **High-level description:** Changed the relationship between `User` and `BusinessType` so that the foreign key resides on the `User` model (`businessTypeId`). The `BusinessType` model now acts as a standalone lookup list of types, and the `userId` mapping was removed from it.
+- **Files modified:**
+  - `prisma/models/business_type.prisma` — removed `userId` and `user` relation; added `users User[]` for the reverse relation.
+  - `prisma/models/user.prisma` — added `businessTypeId` field and the relation to `BusinessType`.
+  - `prisma/schema.prisma` — updated to reflect the change.
+  - `src/modules/business-type/business-type.types.ts` — removed `findByUserId` and `updateUserId` from repository and service interfaces.
+  - `src/modules/business-type/business-type.repository.ts` — removed `findByUserId` and `updateUserId` implementations.
+  - `src/modules/business-type/business-type.service.ts` — removed `assignToUser` method.
+- **Rationale:** Aligns with the requirement that the relation should only be managed from the user's perspective, and `BusinessType` should not be mapped to a specific user but serve as a general list of categories.
+- **Verified:** Ran `pnpm prisma db push --accept-data-loss` to sync the schema and `pnpm prisma generate` to update the client.
+
+### Feat: Business Type CRUD endpoints and User relation
+
+- **High-level description:** Implemented the Business Type entity and a set of CRUD endpoints. Established a one-to-one relationship between `User` and `BusinessType`, allowing each user to be associated with exactly one business type.
+- **Files modified:**
+  - `prisma/models/business_type.prisma` — created new model `BusinessType` with `type` and `description` fields.
+  - `prisma/models/user.prisma` — added `businessType` relation to `User` model.
+  - `prisma/schema.prisma` — updated to ensure consistency (though the project's `prisma.config.ts` loads models from the `prisma/` directory).
+  - `src/modules/business-type/business-type.types.ts` — defined `TYPES`, `IBusinessType`, `IBusinessTypeRepository`, and `IBusinessTypeService`.
+  - `src/modules/business-type/business-type.repository.ts` — implemented Prisma-based CRUD operations.
+  - `src/modules/business-type/business-type.service.ts` — implemented business logic and validation.
+  - `src/modules/business-type/business-type.dto.ts` — created `CreateBusinessTypeDto` and `UpdateBusinessTypeDto`.
+  - `src/modules/business-type/business-type.controller.ts` — implemented `GET /`, `GET /:id`, `POST /`, `PATCH /:id`, and `DELETE /:id` endpoints.
+  - `src/modules/business-type/business-type.module.ts` — configured Inversify DI bindings.
+  - `src/app.module.ts` — registered `BusinessTypeModule` in the application root.
+- **Rationale:** Provides the necessary infrastructure to categorize users by business type as per requirements. The one-to-one mapping ensures data integrity for user-business associations.
+- **Verified:** Ran `pnpm prisma migrate dev` and `pnpm prisma generate` successfully. Code follows the established architectural pattern (Controller -> Service -> Repository) and uses `ApiResponse` for standardized outputs.
+- **Endpoint contract:**
+  - `GET /api/v1/business-types` — Returns all business types.
+  - `GET /api/v1/business-types/:id` — Returns a single business type by ID.
+  - `POST /api/v1/business-types` — Creates a new business type. Body: `{ "type": string, "description": string (optional), "userId": string (optional) }`.
+  - `PATCH /api/v1/business-types/:id` — Updates a business type. Body: `{ "type": string (optional), "description": string (optional), "userId": string (optional) }`.
+  - `DELETE /api/v1/business-types/:id` — Deletes a business type.
+
 ### Feat: `POST /users/validate-phone` endpoint + wire real user module
 
 - **High-level description:** Implemented a `POST /api/v1/users/validate-phone` endpoint that accepts a phone number and returns `{ phone, available: true }` when the phone is free, or throws a `ConflictException` (409) when the phone is already registered and the user has completed onboarding. The user module — previously scaffold-only (`@controller` registered with no service/repository bindings) — now has a real `UserService` + `UserRepository` wired through Inversify DI, and `UserController` was migrated to the `BaseHttpController` + `ApiResponse` envelope pattern used by `AddressController`.
@@ -65,7 +101,7 @@
 
 - **High-level description:** Updated the project `CLAUDE.md` so its bootstrap flow, module layout, infrastructure wiring, and API surface match the code today. The previous copy still described the bootstrap as wiring only `UserModule` + `LoggerModule` and listed `address/*`, `auth/*`, `Anchor`, and `Cloudinary` as "to be implemented" — all of which are actually wired now. Also added a note that no test runner is configured yet, and pointed the Conventions section at the new `ApiResponse` envelope and the `.types.ts` naming convention.
 - **Files modified:**
-  - `CLAUDE.md` — bootstrap step 3 now lists `UserModule`, `LoggerModule`, `InfrastructureModule`, `AddressModule`; module layout reflects the `*.types.ts` migration (with `*.interfaces.ts` as the optional split) and uses `address/` as the canonical example; cross-cutting concerns now mention `ApiResponse<T>` from `src/utils/http-response.ts` and the unified `infrastructure.types.ts`; infrastructure section notes `InfrastructureModule` is wired in `app.module.ts` and lists `google/` (Places autocomplete) with the `{ predictions }` payload shape; API surface lists `/api/v1/users`, `/api/v1/auth`, `/api/v1/address/autocomplete`; Current State snapshot reflects what is actually working vs. still stubbed; added a "Tests" subsection under Common Commands noting there is no `test` script in `package.json`.
+  - `CLAUDE.md` — bootstrap step 3 now lists `UserModule`, `LoggerModule`, `InfrastructureModule`, `AddressModule`; module layout reflects the `*.types.ts` migration (with `*.interfaces.ts` as the optional split) and uses `address/` as the canonical example; cross-cutting concerns now mention `ApiResponse<T>` from `src/utils/http-response.ts` and the unified `infrastructure.types.ts`; infrastructure section notes `InfrastructureModule` is wired in `app.module.ts` and lists `google/` (Places autocomplete) with the `{ predictions }` payload shape; Current State snapshot reflects what is actually working vs. still stubbed; added a "Tests" subsection under Common Commands noting there is no `test` script in `package.json`.
 - **Rationale:** Future Claude Code sessions should be able to read `CLAUDE.md` and immediately know which modules are wired, which naming convention to follow for new DI files, and where the response helper lives. The previous copy would have misled a session into thinking `address` and `auth` were not yet wired.
 
 ### Refactor: Rename `*.contract.ts` → `*.types.ts` and fix Google Maps integration
@@ -84,4 +120,4 @@
   - `src/modules/address/address.controller.ts` — endpoint renamed `/predictions` → `/autocomplete`; response now wrapped via `ApiResponse.success(...)` with explicit `200` status.
   - `src/modules/address/address.service.ts` — added `search` empty-string validation (throws `BadRequestException`); maps Google prediction payload to a slim `{ placeId, description, mainText, secondaryText }` shape.
   - `src/utils/http-response.ts` (new) — generic `ApiResponse<T>` helper with `success` / `error` static factories.
-- **Rationale:** Unify naming for DI token/type files (`*.types.ts`) to remove confusion between tokens and contracts. Fix the address autocomplete flow so the controller returns the proper payload and the service validates input and shapes a clean DTO for clients. Introduce a reusable `ApiResponse` wrapper to standardize API responses. Update CLAUDE.md to formalize plans storage and change-log tracking.
+- **Rationale:** Unify naming for DI token/type files (`*.types.ts`) to remove confusion between tokens and contracts. Fix the address autocomplete flow so the controller returns the proper payload and the service validates input and shapes a clean DTO for clients. Introduce a reusable `ApiResponse` wrapper to standardize API responses. Update `CLAUDE.md` to formalize plans storage and change-log tracking.

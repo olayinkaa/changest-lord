@@ -1,0 +1,10 @@
+model BusinessType {
+    id          String   @id @default(uuid())
+    type        String   @unique
+    description String?
+    users       User[]
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@map("business_types")
+}
