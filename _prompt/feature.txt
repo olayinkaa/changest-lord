@@ -19,3 +19,6 @@ A user can has just one business type,
 there should be a one to one relationship
 
 ---
+
+create a database seed for the users, business type, kyc table.
+Ensure that one of the user has completed profile to be true.

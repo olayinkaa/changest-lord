@@ -2,9 +2,21 @@
 
 ## 2026-07-30
 
+### Feat: Database seed for Users, Business Types, and KYC
+
+- **High-level description:** Implemented a comprehensive database seed script to populate the system with test data. This includes a curated list of business types, randomly generated users associated with those types, and corresponding KYC records.
+- **Files modified:**
+  - `prisma/seed.ts` — rewrote the seeding logic to support `BusinessType`, `User`, and `UserKyc` models.
+- **Rationale:** Provides a realistic dataset for development and testing. Ensures that the `completedProfile` flag is set to `true` for at least one user to test onboarded-user flows.
+- **Verified:** Ran `make seed-db` successfully.
+- **Seed details:**
+  - 8 standard business types.
+  - 20 random users with varied roles.
+  - 20 KYC records, with a guaranteed completed profile for the first user.
+
 ### Refactor: Move Business Type relation to User model
 
-- **High-level description:** Changed the relationship between `User` and `BusinessType` so that the foreign key resides on the `User` model (`businessTypeId`). The `BusinessType` model now acts as a standalone lookup list of types, and the `userId` mapping was removed from it.
+- **High-level description:** Changed the relationship between `User` and `BusinessType` so that it is managed exclusively from the `User` model (`businessTypeId`). The `BusinessType` model now acts as a standalone lookup list of types, and the `userId` mapping was removed from it.
 - **Files modified:**
   - `prisma/models/business_type.prisma` — removed `userId` and `user` relation; added `users User[]` for the reverse relation.
   - `prisma/models/user.prisma` — added `businessTypeId` field and the relation to `BusinessType`.
@@ -102,7 +114,7 @@
 - **High-level description:** Updated the project `CLAUDE.md` so its bootstrap flow, module layout, infrastructure wiring, and API surface match the code today. The previous copy still described the bootstrap as wiring only `UserModule` + `LoggerModule` and listed `address/*`, `auth/*`, `Anchor`, and `Cloudinary` as "to be implemented" — all of which are actually wired now. Also added a note that no test runner is configured yet, and pointed the Conventions section at the new `ApiResponse` envelope and the `.types.ts` naming convention.
 - **Files modified:**
   - `CLAUDE.md` — bootstrap step 3 now lists `UserModule`, `LoggerModule`, `InfrastructureModule`, `AddressModule`; module layout reflects the `*.types.ts` migration (with `*.interfaces.ts` as the optional split) and uses `address/` as the canonical example; cross-cutting concerns now mention `ApiResponse<T>` from `src/utils/http-response.ts` and the unified `infrastructure.types.ts`; infrastructure section notes `InfrastructureModule` is wired in `app.module.ts` and lists `google/` (Places autocomplete) with the `{ predictions }` payload shape; Current State snapshot reflects what is actually working vs. still stubbed; added a "Tests" subsection under Common Commands noting there is no `test` script in `package.json`.
-- **Rationale:** Future Claude Code sessions should be able to read `CLAUDE.md` and immediately know which modules are wired, which naming convention to follow for new DI files, and where the response helper lives. The previous copy would have misled a session into thinking `address` and `auth` were not yet wired.
+- **Rationale:** Future Claude Code sessions should be able to read `CLAUDE.md` and immediately know which modules are wired, which naming convention to follow, and where the response helper lives. The previous copy would have misled a session into thinking `address` and `auth` were not yet wired.
 
 ### Refactor: Rename `*.contract.ts` → `*.types.ts` and fix Google Maps integration
 
