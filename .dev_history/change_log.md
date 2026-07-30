@@ -2,6 +2,21 @@
 
 ## 2026-07-30
 
+### Refactor: Rename `infrastructure/` → `adapters/` (folder, module, token)
+
+- **High-level description:** Renamed the entire `src/infrastructure/` tree to `src/adapters/` because the folder holds third-party service wrappers (Anchor, Cloudinary, Google Maps, AWS Rekognition), not generic infrastructure. Renamed the module class `InfrastructureModule` → `AdaptersModule` and the token object `INFRA_TYPES` → `ADAPTER_TYPES` for consistency. Also dropped the leading-space typo in ` infrastructure.module.ts` along the way.
+- **Files modified:**
+  - `src/infrastructure/` → `src/adapters/` (entire tree moved via `git mv`; tracked rename ratio near 100% for all 9 files).
+  - `src/adapters/adapters.types.ts` — `INFRA_TYPES` → `ADAPTER_TYPES`; entries unchanged (`AnchorApiSdk`, `GoogleMapsService`, `AwsRekognitionService`).
+  - `src/adapters/adapters.module.ts` — `InfrastructureModule` → `AdaptersModule`; binds `IGoogleMapsService` against `ADAPTER_TYPES.GoogleMapsService`; imports sorted.
+  - `src/app.module.ts` — imports `AdaptersModule` from `./adapters/adapters.module`; registered in `AppModules`; Biome format (drop trailing semicolons, trailing newline).
+  - `src/modules/address/address.service.ts` — imports `@/adapters/adapters.types` and `@/adapters/google/google-map.type`; uses `ADAPTER_TYPES.GoogleMapsService`.
+  - `CLAUDE.md` — bootstrap step 3, module layout, cross-cutting concerns, the adapter-modules section, and the Current State snapshot updated to use `AdaptersModule` / `ADAPTER_TYPES` / `src/adapters/`. Added an `aws-rekognition/` entry noting the compareFaces stub still needs a binding in `adapters.module.ts`.
+  - `src/adapters/aws-rekognition/aws-rekogniction.type.ts` (new, was untracked) — empty placeholder, filename typo retained per user direction.
+  - `src/adapters/aws-rekognition/aws-rekognition.service.ts` (new, was untracked) — duplicate of the tracked `aws-rekognition.ts` with tabs/no-semicolons formatting; kept per user direction.
+- **Rationale:** Match the code to what it does (hexagonal-style adapter layer between the domain and external SDKs). Unify naming across folder, module class, and exported symbol so future readers don't have to remember the rename.
+- **Verified:** `tsc --noEmit` clean. `biome check` reports 0 errors; 4 pre-existing `noUnusedPrivateClassMembers` warnings on the rekognition stubs are out of scope.
+
 ### Feat: Address `/geometry` endpoint, AWS Rekognition skeleton, infra token rename
 
 - **High-level description:** Extended the address module with a Place Details geometry lookup, added an AWS Rekognition wrapper as scaffolding for face comparison, renamed the infrastructure DI token object to `INFRA_TYPES` (with a new `AwsRekognitionService` symbol), disabled the Express server timeout for long-running calls, and bumped Prisma + AWS SDK deps. Also reformatted `tsconfig.json` (2-space indent) and added a `prisma/seed.ts` plus Makefile `db-gen` / `seed` targets.
