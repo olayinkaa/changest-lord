@@ -3,5 +3,12 @@ export const USER_TYPES = {
 	Repository: Symbol.for("UserRepository"),
 }
 
-// export interface IUserRepository {}
-// export interface IUserService {}
+export interface IUserRepository {
+	findByPhoneWithKyc(
+		phone: string,
+	): Promise<{ id: string; kyc: { completedProfile: boolean } | null } | null>
+}
+
+export interface IUserService {
+	validatePhone(phone: string): Promise<{ phone: string; available: boolean }>
+}

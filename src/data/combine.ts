@@ -1,0 +1,31 @@
+export const CardProviders = {
+	VISA: "https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png",
+	MASTERCARD: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg",
+	AMEX: "https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282019%29.svg",
+	DISCOVER: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Discover_Card_logo.svg",
+	UNIONPAY: "https://upload.wikimedia.org/wikipedia/commons/6/6b/UnionPay_logo.svg",
+	JCB: "https://upload.wikimedia.org/wikipedia/commons/0/0b/JCB_logo.svg",
+	DINERS: "https://upload.wikimedia.org/wikipedia/commons/7/72/Diners_Club_Logo4.svg",
+	VERVE: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Verve_card_logo.png",
+}
+
+export const FlutterwaveUssdBanks = [
+	{ name: "Access Bank", code: "044" },
+	{ name: "Ecobank", code: "050" },
+	{ name: "Fidelity Bank", code: "070" },
+	{ name: "First Bank of Nigeria", code: "011" },
+	{ name: "First City Monument Bank (FCMB)", code: "214" },
+	{ name: "Guaranty Trust Bank", code: "058" },
+	{ name: "Heritage Bank", code: "030" },
+	{ name: "Keystone Bank", code: "082" },
+	{ name: "Lotus Bank", code: "303" },
+	{ name: "Premium Trust Bank", code: "105" },
+	{ name: "Stanbic IBTC Bank", code: "221" },
+	{ name: "Sterling Bank", code: "232" },
+	{ name: "Union Bank", code: "032" },
+	{ name: "United Bank for Africa (UBA)", code: "033" },
+	{ name: "Unity Bank", code: "215" },
+	{ name: "VFD Microfinance Bank", code: "090110" },
+	{ name: "Wema Bank", code: "035" },
+	{ name: "Zenith Bank", code: "057" },
+]

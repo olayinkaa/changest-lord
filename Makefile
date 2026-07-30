@@ -15,5 +15,5 @@ drop-db:
 	pnpm prisma migrate reset --force
 db-gen:
 	pnpm prisma generate
-seed:
+seed-db:
 	pnpm prisma db seed

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator"
+import { IsNotEmpty, IsString, Matches } from "class-validator"
 
 export class UserRequest {
 	@IsNotEmpty({ message: "First name is required" })
@@ -10,8 +10,11 @@ export class UserRequest {
 	lastName!: string
 }
 
-export class UserPhoneRequest {
-	@IsNotEmpty({ message: "First name is required" })
-	@IsString({ message: "First name must be a string" })
-	phoneNumber!: string
+export class ValidatePhoneRequest {
+	@IsNotEmpty({ message: "Phone number is required" })
+	@IsString({ message: "Phone number must be a string" })
+	@Matches(/^\+?[0-9]{7,15}$/, {
+		message: "Phone number must be 7–15 digits, optionally prefixed with '+'",
+	})
+	phone!: string
 }

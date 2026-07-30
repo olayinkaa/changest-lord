@@ -2,6 +2,25 @@
 
 ## 2026-07-30
 
+### Feat: `POST /users/validate-phone` endpoint + wire real user module
+
+- **High-level description:** Implemented a `POST /api/v1/users/validate-phone` endpoint that accepts a phone number and returns `{ phone, available: true }` when the phone is free, or throws a `ConflictException` (409) when the phone is already registered and the user has completed onboarding. The user module — previously scaffold-only (`@controller` registered with no service/repository bindings) — now has a real `UserService` + `UserRepository` wired through Inversify DI, and `UserController` was migrated to the `BaseHttpController` + `ApiResponse` envelope pattern used by `AddressController`.
+- **Files modified:**
+  - `src/modules/user/user.dto.ts` — added `ValidatePhoneRequest` DTO (`@IsNotEmpty`, `@IsString`, `@Matches(/^\+?[0-9]{7,15}$/)`); removed the stale `UserPhoneRequest` (its error messages were copy-pasted from `UserRequest`).
+  - `src/modules/user/user.types.ts` — added `IUserService` and `IUserRepository` interfaces alongside the existing `USER_TYPES` symbols.
+  - `src/modules/user/user.repository.ts` — `UserRepository implements IUserRepository`; `findByPhoneWithKyc(phone)` runs `prisma.user.findUnique` selecting `id` + `kyc.completedProfile`.
+  - `src/modules/user/user.service.ts` — `UserService implements IUserService`; `validatePhone(phone)` looks up the user and throws `ConflictException` when `existing?.kyc?.completedProfile` is true; otherwise returns `{ phone, available: true }`.
+  - `src/modules/user/user.controller.ts` — extends `BaseHttpController`; constructor now injects `IUserService` via `USER_TYPES.Service`; existing `GET /` and `POST /` now use `this.json(ApiResponse.success(...))`; new `POST /validate-phone` is `@validateSchema(ValidatePhoneRequest)` and returns `ApiResponse.success` on success.
+  - `src/modules/user/user.module.ts` — binds `IUserRepository` → `UserRepository` and `IUserService` → `UserService` in the `ContainerModule` (was only binding the controller).
+- **Rationale:** Fills the gap in the user module so the validate-phone flow actually queries PostgreSQL through Prisma. Centralising the "is this phone already onboarded?" check in the service keeps the controller thin and makes the rule easy to extend (e.g., reject soft-deleted users later). Branching rule: implemented on `feature/validate-user-phone` per CLAUDE.md's branch-first policy.
+- **Verified:** `pnpm run lint:check:fix` reports 0 errors/warnings on the user module (pre-existing rekognition stubs remain out of scope). `pnpm exec tsc --noEmit` and `pnpm run build` (`tsc && tsc-alias`) both pass cleanly.
+- **Endpoint contract:**
+  - `POST /api/v1/users/validate-phone`
+  - Body: `{ "phone": "+2348012345678" }`
+  - 200 on free / partially-onboarded phone: `{ "success": true, "statusCode": 200, "message": "Phone number is available", "data": { "phone": "+2348012345678", "available": true } }`
+  - 409 if phone exists and `UserKyc.completedProfile === true`: `{ "code": 409, "status": "error", "message": "This phone number is already registered and has completed onboarding" }`
+  - 400 on missing / malformed phone (handled by `validateSchema`).
+
 ### Refactor: Rename `infrastructure/` → `adapters/` (folder, module, token)
 
 - **High-level description:** Renamed the entire `src/infrastructure/` tree to `src/adapters/` because the folder holds third-party service wrappers (Anchor, Cloudinary, Google Maps, AWS Rekognition), not generic infrastructure. Renamed the module class `InfrastructureModule` → `AdaptersModule` and the token object `INFRA_TYPES` → `ADAPTER_TYPES` for consistency. Also dropped the leading-space typo in ` infrastructure.module.ts` along the way.

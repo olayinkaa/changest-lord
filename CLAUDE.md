@@ -158,3 +158,12 @@ Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from 
         2. A bulleted list of files modified.
         3. A brief rationale for the changes.
 - **Visibility:** Always display the summary of these changes in your final chat response immediately after completing the task.
+
+### Workflow & Branching Policy
+- **Branch-First Development:** Before making any code changes, creating new features, or implementing bug fixes, you MUST verify the current branch.
+- **Requirement:** If not already on a dedicated feature or fix branch, you must suggest or create a new, appropriately named branch (e.g., `feature/description` or `fix/issue-name`) using `git checkout -b <branch-name>`.
+- **Constraint:** Do not apply code changes directly to `main`, `master`, `staging`, `development`, or `pre-develoment` branches.
+- **Workflow:** 1. Assess the task.
+    2. Check the current git branch.
+    3. If necessary, execute the git command to switch to a new branch.
+    4. Proceed with code implementation only after the branch is confirmed.
