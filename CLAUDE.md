@@ -78,7 +78,7 @@ Env is validated at boot via Zod (`src/config/env.ts` + `src/utils/env.ts`). The
 ### Bootstrap flow (`src/index.ts`)
 1. Import `reflect-metadata` (required for Inversify decorators).
 2. `Application` abstract class (`src/utils/application.ts`) creates an Inversify `Container` (default scope: `Singleton`) and calls abstract `configureService()` and `setup()`.
-3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `InfrastructureModule`, `AddressModule`) into the container.
+3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `AdaptersModule`, `AddressModule`) into the container.
 4. `App.setup`:
    - Connects Prisma (`prisma.$connect`); exits on failure.
    - Builds an `InversifyExpressServer` rooted at `/api/v1`.
@@ -96,10 +96,10 @@ Each domain under `src/modules/<name>/` follows the same shape:
 - `<name>.types.ts` — `Symbol.for(...)` DI tokens used in `@inject(TYPES.X)` and service/repository interfaces. (Naming convention migrated from the older `*.tokens.ts` + `*.contracts.ts` split.)
 - `<name>.interfaces.ts` (optional) — additional contracts split out from `types.ts` when the file grows.
 
-Currently wired domains: `user/`, `auth/`, `address/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from infrastructure).
+Currently wired domains: `user/`, `auth/`, `address/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from the adapters layer).
 
 ### Cross-cutting concerns
-- **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.types.ts`. Infrastructure tokens are unified in `src/infrastructure/infrastructure.types.ts`.
+- **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.types.ts`. Adapter-layer tokens are unified in `src/adapters/adapters.types.ts` (`ADAPTER_TYPES`).
 - **Logger**: `src/config/pino-logger.ts` exports `pinoLogger` (singleton) and a `LoggerModule` that binds `TYPES.Logger` to a request-scoped child logger (each request gets a `requestId`). Inject as `private logger: pino.Logger` in controllers. The `logService` decorator (`src/common/injectable/service.ts`) is provided for use on services/properties.
 - **Validation**: `validateSchema(DtoClass)` (`src/core/middleware/validate-schema.ts`) is applied as `withMiddleware(...)` to controller methods. It uses `class-transformer` + `class-validator` with `whitelist` + `forbidNonWhitelisted`. The validated DTO instance replaces `req.body`.
 - **Errors**: throw `HttpException` subclasses from `src/core/errors/exceptions.ts` (`BadRequestException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ConflictException`). The global handler in `error-handler.ts` serializes them as `{ code, status: "error", message, data? }`. Unknown errors become 500.
@@ -107,11 +107,12 @@ Currently wired domains: `user/`, `auth/`, `address/`. The `address` module is a
 - **CORS**: `src/config/cors.ts` whitelists localhost ports 3000/5005/5173/4006 with credentials.
 - **Prisma client**: `src/core/database/db.ts` exports a shared `prisma` instance (driver-adapter for Postgres) that hot-reloads in dev via `globalThis`.
 
-### Infrastructure modules (`src/infrastructure/`)
-Wired via `InfrastructureModule` (see `src/infrastructure/ infrastructure.module.ts`) and exported from `src/app.module.ts`.
+### Adapter modules (`src/adapters/`)
+Wired via `AdaptersModule` (see `src/adapters/adapters.module.ts`) and exported from `src/app.module.ts`.
 - `anchor-api-sdk/` — Anchor API client (banks, virtual accounts, transfers, airtime, data) with ambient types in `src/types/global.d.ts` (`AnchorBank`, `AnchorVirtualAccount`, etc.).
 - `cloudinary/` — image upload service + interface.
 - `google/` — Google Maps Places autocomplete. `GoogleMapsService.getPlacePredictions(input)` returns `{ predictions }`; downstream code (e.g. `AddressService`) flattens to `{ placeId, description, mainText, secondaryText }`.
+- `aws-rekognition/` — `@aws-sdk/client-rekognition` wrapper (`AwsRekognition` injectable). `compareFaces()` is currently a stub — binding in `adapters.module.ts` still to be added when the first caller is in place.
 
 ### Skills
 `skills-lock.json` pins Prisma-related skills (CLI, client API, compute, database setup, driver adapter, MongoDB/Postgres upgrades). Use `context7` for ad-hoc library docs and the `prisma-*` skills for any Prisma operation.
@@ -137,7 +138,7 @@ Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from 
 
 ## Current State (snapshot)
 
-- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete via Google Maps), `InfrastructureModule` (Anchor / Cloudinary / Google Maps), `ApiResponse` envelope.
+- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete + geometry via Google Maps), `AdaptersModule` (Anchor / Cloudinary / Google Maps / AWS Rekognition skeleton), `ApiResponse` envelope.
 - Stubs / to be implemented: Prisma schema is not yet composed (per-model files exist in `prisma/models/` but `schema.prisma` doesn't reference them); `user.service.ts` / `user.repository.ts` / `auth.repository.ts` are skeleton files; Passport JWT strategy not yet wired; Swagger URL is referenced in the README but not yet wired in code.
 
 ### Documentation & Planning

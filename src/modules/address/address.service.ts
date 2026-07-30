@@ -1,13 +1,13 @@
 import { inject, injectable } from "inversify"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
+import type { IGoogleMapsService } from "@/adapters/google/google-map.type"
 import { BadRequestException } from "@/core/errors/exceptions"
-import type { IGoogleMapsService } from "@/infrastructure/google/google-map.type"
-import { INFRA_TYPES } from "@/infrastructure/infrastructure.types"
 import type { IAddressService, TGetLocationAddress } from "./address.type"
 
 @injectable()
 export class AddressService implements IAddressService {
 	constructor(
-		@inject(INFRA_TYPES.GoogleMapsService)
+		@inject(ADAPTER_TYPES.GoogleMapsService)
 		private googleMapsService: IGoogleMapsService,
 	) {}
 
