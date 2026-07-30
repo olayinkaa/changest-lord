@@ -28,4 +28,14 @@ export class AddressController extends BaseHttpController {
 			nxt(error)
 		}
 	}
+
+	@httpGet("/geometry")
+	async getGeometry(@queryParam("placeId") placeId: string, @next() nxt: NextFunction) {
+		try {
+			const data = await this._addressService.getLocationGeometry(placeId)
+			return this.json(ApiResponse.success(data), 200)
+		} catch (error) {
+			nxt(error)
+		}
+	}
 }

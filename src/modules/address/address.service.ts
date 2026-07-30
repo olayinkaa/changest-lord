@@ -1,17 +1,17 @@
 import { inject, injectable } from "inversify"
 import { BadRequestException } from "@/core/errors/exceptions"
 import type { IGoogleMapsService } from "@/infrastructure/google/google-map.type"
-import { TYPES } from "@/infrastructure/infrastructure.types"
-import type { IAddressService } from "./address.type"
+import { INFRA_TYPES } from "@/infrastructure/infrastructure.types"
+import type { IAddressService, TGetLocationAddress } from "./address.type"
 
 @injectable()
 export class AddressService implements IAddressService {
 	constructor(
-		@inject(TYPES.GoogleMapsService)
+		@inject(INFRA_TYPES.GoogleMapsService)
 		private googleMapsService: IGoogleMapsService,
 	) {}
 
-	async getLocationAddress(search: string) {
+	async getLocationAddress(search: string): Promise<TGetLocationAddress[]> {
 		if (!search) {
 			throw new BadRequestException("Search query is missing")
 		}
@@ -22,5 +22,14 @@ export class AddressService implements IAddressService {
 			mainText: item.structured_formatting?.main_text,
 			secondaryText: item.structured_formatting?.secondary_text,
 		}))
+	}
+
+	async getLocationGeometry(placeId: string) {
+		if (!placeId) {
+			throw new BadRequestException("The 'placeId' query parameter is required")
+		}
+		const selectedField = "geometry"
+		const result = await this.googleMapsService.getPlaceDetails(placeId, selectedField)
+		return result.result.geometry
 	}
 }

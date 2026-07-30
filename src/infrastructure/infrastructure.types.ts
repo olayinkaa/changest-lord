@@ -1,4 +1,5 @@
-export const TYPES = {
+export const INFRA_TYPES = {
 	AnchorApiSdk: Symbol.for("AnchorApiSdk"),
 	GoogleMapsService: Symbol.for("GoogleMapsService"),
+	AwsRekognitionService: Symbol.for("AwsRekognitionService"),
 }

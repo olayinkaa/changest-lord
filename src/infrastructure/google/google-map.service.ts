@@ -4,7 +4,11 @@ import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import { BadRequestException } from "@/core/errors/exceptions"
 import type { ApiResponse } from "@/types/base"
-import type { IGoogleMapsService, IPlacePrediction } from "./google-map.type"
+import type {
+	IGoogleMapsService,
+	IPlaceDetails,
+	IPlacePrediction,
+} from "./google-map.type"
 
 const AUTOCOMPLETE_COUNTRY_RESTRICTION = "country:ng"
 
@@ -40,14 +44,16 @@ export class GoogleMapsService implements IGoogleMapsService {
 		}
 	}
 
-	async getPlaceDetails(placeId: string) {
-		const res = await this.api.get("/place/details/json", {
+	async getPlaceDetails(placeId: string, fields?: string) {
+		const selectedFields = fields || undefined
+		const res: ApiResponse<IPlaceDetails> = await this.api.get("/place/details/json", {
 			params: {
 				place_id: placeId,
 				key: this.apiKey,
-				fields: "formatted_address,geometry,address_component,place_id",
+				fields: selectedFields,
+				// fields: "formatted_address,geometry,address_component,place_id",
 			},
 		})
-		return res
+		return res.data
 	}
 }

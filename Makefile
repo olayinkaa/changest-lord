@@ -13,3 +13,7 @@ rm-migration:
 	rm -rf prisma/migrations
 drop-db:
 	pnpm prisma migrate reset --force
+db-gen:
+	pnpm prisma generate
+seed:
+	pnpm prisma db seed

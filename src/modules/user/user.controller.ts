@@ -23,4 +23,10 @@ export class UserController {
 	public async createUser(@requestBody() body: UserRequest) {
 		return body
 	}
+
+	@httpPost("/validate")
+	@validateSchema(UserRequest)
+	public async createU(@requestBody() body: UserRequest) {
+		return body
+	}
 }

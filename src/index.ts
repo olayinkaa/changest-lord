@@ -59,6 +59,8 @@ export class App extends Application {
 			)
 		})
 
+		serverInstance.timeout = 0
+
 		const handleShutdown = async (signal: string) => {
 			pinoLogger.info(`${signal} received, shutting down gracefully...`)
 
