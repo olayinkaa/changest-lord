@@ -30,18 +30,40 @@ export class UserRepository implements IUserRepository {
 	async createUserOnboarding(data: any) {
 		const {
 			email,
+			phone,
 			firstName,
 			lastName,
 			address,
 			userType,
-			referralCode,
 			businessName,
 			businessLocation,
-			businessType,
+			businessTypeId,
 		} = data
 
-		// 1. Handle BusinessType if seller
-
-		// return user;
+		// Prisma handles the safety transaction internally via nested writes
+		return prisma.user.create({
+			data: {
+				email,
+				phone,
+				firstName,
+				lastName,
+				address,
+				userType,
+				businessName,
+				businessTypeId,
+				businessLocation,
+				// Direct nested creation
+				kyc: {
+					create: {
+						completedProfile: true,
+						phoneVerified: false,
+					},
+				},
+			},
+			include: {
+				kyc: true,
+				businessType: true,
+			},
+		})
 	}
 }

@@ -12,7 +12,7 @@ import {
 } from "inversify-express-utils"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
-import { OnboardingRequest, UserRequest, ValidatePhoneRequest } from "./user.dto"
+import { OnboardingRequest, ValidatePhoneRequest } from "./user.dto"
 import type { IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 
@@ -29,16 +29,6 @@ export class UserController extends BaseHttpController {
 	public async getUsers() {
 		const users = await this.userService.getAllUsers()
 		return this.json(ApiResponse.success(users), 200)
-	}
-
-	@httpPost("/")
-	@validateSchema(UserRequest)
-	public async createUser(@requestBody() body: UserRequest, @next() nxt: NextFunction) {
-		try {
-			return this.json(ApiResponse.success(body), 200)
-		} catch (error) {
-			nxt(error)
-		}
 	}
 
 	@httpPost("/validate-phone")
