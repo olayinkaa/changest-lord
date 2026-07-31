@@ -20,8 +20,8 @@ export interface IOnboardingService {
 	saveDetails(userId: string, data: any): Promise<any>
 	setUserType(userId: string, type: string): Promise<any>
 	processSellerBusiness(userId: string, data: any): Promise<any>
-	initiateLiveness(userId: string): Promise<{ sessionId: string }>
-	verifyLiveness(userId: string, sessionId: string): Promise<boolean>
+	initiateLiveness(userId: string): Promise<any>
+	verifyLiveness(userId: string, sessionId: string): Promise<any>
 	finalizeSecurity(userId: string, pin: string): Promise<{ userId5: string }>
 	completeOnboarding(userId: string, deviceData: any): Promise<void>
 }

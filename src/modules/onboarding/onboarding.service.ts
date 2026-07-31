@@ -48,14 +48,14 @@ export class OnboardingService implements IOnboardingService {
 		return this.onboardingRepository.updateSellerDetails(userId, data)
 	}
 
-	async initiateLiveness(userId: string): Promise<{ sessionId: string }> {
+	async initiateLiveness(userId: string) {
 		// We would normally need a token for the session
-		const session = await this.rekognitionService.initiateLivenessSession("dummy-token")
-		return { sessionId: session.sessionId }
+		const sessionId = await this.rekognitionService.initiateLivenessSession("dummy-token")
+		return sessionId
 	}
 
 	async verifyLiveness(userId: string, sessionId: string): Promise<boolean> {
-		const result = await this.rekognitionService.getLivenessSessionResult(sessionId)
+		const result: any = await this.rekognitionService.getLivenessSessionResult(sessionId)
 		if (result.confidence < 0.9) {
 			throw new BadRequestException(
 				"Liveness check failed. Please retake the face capture.",
@@ -91,6 +91,8 @@ export class OnboardingService implements IOnboardingService {
 		const user = await this.onboardingRepository.updateUserDetails(userId, {})
 		await this.sesService.sendWelcomeEmail(user.email || "", "NEW_ID", "NEW_ACC")
 
-		await this.onboardingRepository.updateKycStatus(userId, { completedProfile: true })
+		await this.onboardingRepository.updateKycStatus(userId, {
+			completedProfile: true,
+		})
 	}
 }
