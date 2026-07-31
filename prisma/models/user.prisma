@@ -4,7 +4,7 @@ model User {
     phone            String        @unique
     firstName        String
     lastName         String
-    middleName       String
+    middleName       String?
     isMarketer       Boolean?      @default(false)
     userType         UserType
     businessLocation String?

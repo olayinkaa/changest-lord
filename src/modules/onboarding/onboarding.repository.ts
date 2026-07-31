@@ -19,6 +19,7 @@ export class OnboardingRepository implements IOnboardingRepository {
 					firstName: data.firstName,
 					lastName: data.lastName,
 					address: data.address,
+					userType: data.userType,
 				},
 			})
 
