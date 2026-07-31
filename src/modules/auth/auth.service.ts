@@ -13,11 +13,11 @@ export class AuthService implements IAuthService {
 		@inject(AUTH_TYPES.AuthUtils)
 		private authUtils: IAuthUtils,
 		@inject(USER_TYPES.Repository)
-		private userRepository: IUserRepository,
+		private userRepo: IUserRepository,
 	) {}
 
 	async login(data: LoginRequest) {
-		const user = await this.userRepository.findUserByPhone(data.phone)
+		const user = await this.userRepo.findUserByPhone(data.phone)
 
 		if (!user) {
 			throw new UnauthorizedException("Invalid phone number or PIN")
@@ -51,4 +51,16 @@ export class AuthService implements IAuthService {
 
 		return { accessToken, refreshToken }
 	}
+
+	async verifyTransaction(userId: string, plainPin: string) {
+		const user = await this.userRepo.findUser(userId)
+		if (!user) throw new Error("PIN not set")
+
+		const isPinValid = await this.authUtils.verifyPin(plainPin, user.pinHash)
+		if (!isPinValid) throw new Error("Incorrect transaction PIN")
+
+		return true
+	}
+
+	// end here
 }

@@ -8,17 +8,30 @@ import {
 	ValidateIf,
 } from "class-validator"
 import { UserType } from "@/generated/prisma/enums"
+import { TransformNigeriaPhone } from "@/utils/custom-transformer"
+import { IsNigeriaPhone } from "@/utils/custom-validator"
 
+/**
+ *
+ */
 export class ValidatePhoneRequest {
 	@IsNotEmpty({ message: "Phone number is required" })
 	@IsString({ message: "Phone number must be a string" })
-	@Matches(/^\+?[0-9]{7,15}$/, {
-		message: "Phone number must be 7–15 digits, optionally prefixed with '+'",
-	})
+	@TransformNigeriaPhone()
+	@IsNigeriaPhone()
 	phone!: string
 }
 
+/**
+ *
+ */
 export class OnboardingRequest {
+	@IsNotEmpty({ message: "Phone number is required" })
+	@IsString({ message: "Phone number must be a string" })
+	@TransformNigeriaPhone()
+	@IsNigeriaPhone()
+	phone!: string
+
 	@IsNotEmpty({ message: "First name is required" })
 	@IsString({ message: "First name must be a string" })
 	firstName!: string
@@ -41,9 +54,7 @@ export class OnboardingRequest {
 	})
 	userType!: UserType
 
-	@IsOptional()
-	@IsString()
-	referralCode?: string
+	@IsOptional() @IsString() referralCode?: string
 
 	@ValidateIf((o) => o.userType === UserType.seller)
 	@IsString()
@@ -61,6 +72,9 @@ export class OnboardingRequest {
 	businessType?: string
 }
 
+/**
+ *
+ */
 export class CreatePinRequest {
 	@IsNotEmpty({ message: "PIN is required" })
 	@IsString({ message: "PIN must be a string" })

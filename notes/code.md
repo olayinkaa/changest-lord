@@ -158,3 +158,10 @@ async createUserOnboarding(data: any) {
   });
 }
 ```
+
+## Class Validator
+```ts
+ @Matches(/^\+?[0-9]{7,15}$/, {
+  	message: "Phone number must be 7–15 digits, optionally prefixed with '+'",
+  })
+```
