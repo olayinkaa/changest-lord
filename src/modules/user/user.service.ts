@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify"
 import { ConflictException } from "@/core/errors/exceptions"
 import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { TYPES as AUTH_TYPES } from "@/modules/auth/auth.types"
-import type { OnboardingRequest } from "./user.dto"
+import type { OnboardingRequest } from "./user.request.dto"
 import type { IUserRepository, IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 

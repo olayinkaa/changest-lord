@@ -24,6 +24,9 @@ export class UserRepository implements IUserRepository {
 				kyc: true,
 				businessType: true,
 			},
+			orderBy: {
+				createdAt: "desc", // Sorts by newest records first
+			},
 		})
 	}
 

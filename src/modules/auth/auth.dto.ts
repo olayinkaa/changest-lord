@@ -1,11 +1,12 @@
 import { IsNotEmpty, IsString, Matches } from "class-validator"
+import { TransformNigeriaPhone } from "@/utils/custom-transformer"
+import { IsNigeriaPhone } from "@/utils/custom-validator"
 
 export class LoginRequest {
 	@IsNotEmpty({ message: "Phone number is required" })
 	@IsString({ message: "Phone number must be a string" })
-	@Matches(/^\+?[0-9]{7,15}$/, {
-		message: "Phone number must be 7–15 digits, optionally prefixed with '+'",
-	})
+	@TransformNigeriaPhone()
+	@IsNigeriaPhone()
 	phone!: string
 
 	@IsNotEmpty({ message: "PIN is required" })

@@ -11,7 +11,11 @@ import {
 } from "inversify-express-utils"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
-import { CreatePinRequest, OnboardingRequest, ValidatePhoneRequest } from "./user.dto"
+import {
+	CreatePinRequest,
+	OnboardingRequest,
+	ValidatePhoneRequest,
+} from "./user.request.dto"
 import type { IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 

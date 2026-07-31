@@ -2,9 +2,16 @@ import {
 	registerDecorator,
 	type ValidationArguments,
 	type ValidationOptions,
+	ValidatorConstraint,
+	type ValidatorConstraintInterface,
 } from "class-validator"
 import { parsePhoneNumberFromString } from "libphonenumber-js/max"
 
+/**
+ * validate Nigeria phone number
+ * @param validationOptions
+ * @returns
+ */
 export function IsNigeriaPhone(validationOptions?: ValidationOptions) {
 	return (object: object, propertyName: string) => {
 		registerDecorator({
@@ -35,3 +42,38 @@ export function IsNigeriaPhone(validationOptions?: ValidationOptions) {
 		})
 	}
 }
+
+/**
+ * Strong Password
+ */
+@ValidatorConstraint({ name: "isStrongPassword", async: false })
+export class IsStrongPasswordConstraint implements ValidatorConstraintInterface {
+	validate(password: string) {
+		const hasMinLength = password.length >= 8
+		const hasLetter = /[a-zA-Z]/.test(password)
+		const hasNumber = /[0-9]/.test(password)
+		const hasSpecialChar = /[^a-zA-Z0-9]/.test(password)
+
+		return hasMinLength && hasLetter && hasNumber && hasSpecialChar
+	}
+
+	defaultMessage(): string {
+		return `Password must be at least 8 characters long and contain at least one letter, one number, and one special character.`
+	}
+}
+
+export function IsStrongPassword(validationOptions?: ValidationOptions) {
+	return (target: object, propertyName: string) => {
+		registerDecorator({
+			name: "isStrongPassword",
+			target: target.constructor,
+			propertyName: propertyName,
+			options: validationOptions,
+			validator: IsStrongPasswordConstraint,
+		})
+	}
+}
+
+/**
+ *
+ */

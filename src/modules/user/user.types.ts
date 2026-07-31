@@ -1,5 +1,5 @@
 // import type { UserCreateInput } from "@/generated/prisma/models";
-import type { OnboardingRequest } from "./user.dto"
+import type { OnboardingRequest } from "./user.request.dto"
 
 export const USER_TYPES = {
 	Service: Symbol.for("UserService"),
