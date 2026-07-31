@@ -6,7 +6,6 @@ import {
 	httpGet,
 	httpPost,
 	next,
-	queryParam,
 	requestBody,
 	requestParam,
 } from "inversify-express-utils"
@@ -45,6 +44,12 @@ export class UserController extends BaseHttpController {
 		}
 	}
 
+	@httpGet("/:id")
+	public async getUser(@requestParam("id") id: string) {
+		const user = await this.userService.getUser(id)
+		return this.json(ApiResponse.success(user), 200)
+	}
+
 	@httpPost("/onboard")
 	@validateSchema(OnboardingRequest)
 	public async onboardUser(
@@ -54,32 +59,6 @@ export class UserController extends BaseHttpController {
 		try {
 			const data = await this.userService.onboardUser(body)
 			return this.json(ApiResponse.success(data, "User onboarded successfully"), 201)
-		} catch (error) {
-			nxt(error)
-		}
-	}
-
-	@httpPost("/start-liveness-session")
-	public async startLivenessSession(
-		@queryParam("token") token: string,
-		@next() nxt: NextFunction,
-	) {
-		try {
-			const result = await this.userService.initiateLivenessSession(token)
-			return this.json(ApiResponse.success(result))
-		} catch (error) {
-			nxt(error)
-		}
-	}
-
-	@httpGet("/get-liveness-result/:sessionId")
-	public async getLivenessSessionResult(
-		@requestParam("sessionId") sessionId: string,
-		@next() nxt: NextFunction,
-	) {
-		try {
-			const result = await this.userService.getLivenessSessionResult(sessionId)
-			return this.json(ApiResponse.success(result))
 		} catch (error) {
 			nxt(error)
 		}

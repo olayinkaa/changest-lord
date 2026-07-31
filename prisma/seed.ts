@@ -85,7 +85,7 @@ async function main() {
 				email: faker.internet.email({ firstName, lastName }).toLowerCase(),
 				phone: generateNigerianPhone(),
 				businessTypeId: businessType.id,
-				role: faker.helpers.arrayElement(["user", "merchant", "admin"]),
+				userType: faker.helpers.arrayElement(["customer", "seller"]),
 			},
 		})
 		users.push(user)

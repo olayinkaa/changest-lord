@@ -11,9 +11,9 @@ migrate:
 	pnpm prisma migrate dev --name "$$name"
 rm-migration:
 	rm -rf prisma/migrations
-drop-db:
+db-drop:
 	pnpm prisma migrate reset --force
 db-gen:
 	pnpm prisma generate
-seed-db:
+db-seed:
 	pnpm prisma db seed

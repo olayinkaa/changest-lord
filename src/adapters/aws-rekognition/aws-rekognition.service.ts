@@ -4,6 +4,7 @@ import {
 	RekognitionClient,
 } from "@aws-sdk/client-rekognition"
 import { injectable } from "inversify"
+import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import type { IAwsRekognitionService } from "./aws-rekogniction.type"
 
@@ -14,7 +15,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 
 	constructor() {
 		this.rekognitionClient = new RekognitionClient({
-			region: process.env.AWS_REGION || "us-east-1",
+			region: config.AWS_REKOGNITION_REGION,
 		})
 	}
 
@@ -34,6 +35,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 			return result?.SessionId
 		} catch (e) {
 			pinoLogger.error(e, "Error initiating liveness session")
+			throw e
 		}
 	}
 
@@ -49,6 +51,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 			}
 		} catch (e) {
 			pinoLogger.error(e, "Error getting liveness session results")
+			throw e
 		}
 	}
 }

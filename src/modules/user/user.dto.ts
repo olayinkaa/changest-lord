@@ -1,5 +1,6 @@
 import {
 	IsEmail,
+	IsEnum,
 	IsNotEmpty,
 	IsOptional,
 	IsString,
@@ -35,7 +36,9 @@ export class OnboardingRequest {
 	homeAddress!: string
 
 	@IsNotEmpty({ message: "User type is required" })
-	@IsString({ message: "User type must be a string" })
+	@IsEnum(UserType, {
+		message: `User type must be one of: ${Object.values(UserType).join(", ")}`,
+	})
 	userType!: UserType
 
 	@IsOptional()
@@ -43,17 +46,17 @@ export class OnboardingRequest {
 	referralCode?: string
 
 	@ValidateIf((o) => o.userType === UserType.seller)
-	@IsNotEmpty({ message: "Business name is required for sellers" })
 	@IsString()
+	@IsNotEmpty({ message: "Business name is required for seller" })
 	businessName?: string
 
 	@ValidateIf((o) => o.userType === UserType.seller)
-	@IsNotEmpty({ message: "Business location is required for sellers" })
 	@IsString()
+	@IsNotEmpty({ message: "Business location is required for seller" })
 	businessLocation?: string
 
 	@ValidateIf((o) => o.userType === UserType.seller)
-	@IsNotEmpty({ message: "Business type is required for sellers" })
 	@IsString()
+	@IsNotEmpty({ message: "Business type is required for seller" })
 	businessType?: string
 }

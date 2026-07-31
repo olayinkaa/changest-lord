@@ -27,6 +27,16 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	async findUser(id: string) {
+		return prisma.user.findUnique({
+			where: { id },
+			include: {
+				kyc: true,
+				businessType: true,
+			},
+		})
+	}
+
 	async createUserOnboarding(data: any) {
 		const {
 			email,

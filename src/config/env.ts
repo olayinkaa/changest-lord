@@ -16,6 +16,10 @@ const envSchema = z.object({
 	// Google configuration
 	GOOGLE_MAPS_API_KEY: z.string(),
 	// Redis configuration
+	// Aws configuration
+	AWS_ACCESS_KEY_ID: z.string(),
+	AWS_SECRET_ACCESS_KEY: z.string(),
+	AWS_REKOGNITION_REGION: z.string().default("us-east-1"),
 	// Email configuration
 	// Other configuration
 })
