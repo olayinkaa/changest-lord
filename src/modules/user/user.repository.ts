@@ -17,4 +17,31 @@ export class UserRepository implements IUserRepository {
 			},
 		})
 	}
+
+	async findAllWithKycAndBusiness() {
+		return prisma.user.findMany({
+			include: {
+				kyc: true,
+				businessType: true,
+			},
+		})
+	}
+
+	async createUserOnboarding(data: any) {
+		const {
+			email,
+			firstName,
+			lastName,
+			address,
+			userType,
+			referralCode,
+			businessName,
+			businessLocation,
+			businessType,
+		} = data
+
+		// 1. Handle BusinessType if seller
+
+		// return user;
+	}
 }

@@ -6,11 +6,13 @@ import {
 	httpGet,
 	httpPost,
 	next,
+	queryParam,
 	requestBody,
+	requestParam,
 } from "inversify-express-utils"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
-import { UserRequest, ValidatePhoneRequest } from "./user.dto"
+import { OnboardingRequest, UserRequest, ValidatePhoneRequest } from "./user.dto"
 import type { IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 
@@ -25,13 +27,8 @@ export class UserController extends BaseHttpController {
 
 	@httpGet("/")
 	public async getUsers() {
-		return this.json(
-			ApiResponse.success([
-				{ email: "john@example.com", id: 1, name: "John Doe" },
-				{ email: "jane@example.com", id: 2, name: "Jane Smith" },
-			]),
-			200,
-		)
+		const users = await this.userService.getAllUsers()
+		return this.json(ApiResponse.success(users), 200)
 	}
 
 	@httpPost("/")
@@ -57,4 +54,46 @@ export class UserController extends BaseHttpController {
 			nxt(error)
 		}
 	}
+
+	@httpPost("/onboard")
+	@validateSchema(OnboardingRequest)
+	public async onboardUser(
+		@requestBody() body: OnboardingRequest,
+		@next() nxt: NextFunction,
+	) {
+		try {
+			const data = await this.userService.onboardUser(body)
+			return this.json(ApiResponse.success(data, "User onboarded successfully"), 201)
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpPost("/start-liveness-session")
+	public async startLivenessSession(
+		@queryParam("token") token: string,
+		@next() nxt: NextFunction,
+	) {
+		try {
+			const result = await this.userService.initiateLivenessSession(token)
+			return this.json(ApiResponse.success(result))
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpGet("/get-liveness-result/:sessionId")
+	public async getLivenessSessionResult(
+		@requestParam("sessionId") sessionId: string,
+		@next() nxt: NextFunction,
+	) {
+		try {
+			const result = await this.userService.getLivenessSessionResult(sessionId)
+			return this.json(ApiResponse.success(result))
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	//end here
 }

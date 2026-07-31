@@ -1,22 +1,30 @@
 model User {
-    id                String   @id @default(uuid())
-    email             String?  @unique
-    phone             String   @unique
-    firstName         String?
-    lastName          String?
-    middleName        String?
-    isMarketer        Boolean  @default(false)
-    role              UserRole @default(user)
+    id               String        @id @default(uuid())
+    email            String?       @unique
+    phone            String        @unique
+    firstName        String?
+    lastName         String?
+    middleName       String?
+    isMarketer       Boolean       @default(false)
+    userType         UserType
     businessCategory String?
     businessName     String?
-    address           String?
-    nin               String?
-    bvn               String?
+    address          String?
+    nin              String?
+    bvn              String?
     businessTypeId   String?
-    businessType       BusinessType? @relation(fields: [businessTypeId], references: [id], onDelete: SetNull)
-    kyc               UserKyc?
-    createdAt         DateTime @default(now())
-    updatedAt         DateTime @updatedAt
+    businessType     BusinessType? @relation(fields: [businessTypeId], references: [id], onDelete: SetNull)
+    kyc              UserKyc?
+    userId5          String?       @unique
+    pinHash          String?
+    latitude         Decimal?      @db.Decimal(9, 6)
+    longitude        Decimal?      @db.Decimal(9, 6)
+    deviceBindingId  String?
+    virtualAccountNo String?       @unique
+    createdAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
+    userDeviceId     String
+    devices          UserDevice?
 
     @@index([email])
     @@index([phone])
@@ -35,4 +43,19 @@ model UserKyc {
     locationVerified Boolean @default(false)
     whatsappVerified Boolean @default(false)
     createdPin       Boolean @default(false)
+    isSmsVerified    Boolean @default(false)
+
+    @@map("user_kycs")
+}
+
+model UserDevice {
+    id          String   @id @default(uuid())
+    userId      String   @unique
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    deviceId    String   @unique
+    deviceToken String?
+    lastUsedAt  DateTime @default(now())
+    createdAt   DateTime @default(now())
+
+    @@map("user_devices")
 }

@@ -1,5 +1,7 @@
 import { ContainerModule } from "inversify"
 import { ADAPTER_TYPES } from "./adapters.types"
+import { AmazonSesService, type IAmazonSesService } from "./amazon-ses/amazon-ses.service"
+import { AnchorApiSdkService, type IAnchorApiSdk } from "./anchor-api-sdk/anchor.service"
 import type { IAwsRekognitionService } from "./aws-rekognition/aws-rekogniction.type"
 import { AwsRekognitionService } from "./aws-rekognition/aws-rekognition.service"
 import { GoogleMapsService } from "./google/google-map.service"
@@ -10,4 +12,6 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService).to(
 		AwsRekognitionService,
 	)
+	bind<IAmazonSesService>(ADAPTER_TYPES.AmazonSesService).to(AmazonSesService)
+	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
 })

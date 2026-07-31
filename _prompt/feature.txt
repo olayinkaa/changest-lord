@@ -22,3 +22,16 @@ there should be a one to one relationship
 
 create a database seed for the users, business type, kyc table.
 Ensure that one of the user has completed profile to be true.
+
+---
+create a get user endpoint to return all the user record
+including the kyc and the business type
+
+create a user onboarding endpoint to profile the user,
+the data fields to collect are 
+`firstName`, `lastName`, `email`, `homeAddress`,
+`userType` (which can be a customer or a seller),
+referral code (which is optional).
+if the `userType` is a seller, the following field should be in the
+request:
+`businessName`, `businessLocation`, `businessType`
