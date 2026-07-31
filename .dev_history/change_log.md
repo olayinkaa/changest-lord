@@ -2,6 +2,18 @@
 
 ## 2026-07-31
 
+### Refactor: Migrate Liveness logic to separate module and update User service
+- **High-level description:** Extracted AWS Rekognition liveness session management from `UserService` into a dedicated `LivenessModule`. Added `getUser` to `UserService` and applied general formatting updates via Biome.
+- **Files modified:**
+  - `src/modules/liveness/` — created new module (`controller.ts`, `service.ts`, `module.ts`, `dto.ts`, `type.ts`) to handle liveness sessions.
+  - `src/modules/user/user.service.ts` — removed liveness methods; added `getUser` method.
+  - `src/modules/user/user.controller.ts`, `user.dto.ts`, `user.repository.ts`, `user.types.ts` — formatting updates.
+  - `src/app.module.ts`, `src/config/env.ts` — formatting updates.
+  - `prisma/seed.ts`, `Makefile` — minor updates.
+  - `compose.yml` — added docker compose configuration.
+- **Rationale:** Separates concerns by moving the third-party liveness orchestration into its own domain, simplifying the `UserService` and allowing the liveness flow to scale independently.
+- **Verified:** Commit successfully passed the pre-commit biome check.
+
 ### Feat: Implement AuthUtils for password and token management
 - **High-level description:** Implemented `AuthUtils` service and `IAuthUtils` interface to centralize authentication utilities including bcrypt password hashing, JWT token generation/verification, and SHA-256 code hashing for password resets.
 - **Files modified:**
