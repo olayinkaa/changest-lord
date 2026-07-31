@@ -1,5 +1,4 @@
 import { injectable } from "inversify"
-import type { pino } from "pino"
 import { pinoLogger } from "@/config/pino-logger"
 
 export interface IAnchorApiSdk {
