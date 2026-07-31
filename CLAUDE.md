@@ -78,7 +78,7 @@ Env is validated at boot via Zod (`src/config/env.ts` + `src/utils/env.ts`). The
 ### Bootstrap flow (`src/index.ts`)
 1. Import `reflect-metadata` (required for Inversify decorators).
 2. `Application` abstract class (`src/utils/application.ts`) creates an Inversify `Container` (default scope: `Singleton`) and calls abstract `configureService()` and `setup()`.
-3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `AdaptersModule`, `AddressModule`) into the container.
+3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `AdaptersModule`, `AddressModule`, `BusinessTypeModule`, `LivenessModule`) into the container.
 4. `App.setup`:
    - Connects Prisma (`prisma.$connect`); exits on failure.
    - Builds an `InversifyExpressServer` rooted at `/api/v1`.
@@ -96,7 +96,7 @@ Each domain under `src/modules/<name>/` follows the same shape:
 - `<name>.types.ts` — `Symbol.for(...)` DI tokens used in `@inject(TYPES.X)` and service/repository interfaces. (Naming convention migrated from the older `*.tokens.ts` + `*.contracts.ts` split.)
 - `<name>.interfaces.ts` (optional) — additional contracts split out from `types.ts` when the file grows.
 
-Currently wired domains: `user/`, `auth/`, `address/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from the adapters layer).
+Currently wired domains: `user/`, `auth/`, `address/`, `business-type/`, `liveness/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from the adapters layer).
 
 ### Cross-cutting concerns
 - **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.types.ts`. Adapter-layer tokens are unified in `src/adapters/adapters.types.ts` (`ADAPTER_TYPES`).
@@ -134,11 +134,11 @@ Wired via `AdaptersModule` (see `src/adapters/adapters.module.ts`) and exported 
 
 ## API Surface
 
-Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from `@controller("/users")` + `rootPath: "/api/v1"`). Currently exposed slices: `users`, `auth`, `address` (the `address` autocomplete endpoint is `/api/v1/address/autocomplete`).
+Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from `@controller("/users")` + `rootPath: "/api/v1"`). Currently exposed slices: `users`, `auth`, `address`, `business-type`, `liveness` (the `address` autocomplete endpoint is `/api/v1/address/autocomplete`).
 
 ## Current State (snapshot)
 
-- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete + geometry via Google Maps), `AdaptersModule` (Anchor / Cloudinary / Google Maps / AWS Rekognition skeleton), `ApiResponse` envelope.
+- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete + geometry via Google Maps), `BusinessTypeController`, `LivenessController`, `AdaptersModule` (Anchor / Cloudinary / Google Maps / AWS Rekognition skeleton), `ApiResponse` envelope.
 - Stubs / to be implemented: Prisma schema is not yet composed (per-model files exist in `prisma/models/` but `schema.prisma` doesn't reference them); `user.service.ts` / `user.repository.ts` / `auth.repository.ts` are skeleton files; Passport JWT strategy not yet wired; Swagger URL is referenced in the README but not yet wired in code.
 
 ### Documentation & Planning
