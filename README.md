@@ -28,8 +28,8 @@ Key Features of MyChange
 # ⚙️ Installation & Setup
 - Clone the Repository
 ```sh
-git clone 
-cd 
+git clone https://github.com/Face-mychange/myChangeBE.git
+cd myChangeBE
 git switch development
 ```
 
@@ -44,18 +44,26 @@ git switch -c <branch-name>
 ```
 
 - Environment Variables <br/>
-Create a `.env.local` file in the root directory:
+Create a `.env` file in the root directory:
 ```sh
-  NEXT_PUBLIC_APP_NAME=""
-  PORT=""
-  JWT_TOKEN_SECRET=""
+NODE_ENV=development
+LOG_LEVEL="debug"
+JWT_TOKEN_SECRET=
+JWT_REFRESH_TOKEN_SECRET=
+DATABASE_URL=
+GOOGLE_MAPS_API_KEY=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+# AWS_REKOGNITION_REGION=
 ```
 
 - Generate Secret
 ```sh
 openssl rand -base64 32
 ```
-copy it and set it as the value for `JWT_TOKEN_SECRET` in `.env.local`
+copy it and set it as the value for `JWT_TOKEN_SECRET`,  in `.env`.
+You can generate a different value for `JWT_REFRESH_TOKEN_SECRET` and 
+other secret using the same command
 </br>
 
 - Run Development Server
@@ -76,8 +84,8 @@ pnpm run dev
 
 
 # 🌐 Live Environments
-- Development: <http://172.17.10.79:4444>
-- Staging: <https://nrsmerchantportaldemo.etranzactng.com/>
+- Development: <>
+- Staging: <>
 - Production: <Insert Production URL>
 
 # 👥 Credits
@@ -87,7 +95,7 @@ Contributors:
 📞 070-6564-3303
 
 # 🏢 License
-<!-- This project is proprietary software owned by: <br/>
-<b>eTranzact International Plc</b>  <br/>
-<b>Website: https://www.etranzact.com </b> <br/>
-All rights reserved © eTranzact International Plc. -->
+This project is proprietary software owned by: <br/>
+<b><Company name></b>  <br/>
+<b>Website: <website urk> </b> <br/>
+All rights reserved © <Company name>.
