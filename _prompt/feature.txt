@@ -18,12 +18,12 @@ The business type model should include:
 A user can has just one business type, 
 there should be a one to one relationship
 
----
+------
 
 create a database seed for the users, business type, kyc table.
 Ensure that one of the user has completed profile to be true.
 
----
+-------
 create a get user endpoint to return all the user record
 including the kyc and the business type
 
@@ -35,3 +35,15 @@ referral code (which is optional).
 if the `userType` is a seller, the following field should be in the
 request:
 `businessName`, `businessLocation`, `businessType`
+
+-------
+- create an endpoint to create 4 digit pin.
+put it under the user controller,
+validate the input.
+
+- create a login endpoint 
+put it under `auth`
+the login input field is: phone number and pin
+generate an access token and refresh token
+
+you can use the authUtils to generate the access token

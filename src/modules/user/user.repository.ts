@@ -76,4 +76,31 @@ export class UserRepository implements IUserRepository {
 			},
 		})
 	}
+
+	async updateUserPin(userId: string, pinHash: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				pinHash,
+				kyc: {
+					create: {
+						pinCreated: true,
+					},
+				},
+			},
+		})
+	}
+
+	async updateKycPinStatus(userId: string, pinCreated: boolean) {
+		return prisma.userKyc.update({
+			where: { userId },
+			data: { pinCreated },
+		})
+	}
+
+	async findUserByPhone(phone: string) {
+		return prisma.user.findUnique({
+			where: { phone },
+		})
+	}
 }

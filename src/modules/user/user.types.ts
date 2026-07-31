@@ -13,6 +13,9 @@ export interface IUserRepository {
 	findAllWithKycAndBusiness(): Promise<any[]>
 	createUserOnboarding(data: any): Promise<any>
 	findUser(id: any): Promise<any>
+	updateUserPin(userId: string, pinHash: string): Promise<any>
+	updateKycPinStatus(userId: string, pinCreated: boolean): Promise<any>
+	findUserByPhone(phone: string): Promise<any>
 }
 
 export interface IUserService {
@@ -20,4 +23,5 @@ export interface IUserService {
 	getAllUsers(): Promise<any[]>
 	getUser(id: string): Promise<any>
 	onboardUser(data: OnboardingRequest): Promise<any>
+	createPin(userId: string, pin: string): Promise<any>
 }

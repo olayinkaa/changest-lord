@@ -17,3 +17,5 @@ db-gen:
 	pnpm prisma generate
 db-seed:
 	pnpm prisma db seed
+db-push:
+	pnpm prisma db push

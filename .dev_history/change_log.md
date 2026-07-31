@@ -2,40 +2,18 @@
 
 ## 2026-07-31
 
-### Refactor: Migrate Liveness logic to separate module and update User service
-- **High-level description:** Extracted AWS Rekognition liveness session management from `UserService` into a dedicated `LivenessModule`. Added `getUser` to `UserService` and applied general formatting updates via Biome.
+### Feat: Implement User PIN Creation and Phone/PIN Login
+- **High-level description:** Added functionality for users to set up a secure 4-digit PIN and a login endpoint that authenticates users via phone number and PIN.
 - **Files modified:**
-  - `src/modules/liveness/` — created new module (`controller.ts`, `service.ts`, `module.ts`, `dto.ts`, `type.ts`) to handle liveness sessions.
-  - `src/modules/user/user.service.ts` — removed liveness methods; added `getUser` method.
-  - `src/modules/user/user.controller.ts`, `user.dto.ts`, `user.repository.ts`, `user.types.ts` — formatting updates.
-  - `src/app.module.ts`, `src/config/env.ts` — formatting updates.
-  - `prisma/seed.ts`, `Makefile` — minor updates.
-  - `compose.yml` — added docker compose configuration.
-- **Rationale:** Separates concerns by moving the third-party liveness orchestration into its own domain, simplifying the `UserService` and allowing the liveness flow to scale independently.
-- **Verified:** Commit successfully passed the pre-commit biome check.
-
-### Feat: Implement AuthUtils for password and token management
-- **High-level description:** Implemented `AuthUtils` service and `IAuthUtils` interface to centralize authentication utilities including bcrypt password hashing, JWT token generation/verification, and SHA-256 code hashing for password resets.
-- **Files modified:**
-  - `src/modules/auth/auth.types.ts` — defined `IAuthUtils` interface and `TYPES.AuthUtils` DI token.
-  - `src/modules/auth/auth-utils.service.ts` — implemented `AuthUtils` class with methods for password encryption, comparison, JWT management, and reset code generation.
-  - `src/modules/auth/auth.module.ts` — bound `TYPES.AuthUtils` to `AuthUtils` in singleton scope.
-- **Rationale:** Provides a reusable, injectable utility for core security operations, separating the technical implementation of cryptography and tokenization from the business logic of the `AuthService`.
-- **Verified:** Code follows the project's DI pattern and utilizes standard libraries (`bcryptjs`, `jsonwebtoken`, `crypto`).
-
-### Feat: Multi-step User Onboarding Flow
-- **High-level description:** Implemented a stateful onboarding sequence to profile new users. The flow includes phone validation (11 digits, 070/080 prefix), email validation via Amazon SES, address collection via Google Maps, role selection (Customer/Seller), and security setup (4-digit PIN, unique 5-digit User ID). Sellers additionally undergo a business profile update and AWS Rekognition liveness check. The flow concludes with device binding and a welcome email.
-- **Files modified:**
-  - `prisma/models/user.prisma` — added `userId5`, `pinHash`, `latitude`, `longitude`, `deviceBindingId`, and `virtualAccountNo` to `User` model; added `isSms laVerified` to `UserKyc`.
-  - `prisma/models/user_device.prisma` — created new `UserDevice` model for hardware binding.
-  - `src/modules/onboarding/` — created new module containing `onboarding.controller.ts`, `onboarding.service.ts`, `onboarding.repository.ts`, `onboarding.dto.ts`, `onboarding.types.ts`, and `onboarding.module.ts`.
-  - `src/adapters/amazon-ses/amazon-ses.service.ts` — created new adapter for email verification and welcome messages.
-  - `src/adapters/anchor-api-sdk/anchor.service.ts` — implemented `createVirtualAccount` to generate virtual accounts.
-  - `src/adapters/adapters.types.ts` & `src/adapters/adapters.module.ts` — registered `AmazonSesService` and `AnchorApiSdkService`.
-  - `src/utils/id-generator.ts` — created utility for generating unique random 5-digit User IDs with collision handling.
-  - `src/app.module.ts` — registered `OnboardingModule`.
-- **Rationale:** implements the core user acquisition and profiling funnel as required, ensuring security (PIN hashing, device binding) and identity verification (Liveness, SES) are integrated into the registration process.
-- **Verified:** Implementation follows the established Controller -> Service -> Repository architectural pattern and uses standard `ApiResponse` envelopes.
-
-## 2026-07-30
-... (rest of the file)
+  - `src/modules/user/user.dto.ts` — added `CreatePinRequest` DTO with 4-digit validation.
+  - `src/modules/user/user.types.ts` — updated `IUserRepository` and `IUserService` with PIN management methods.
+  - `src/modules/user/user.service.ts` — implemented `createPin` logic using `AuthUtils` for hashing.
+  - `src/modules/user/user.repository.ts` — implemented `updateUserPin`, `updateKycPinStatus`, and `findUserByPhone` for database persistence.
+  - `src/modules/user/user.controller.ts` — added `POST /users/:id/create-pin` endpoint.
+  - `src/modules/auth/auth.dto.ts` — created `LoginRequest` DTO for phone/PIN input validation.
+  - `src/modules/auth/auth.types.ts` — added `IAuthService` interface and `TYPES.AuthService` DI token.
+  - `src/modules/auth/auth.service.ts` — implemented `login` logic including PIN verification and JWT token generation (Access & Refresh tokens).
+  - `src/modules/auth/auth.controller.ts` — created `AuthController` with `POST /auth/login` endpoint.
+  - `src/modules/auth/auth.module.ts` — registered `AuthService`, `AuthController`, and `AuthRepository` in the DI container.
+- **Rationale:** Completes the security setup phase of onboarding and provides the primary authentication mechanism for the application.
+- **Verified:** Logic ensures only users who have set a PIN can log in, and utilizes the existing `AuthUtils` for secure password hashing and JWT issuance.

@@ -11,7 +11,7 @@ export class AuthUtils implements IAuthUtils {
 	 * @param plainText - user password
 	 * @returns
 	 */
-	encryptPassword(plainText: string) {
+	hashSecret(plainText: string) {
 		const salt = bcrypt.genSaltSync(10)
 		return bcrypt.hashSync(plainText, salt)
 	}
@@ -21,7 +21,7 @@ export class AuthUtils implements IAuthUtils {
 	 * @param encryptedPassword - encrypted password
 	 * @returns
 	 */
-	async comparePassword(
+	async compareSecret(
 		plainPassword: string,
 		encryptedPassword: string,
 	): Promise<boolean> {
@@ -79,5 +79,17 @@ export class AuthUtils implements IAuthUtils {
 		const code = Math.floor(100000 + Math.random() * 900000).toString() // 6-digit
 		const hashedCode = this.hashCode(code)
 		return { code, hashedCode }
+	}
+
+	hashPin(pin: string): string {
+		return crypto.createHash("sha256").update(pin).digest("hex")
+	}
+
+	verifyPin(plainPin: string, hashedPin: string): boolean {
+		const inputHash = this.hashPin(plainPin)
+		return crypto.timingSafeEqual(
+			Buffer.from(inputHash, "utf-8"),
+			Buffer.from(hashedPin, "utf-8"),
+		)
 	}
 }

@@ -11,7 +11,7 @@ import {
 } from "inversify-express-utils"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
-import { OnboardingRequest, ValidatePhoneRequest } from "./user.dto"
+import { CreatePinRequest, OnboardingRequest, ValidatePhoneRequest } from "./user.dto"
 import type { IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 
@@ -64,5 +64,18 @@ export class UserController extends BaseHttpController {
 		}
 	}
 
-	//end here
+	@httpPost("/:id/create-pin")
+	@validateSchema(CreatePinRequest)
+	public async createPin(
+		@requestParam("id") id: string,
+		@requestBody() body: CreatePinRequest,
+		@next() nxt: NextFunction,
+	) {
+		try {
+			await this.userService.createPin(id, body.pin)
+			return this.json(ApiResponse.success({}, "PIN created successfully"), 200)
+		} catch (error) {
+			nxt(error)
+		}
+	}
 }

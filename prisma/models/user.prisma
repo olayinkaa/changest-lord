@@ -41,7 +41,7 @@ model UserKyc {
     ninVerified      Boolean @default(false)
     locationVerified Boolean @default(false)
     whatsappVerified Boolean @default(false)
-    createdPin       Boolean @default(false)
+    pinCreated       Boolean @default(false)
     isSmsVerified    Boolean @default(false)
 
     @@map("user_kycs")

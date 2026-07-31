@@ -60,3 +60,12 @@ export class OnboardingRequest {
 	@IsNotEmpty({ message: "Business type is required for seller" })
 	businessType?: string
 }
+
+export class CreatePinRequest {
+	@IsNotEmpty({ message: "PIN is required" })
+	@IsString({ message: "PIN must be a string" })
+	@Matches(/^\d{4}$/, {
+		message: "PIN must be exactly 4 digits",
+	})
+	pin!: string
+}
