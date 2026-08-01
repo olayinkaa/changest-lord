@@ -5,8 +5,8 @@ import { withMiddleware } from "inversify-express-utils"
 export function validateSchema<T>(dtoClass: new () => T) {
 	return withMiddleware(async (req, res, next) => {
 		const dtoInstance: any = plainToInstance(dtoClass, req.body, {
-			enableImplicitConversion: true, // 🔁 Auto-convert types
-			exposeDefaultValues: true, // 🎯 Use default values from DTO
+			enableImplicitConversion: true,
+			exposeDefaultValues: true,
 		})
 
 		const errors = await validate(dtoInstance, {
