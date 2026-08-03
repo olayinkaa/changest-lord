@@ -11,7 +11,7 @@ import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
 import { LoginRequest } from "./auth.dto"
 import type { IAuthService } from "./auth.types"
-import { TYPES as AUTH_TYPES } from "./auth.types"
+import { AUTH_TYPES } from "./auth.types"
 
 @controller("/auth")
 export class AuthController extends BaseHttpController {

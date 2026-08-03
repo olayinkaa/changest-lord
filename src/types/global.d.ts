@@ -1,4 +1,9 @@
 declare global {
+	interface IOnboardingUser {
+		id: string
+		phone: string
+	}
+
 	interface AnchorBank {
 		id: string
 		type: "Bank"

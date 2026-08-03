@@ -12,6 +12,7 @@ const envSchema = z.object({
 
 	// JWT configuration
 	JWT_TOKEN_SECRET: z.string().min(32),
+	JWT_ONBOARDING_SECRET: z.string().min(32),
 	JWT_REFRESH_TOKEN_SECRET: z.string().min(32),
 	JWT_TOKEN_EXPIRES_IN: z.string().default(constants.TOKEN_EXPIRES_IN),
 	JWT_REFRESH_TOKEN_EXPIRES_IN: z.string().default(constants.REFRESH_TOKEN_EXPIRES_IN),
@@ -21,7 +22,7 @@ const envSchema = z.object({
 	// Aws configuration
 	AWS_ACCESS_KEY_ID: z.string(),
 	AWS_SECRET_ACCESS_KEY: z.string(),
-	AWS_REKOGNITION_REGION: z.string().default("us-east-1"),
+	AWS_REKOGNITION_REGION: z.string().default("eu-west-1"),
 	// Email configuration
 	// Other configuration
 })

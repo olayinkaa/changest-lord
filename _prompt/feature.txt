@@ -1,4 +1,14 @@
 ---
+/spec let's spec the authentication forms on /login and /signup pages.
+They need email and password fields, a `hide password` icon and a submit button (signup/login).
+The forms should only log details to the console for now, when they are submitted.  We should be
+able to easily switch between the two forms
+
+---
+**plan the features describe in this spec**
+**let's implement this plan**
+
+---
 Build an endpoint to validate the user phone.
 if the user phone number exist and the user has completed onboarding,
 it should throw an error; otherwise it should allow the user to continue the onboarding process.

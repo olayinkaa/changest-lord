@@ -165,3 +165,26 @@ async createUserOnboarding(data: any) {
   	message: "Phone number must be 7–15 digits, optionally prefixed with '+'",
   })
 ```
+
+```ts
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
+
+async findByPhoneWithKyc(inputPhone: string) {
+  // Normalize the query parameter to match your stored "080..." format
+  const phoneNumber = parsePhoneNumberFromString(inputPhone, 'NG');
+  const standardizedPhone = phoneNumber?.isValid() && phoneNumber.country === 'NG'
+    ? phoneNumber.formatNational().replace(/\s+/g, '')
+    : inputPhone;
+
+  return prisma.user.findFirst({
+    where: {
+      phone: standardizedPhone,
+    },
+    include: {
+      kyc: true,
+      businessType: true,
+    },
+  });
+}
+
+```

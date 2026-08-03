@@ -14,7 +14,7 @@ export interface IAuthService {
 	login(data: any): Promise<{ accessToken: string; refreshToken: string }>
 }
 
-export const TYPES = {
+export const AUTH_TYPES = {
 	AuthUtils: Symbol.for("AuthUtils"),
 	AuthService: Symbol.for("AuthService"),
 }

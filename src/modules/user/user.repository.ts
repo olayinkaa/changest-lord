@@ -9,6 +9,8 @@ export class UserRepository implements IUserRepository {
 			where: { phone },
 			select: {
 				id: true,
+				onboardingStep: true,
+				phone: true,
 				kyc: {
 					select: {
 						completedProfile: true,
@@ -40,10 +42,17 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async createUserOnboarding(data: any) {
+	async createUserPhoneNumber(phoneNumber: string) {
+		return prisma.user.create({
+			data: {
+				phone: phoneNumber,
+			},
+		})
+	}
+
+	async createUserOnboarding(onboardingUser: { id: string; phone: string }, data: any) {
 		const {
 			email,
-			phone,
 			firstName,
 			lastName,
 			address,
@@ -54,10 +63,10 @@ export class UserRepository implements IUserRepository {
 		} = data
 
 		// Prisma handles the safety transaction internally via nested writes
-		return prisma.user.create({
+		return prisma.user.update({
+			where: { id: onboardingUser.id },
 			data: {
 				email,
-				phone,
 				firstName,
 				lastName,
 				address,
@@ -65,10 +74,11 @@ export class UserRepository implements IUserRepository {
 				businessName,
 				businessTypeId,
 				businessLocation,
-				// Direct nested creation
+				phone: onboardingUser.phone, // Use the phone number from the onboarding token
+				onboardingStep: "PROFILE_COMPLETED",
 				kyc: {
 					create: {
-						completedProfile: true,
+						completedProfile: false,
 						phoneVerified: false,
 					},
 				},
@@ -80,24 +90,33 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async updateUserPin(userId: string, pinHash: string) {
+	async updateLivenessStatus(userId: string) {
 		return prisma.user.update({
 			where: { id: userId },
 			data: {
-				pinHash,
+				onboardingStep: "LIVENESS_PASSED",
 				kyc: {
-					create: {
-						pinCreated: true,
+					update: {
+						livenessDone: true,
 					},
 				},
 			},
 		})
 	}
 
-	async updateKycPinStatus(userId: string, pinCreated: boolean) {
-		return prisma.userKyc.update({
-			where: { userId },
-			data: { pinCreated },
+	async updateUserPin(userId: string, pinHash: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				pinHash,
+				onboardingStep: "COMPLETED",
+				kyc: {
+					update: {
+						pinCreated: true,
+						completedProfile: true,
+					},
+				},
+			},
 		})
 	}
 

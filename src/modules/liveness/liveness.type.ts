@@ -1,10 +1,42 @@
-import type { InitiateLivenessRequest } from "./liveness.dto"
-
 export const LIVENESS_TYPES = {
 	Service: Symbol.for("LivenessService"),
 }
 
+export interface ILivenessResultResponse {
+	score: number
+	result: {
+		SessionId: string
+		Status: "SUCCEEDED" | "EXPIRED" | "CREATED"
+		Confidence: number
+		ReferenceImage: {
+			Bytes: {
+				[key: string]: number
+			}
+			BoundingBox: {
+				Width: number
+				Height: number
+				Left: number
+				Top: number
+			}
+		}
+		AuditImages: []
+		Challenge: {
+			Type: "FaceMovementChallenge"
+			Version: "1.0.0"
+		}
+		$metadata: {
+			httpStatusCode: number
+			requestId: string
+			attempts: number
+			totalRetryDelay: number
+		}
+	}
+}
+
 export interface ILiveness {
-	initiateLivenessSession(data: InitiateLivenessRequest): Promise<any>
-	getLivenessSessionResult(sessionId: string): Promise<any>
+	initiateLivenessSession(userId: string): Promise<any>
+	getLivenessSessionResult(
+		user: { id: string; phone: string },
+		sessionId: string,
+	): Promise<any>
 }

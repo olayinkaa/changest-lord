@@ -9,6 +9,7 @@ export const configureCors = () => {
 				"http://localhost:5005", //local dev
 				"http://localhost:5173", //local dev
 				"http://localhost:4006", //local dev
+				"http://127.0.0.1:5173",
 			]
 
 			if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -17,7 +18,7 @@ export const configureCors = () => {
 				callback(new Error("Not allowed by cors"))
 			}
 		},
-		methods: ["GET", "POST", "PUT", "DELETE"],
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization", "Accept-Version"],
 		exposedHeaders: ["X-Total-Count", "Content-Range"],
 		credentials: true, //enable support for cookies,

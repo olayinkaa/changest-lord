@@ -3,9 +3,9 @@ description: Reviews uncommitted code changes made on the current branch
 allow-tools: Bash(git diff), Bash(git diff --staged)
 ---
 
-Your Job is to coordinate two reviewer subagents in parallel:
+Your Job is to coordinate reviewer subagents in parallel:
 
-- **code-optimizer**
+- **code-quality-reviewerr**
 
 Goal:
 1. Gather the current branch diff including BOTH staged and unstaged changes.

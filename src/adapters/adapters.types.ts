@@ -3,4 +3,5 @@ export const ADAPTER_TYPES = {
 	GoogleMapsService: Symbol.for("GoogleMapsService"),
 	AwsRekognitionService: Symbol.for("AwsRekognitionService"),
 	AmazonSesService: Symbol.for("AmazonSesService"),
+	CloudinaryService: Symbol.for("CloudinaryService"),
 }

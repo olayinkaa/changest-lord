@@ -11,7 +11,7 @@ export class CloudinaryService implements ICloudinaryService {
 		this.cloudinary.config({ ...config, secure: true })
 	}
 
-	upload(buffer: Buffer, folder = "events"): Promise<UploadApiResponse> {
+	upload(buffer: Buffer, folder = "users"): Promise<UploadApiResponse> {
 		return new Promise((resolve, reject) => {
 			const uploadStream = this.cloudinary.uploader.upload_stream(
 				{ folder, resource_type: "auto" },

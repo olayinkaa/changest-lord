@@ -5,7 +5,7 @@ import type { IUserRepository } from "../user/user.types"
 import { USER_TYPES } from "../user/user.types"
 import type { LoginRequest } from "./auth.dto"
 import type { IAuthService, IAuthUtils } from "./auth.types"
-import { TYPES as AUTH_TYPES } from "./auth.types"
+import { AUTH_TYPES } from "./auth.types"
 
 @injectable()
 export class AuthService implements IAuthService {
