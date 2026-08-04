@@ -3,6 +3,7 @@ export const constants = {
 	REFRESH_TOKEN_EXPIRES_IN: "7d",
 	SERVICE_PORT: 6001,
 	CONFIDENCE_THRESHOLD: 98,
+	LIVENESS_WEB_URL: "https://www.myfacecard.ai/liveness",
 }
 
 export const OnboardingScopes = {

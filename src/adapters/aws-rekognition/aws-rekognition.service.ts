@@ -10,7 +10,6 @@ import type { IAwsRekognitionService } from "./aws-rekogniction.type"
 
 @injectable()
 export class AwsRekognitionService implements IAwsRekognitionService {
-	//   private CONFIDENCE_THRESHOLD = 98;
 	private rekognitionClient: RekognitionClient
 
 	constructor() {
@@ -26,7 +25,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 				Settings: {
 					ChallengePreferences: [
 						{
-							Type: "FaceMovementChallenge",
+							Type: "FaceMovementAndLightChallenge",
 						},
 					],
 				},

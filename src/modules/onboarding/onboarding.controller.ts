@@ -71,7 +71,7 @@ export class OnboardingController extends BaseHttpController {
 		}
 	}
 
-	@httpGet("/liveness-initiate")
+	@httpPost("/liveness-initiate")
 	@enforceOnboardingScope(OnboardingScopes.LIVENESS)
 	public async startLivenessSession(@next() nxt: NextFunction, @request() req: Request) {
 		const userId = req.onboardingUser?.id

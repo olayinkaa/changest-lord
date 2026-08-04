@@ -4,12 +4,14 @@
 - [X] Postgre DB setup
 - [X] Linting [biomejs]
 - [X] Logging
-- [ ] Redis
 - [X] class validator
-- [ ] Bullmq
 - [X] helmet
 - [X] cors
 - [ ] Rate limiting
+- [ ] Bullmq
+- [ ] Redis
+- [ ] Email factory / Email template
+- [ ] Cloudinary
 
 
 ## Endpoints

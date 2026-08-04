@@ -3,7 +3,7 @@ import { ADAPTER_TYPES } from "@/adapters/adapters.types"
 import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekogniction.type"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
-import { OnboardingScopes } from "@/constants"
+import { constants, OnboardingScopes } from "@/constants"
 import {
 	BadRequestException,
 	UnprocessableEntityException,
@@ -36,12 +36,13 @@ export class LivenessService implements ILiveness {
 		const sessionId =
 			await this.awsRekognitionService.initiateLivenessSession(hashedToken)
 		if (!sessionId) {
-			throw new UnprocessableEntityException("Failed to initiate AWS Liveness Session")
+			throw new UnprocessableEntityException("Failed to initiate Liveness Session")
 		}
+
 		return {
 			sessionId,
 			sessionToken,
-			link: `https://www.myfacecard.ai/liveness?session_id=${sessionId}&redirect_url=${this.livenessRedirectUrl}`,
+			link: `${constants.LIVENESS_WEB_URL}?session_id=${sessionId}&redirect_url=${this.livenessRedirectUrl}`,
 		}
 	}
 
@@ -67,7 +68,10 @@ export class LivenessService implements ILiveness {
 
 			await this.userRepo.updateLivenessStatus(user.id)
 
-			// save image to cloud storage or database if needed
+			/**
+			 * save image to cloudinary
+			 * save imageUrl, publicId to user profile in database
+			 */
 
 			// payload for the new token with updated scope
 			const payload = {
