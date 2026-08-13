@@ -2,7 +2,6 @@ import axios, { type AxiosInstance } from "axios"
 import { injectable } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
-import { BadRequestException } from "@/core/errors/exceptions"
 import type { ApiResponse } from "@/types/base"
 import type {
 	IGoogleMapsService,
@@ -38,22 +37,27 @@ export class GoogleMapsService implements IGoogleMapsService {
 				},
 			)
 			return res?.data
-		} catch (error) {
-			pinoLogger.error({ error }, "Error in fetching place predictions")
-			throw new BadRequestException("Error in fetching place predictions")
+		} catch (e) {
+			pinoLogger.error({ error: e }, "Error in fetching place predictions")
+			throw e
 		}
 	}
 
 	async getPlaceDetails(placeId: string, fields?: string) {
 		const selectedFields = fields || undefined
-		const res: ApiResponse<IPlaceDetails> = await this.api.get("/place/details/json", {
-			params: {
-				place_id: placeId,
-				key: this.apiKey,
-				fields: selectedFields,
-				// fields: "formatted_address,geometry,address_component,place_id",
-			},
-		})
-		return res.data
+		try {
+			const res: ApiResponse<IPlaceDetails> = await this.api.get("/place/details/json", {
+				params: {
+					place_id: placeId,
+					key: this.apiKey,
+					fields: selectedFields,
+					// fields: "formatted_address,geometry,address_component,place_id",
+				},
+			})
+			return res.data
+		} catch (e) {
+			pinoLogger.error({ error: e }, "Error in fetching place details")
+			throw e
+		}
 	}
 }

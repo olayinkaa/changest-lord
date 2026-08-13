@@ -14,7 +14,7 @@ import { ADDRESS_TYPES, type IAddressService } from "./address.type"
 export class AddressController extends BaseHttpController {
 	constructor(
 		@inject(ADDRESS_TYPES.Service)
-		private _addressService: IAddressService,
+		private readonly _addressService: IAddressService,
 	) {
 		super()
 	}

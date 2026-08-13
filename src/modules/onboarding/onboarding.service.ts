@@ -26,7 +26,8 @@ export class OnboardingService implements IOnboardingService {
 			// User exists AND has completed onboarding → block the new sign-up.
 			if (existing?.kyc?.completedProfile) {
 				throw new ConflictException(
-					"This phone number is already registered and has completed onboarding",
+					"This phone number is already registered",
+					// "This phone number is already registered and has completed onboarding",
 				)
 			}
 

@@ -63,7 +63,7 @@ export class OnboardingRequest {
 	@ValidateIf((o) => o.userType === UserType.seller)
 	@IsString()
 	@IsNotEmpty({ message: "Business type is required for seller" })
-	businessType?: string
+	businessTypeId?: string
 }
 
 /**
