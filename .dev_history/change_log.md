@@ -51,3 +51,14 @@
 - **Files modified:**
   - `src/modules/onboarding/onboarding.controller.ts` — added a null check for `userId` and integrated `UnauthorizedException`.
 - **Rationale:** Ensures that the liveness session is only initiated when a valid user ID is present in the request context, preventing runtime crashes and providing clear error responses.
+
+## 2026-08-13
+
+### Fix: Resolve ESM `ERR_MODULE_NOT_FOUND` When Running Compiled Output
+- **High-level description:** `node dist/index.js` was failing with `ERR_MODULE_NOT_FOUND` because TypeScript (with `module: "ESNext"`) was emitting relative imports without the `.js` extension (e.g. `import "./config/env"`), which Node's native ESM resolver rejects. The project already had `tsc-alias` in the build pipeline for path-alias rewriting, but no step that adds file extensions.
+- **Files modified:**
+  - `package.json` — added `tsc-esm-fix` as a devDependency and appended it to the `build` script (`tsc && tsc-alias && tsc-esm-fix --target dist`).
+  - `tsconfig.json` — no behavioural change retained; one experimental `rewriteRelativeImportExtensions` attempt was tried and reverted because it only rewrites when the source already has a `.ts` extension (the project uses bare relative paths).
+- **Rationale:** `tsc-esm-fix` post-processes the emitted `dist/` files and appends `.js` to every relative import (e.g. `./config/env` → `./config/env.js`, `../constants` → `../constants/index.js`), making the output natively runnable under `node` ESM without requiring source-code changes. It is invoked after `tsc-alias` so path-alias resolution (`@/*`) is finalised before extensions are normalised.
+- **Verified:** After `pnpm run build`, `dist/index.js` now contains `import { config } from "./config/env.js";` etc. `import('./dist/config/env.js')` resolves successfully (fails only on env-var validation, which is expected without a `.env`). The original `ERR_MODULE_NOT_FOUND` no longer occurs.
+- **Note:** Running `pnpm run start` directly still won't have env vars loaded — use `node --env-file=.env dist/index.js` (Node 20.6+) or `dotenv -e .env -- node dist/index.js`. A separate, pre-existing issue was observed in the **generated Prisma client** (`dist/generated/prisma/client.js`) — its template-literal output is malformed and unrelated to this import-resolution fix.

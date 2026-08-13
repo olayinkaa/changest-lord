@@ -1,22 +1,31 @@
 {
-	"extends": "@tsconfig/node22/tsconfig.json",
+	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
 		/* Required for InversifyJS Decorators */
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
-
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
 		/* File Structure */
-		"module": "ESNext",
-		"moduleResolution": "bundler",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"moduleDetection": "force",
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"removeComments": true,
+		"incremental": false,
+		"isolatedModules": true,
 		"rootDir": "src",
 		"outDir": "dist",
 		"paths": {
 			"@/*": ["./src/*"]
 		},
+		"target": "ES2022",
 		/* Output Options */
 		"sourceMap": true,
-		"declaration": true,
-		"declarationMap": true,
+		"declaration": false,
+		"declarationMap": false,
 		"types": ["node"]
 	},
 	"include": ["src/**/*", "env.d.ts"],

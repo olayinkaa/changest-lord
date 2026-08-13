@@ -5,7 +5,7 @@ import {
 	httpGet,
 	requestParam,
 } from "inversify-express-utils"
-import { ApiResponse } from "@/utils/http-response"
+import { ApiResponse } from "@/utils/http-response.js"
 import type { IUserService } from "./user.types"
 import { USER_TYPES } from "./user.types"
 

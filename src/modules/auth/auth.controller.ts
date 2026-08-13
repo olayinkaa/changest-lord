@@ -24,7 +24,10 @@ export class AuthController extends BaseHttpController {
 
 	@httpPost("/login")
 	@validateSchema(LoginRequest)
-	public async login(@requestBody() body: LoginRequest, @next() nxt: NextFunction) {
+	public async login2(
+		@requestBody() body: LoginRequest,
+		@next() nxt: NextFunction,
+	): Promise<unknown> {
 		try {
 			const data = await this.authService.login(body)
 			return this.json(ApiResponse.success(data, "Login successful"), 200)
