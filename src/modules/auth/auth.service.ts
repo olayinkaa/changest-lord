@@ -24,7 +24,7 @@ export class AuthService implements IAuthService {
 		}
 
 		if (!user.pinHash) {
-			throw new UnauthorizedException("User has not set up a PIN")
+			throw new UnauthorizedException("Invalid phone number or PIN")
 		}
 
 		const isPinMatch = await this.authUtils.verifyPin(data.pin, user.pinHash)

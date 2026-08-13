@@ -31,7 +31,8 @@ export class OnboardingService implements IOnboardingService {
 				)
 			}
 
-			const nextScope = mapStepToNextScope(existing.onboardingStep)
+			// const nextScope = mapStepToNextScope(existing.onboardingStep)
+			const nextScope = mapStepToNextScope(existing.onboardingStep, existing?.userType)
 
 			// User exist but has not completed profile
 
@@ -77,15 +78,58 @@ export class OnboardingService implements IOnboardingService {
 	}
 
 	async onboardUser(onboardingUser: IOnboardingUser, data: OnboardingRequest) {
-		return this.userRepo.createUserOnboarding(onboardingUser, data)
+		// 1. Process profile registration database logic
+		const updatedUser = await this.userRepo.createUserOnboarding(onboardingUser, data)
+
+		// 2. Compute the correct next progressive security access scope
+		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType)
+
+		// 3. Assemble structural JWT target payload parameters
+		const payload = {
+			userId: updatedUser.id,
+			phone: updatedUser.phone,
+			scope: nextScope,
+		}
+
+		// 4. Generate the continuous sequential temporary transaction token
+		const stepToken = this.authUtils.generateToken(
+			payload,
+			config.JWT_ONBOARDING_SECRET,
+			"15m",
+		)
+
+		return {
+			message: "Profile details registered successfully.",
+			currentStep: updatedUser.onboardingStep,
+			temporaryToken: stepToken,
+			//   user: updatedUser,
+		}
 	}
 
 	async createPin(userId: string, pin: string) {
 		const pinHash = this.authUtils.hashPin(pin)
-		await this.userRepo.updateUserPin(userId, pinHash)
+		const user = await this.userRepo.updateUserPin(userId, pinHash)
+
+		// Generate an access token for automatic login/dashboard access
+		const payload = { id: user.id, phone: user.phone }
+
+		const accessToken = this.authUtils.generateToken(
+			payload,
+			config.JWT_TOKEN_SECRET,
+			config.JWT_TOKEN_EXPIRES_IN,
+		)
+
+		const refreshToken = this.authUtils.generateToken(
+			payload,
+			config.JWT_REFRESH_TOKEN_SECRET,
+			config.JWT_REFRESH_TOKEN_EXPIRES_IN,
+		)
+
 		return {
 			message: "PIN created successfully.",
 			nextStep: OnboardingStep.COMPLETED,
+			accessToken,
+			refreshToken,
 		}
 	}
 }

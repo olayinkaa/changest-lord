@@ -44,11 +44,7 @@ export const enforceOnboardingScope = (requiredScope: OnboardingScope) => {
 			next()
 		} catch (error) {
 			pinoLogger.error({ error })
-			return next(
-				new UnauthorizedException(
-					"Your registration session has expired. Please restart the application.",
-				),
-			)
+			return next(new UnauthorizedException("Your registration session has expired"))
 		}
 	})
 }

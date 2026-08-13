@@ -10,6 +10,7 @@ export interface IUserRepository {
 		id: string
 		phone: string
 		onboardingStep: any
+		userType: any
 		kyc: { completedProfile: boolean } | null
 	} | null>
 	findAllWithKycAndBusiness(): Promise<any[]>

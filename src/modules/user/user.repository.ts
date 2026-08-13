@@ -11,6 +11,7 @@ export class UserRepository implements IUserRepository {
 				id: true,
 				onboardingStep: true,
 				phone: true,
+				userType: true,
 				kyc: {
 					select: {
 						completedProfile: true,
@@ -62,7 +63,9 @@ export class UserRepository implements IUserRepository {
 			businessTypeId,
 		} = data
 
-		// Prisma handles the safety transaction internally via nested writes
+		const isCustomer = userType?.toLowerCase() === "customer"
+		const resolvedStep = isCustomer ? "LIVENESS_PASSED" : "PROFILE_COMPLETED"
+
 		return prisma.user.update({
 			where: { id: onboardingUser.id },
 			data: {
@@ -71,15 +74,17 @@ export class UserRepository implements IUserRepository {
 				lastName,
 				address,
 				userType,
-				businessName,
-				businessTypeId,
-				businessLocation,
-				phone: onboardingUser.phone, // Use the phone number from the onboarding token
-				onboardingStep: "PROFILE_COMPLETED",
+				// If customer, clear out business-specific fields to avoid foreign key errors
+				businessName: isCustomer ? null : businessName,
+				businessLocation: isCustomer ? null : businessLocation,
+				businessTypeId: isCustomer || !businessTypeId ? null : businessTypeId,
+				phone: onboardingUser.phone,
+				onboardingStep: resolvedStep,
 				kyc: {
 					create: {
 						completedProfile: false,
 						phoneVerified: false,
+						livenessDone: isCustomer, // Mark true if customer to align with liveness skip
 					},
 				},
 			},
