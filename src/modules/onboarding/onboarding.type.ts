@@ -12,4 +12,5 @@ export interface IOnboardingService {
 		data: OnboardingRequest,
 	): Promise<any>
 	createPin(userId: string, pin: string): Promise<any>
+	validateEmail(email: string): Promise<any>
 }

@@ -7,6 +7,7 @@ import {
 	httpPost,
 	httpPut,
 	next,
+	queryParam,
 	request,
 	requestBody,
 	requestParam,
@@ -129,5 +130,12 @@ export class OnboardingController extends BaseHttpController {
 		} catch (error) {
 			nxt(error)
 		}
+	}
+	//
+	@httpGet("/validate-email")
+	@enforceOnboardingScope(OnboardingScopes.PROFILE)
+	public async validateEmail(@queryParam("email") email: string) {
+		const result = await this.onboardingService.validateEmail(email)
+		return this.json(ApiResponse.success(result), 200)
 	}
 }

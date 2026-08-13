@@ -130,4 +130,15 @@ export class UserRepository implements IUserRepository {
 			where: { phone },
 		})
 	}
+	//
+	// Inside UserRepository class
+	async findByEmail(email: string) {
+		return prisma.user.findUnique({
+			where: { email },
+			select: {
+				id: true,
+				email: true,
+			},
+		})
+	}
 }

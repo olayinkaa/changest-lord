@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify"
 import { config } from "@/config/env"
 import { OnboardingScopes } from "@/constants"
-import { ConflictException } from "@/core/errors/exceptions"
+import { BadRequestException, ConflictException } from "@/core/errors/exceptions"
 import { OnboardingStep } from "@/generated/prisma/enums"
 import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
@@ -131,5 +131,15 @@ export class OnboardingService implements IOnboardingService {
 			accessToken,
 			refreshToken,
 		}
+	}
+	//
+	async validateEmail(email: string) {
+		const existingUser = await this.userRepo.findByEmail(email)
+
+		if (existingUser) {
+			throw new BadRequestException("Email already exists")
+		}
+
+		return { exists: false, message: "Email is available" }
 	}
 }

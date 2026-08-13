@@ -23,6 +23,7 @@ export interface IUserRepository {
 	updateUserPin(userId: string, pinHash: string): Promise<any>
 	updateLivenessStatus(userId: string): Promise<any>
 	findUserByPhone(phone: string): Promise<any>
+	findByEmail(email: string): Promise<any | null>
 }
 
 export interface IUserService {
