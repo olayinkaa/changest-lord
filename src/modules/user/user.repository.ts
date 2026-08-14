@@ -72,7 +72,7 @@ export class UserRepository implements IUserRepository {
 				email,
 				firstName,
 				lastName,
-				address: home,
+				address: homeAddress,
 				userType,
 				// If customer, clear out business-specific fields to avoid foreign key errors
 				businessName: isCustomer ? null : businessName,
