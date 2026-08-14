@@ -12,9 +12,11 @@
 - [ ] Redis
 - [ ] Email factory / Email template
 - [ ] Cloudinary
+- [ ] SwaggerUI documentation
 
 
 ## Endpoints
+- 
 
 
 ## Questions ?
