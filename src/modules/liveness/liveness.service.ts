@@ -46,7 +46,7 @@ export class LivenessService implements ILiveness {
 		}
 	}
 
-	async getLivenessSessionResult(user: IOnboardingUser, sessionId: string) {
+	async submitLivenessSessionCapture(user: IOnboardingUser, sessionId: string) {
 		if (!sessionId) {
 			throw new BadRequestException("sessionId is required")
 		}

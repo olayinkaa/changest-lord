@@ -89,9 +89,9 @@ export class OnboardingController extends BaseHttpController {
 		}
 	}
 
-	@httpGet("/liveness-result/:sessionId")
+	@httpPost("/liveness-result/:sessionId")
 	@enforceOnboardingScope(OnboardingScopes.LIVENESS)
-	public async getLivenessSessionResult(
+	public async submitLivenessCapture(
 		@requestParam("sessionId") sessionId: string,
 		@next() nxt: NextFunction,
 		@request() req: Request,
@@ -103,7 +103,10 @@ export class OnboardingController extends BaseHttpController {
 			)
 		}
 		try {
-			const result = await this.livenessService.getLivenessSessionResult(user, sessionId)
+			const result = await this.livenessService.submitLivenessSessionCapture(
+				user,
+				sessionId,
+			)
 			return this.json(ApiResponse.success(result))
 		} catch (error) {
 			nxt(error)

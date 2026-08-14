@@ -108,7 +108,7 @@ async function main() {
 				ninVerified: faker.datatype.boolean(),
 				locationVerified: faker.datatype.boolean(),
 				whatsappVerified: faker.datatype.boolean(),
-				createdPin: completedProfile,
+				pinCreated: completedProfile,
 			},
 		})
 	}
