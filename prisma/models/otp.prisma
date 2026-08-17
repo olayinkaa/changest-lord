@@ -1,0 +1,7 @@
+model Otp {
+    id        String   @id @default(uuid())
+    email     String
+    otp       String
+    otpType     OtpType
+    createdAt DateTime @default(now())
+}

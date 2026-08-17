@@ -22,6 +22,13 @@ enum MerchantType {
   branch
 }
 
+enum OtpType {
+  PHONE
+  EMAIL
+  RESET_PASSWORD
+  RESET_PIN
+}
+
 enum OnboardingStep {
   PHONE_VALIDATED // Step 1: Phone checked (and verified via OTP if applicable)
   PROFILE_COMPLETED // Step 2: Basic info (and Seller details if applicable) submitted
