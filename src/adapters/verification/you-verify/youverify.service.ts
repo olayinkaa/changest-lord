@@ -11,9 +11,9 @@ export class YouVerifyService implements IVerificationService {
 		})
 	}
 	//
-	public async verifyNIN(nin: string) {}
+	public async verifyNIN(_nin: string) {}
 	//
-	public async verifyBVN(bvn: string) {}
+	public async verifyBVN(_bvn: string) {}
 	//
-	public async verifyBasicPhone(phoneNumber: string) {}
+	public async verifyBasicPhone(_phoneNumber: string) {}
 }
