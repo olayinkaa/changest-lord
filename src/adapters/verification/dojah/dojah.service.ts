@@ -1,9 +1,10 @@
 import type { AxiosInstance } from "axios"
 import axios from "axios"
 import { config } from "@/config/env"
+import { pinoLogger } from "@/config/pino-logger"
 import type { ApiResponse } from "@/types/base"
 import type { IVerificationService } from "../verification.types"
-import type { IDojahBvnVerificationFullResponse } from "./dojah.types"
+import type { IDojahBvnFullResponse } from "./dojah.types"
 
 export class DojaService implements IVerificationService {
 	private readonly api: AxiosInstance
@@ -20,15 +21,20 @@ export class DojaService implements IVerificationService {
 	public async verifyNIN(nin: string) {}
 	//
 	public async verifyBVN(bvn: string) {
-		const res: ApiResponse<IDojahBvnVerificationFullResponse> = await this.api.get(
-			"/api/v1/kyc/bvn/full",
-			{
-				params: {
-					bvn,
+		try {
+			const res: ApiResponse<IDojahBvnFullResponse> = await this.api.get(
+				"/api/v1/kyc/bvn/full",
+				{
+					params: {
+						bvn,
+					},
 				},
-			},
-		)
-		return res.data.entity
+			)
+			return res.data.entity
+		} catch (err) {
+			pinoLogger.error({ err }, "BVN verification failed")
+			throw err
+		}
 	}
 	//
 	public async verifyBasicPhone(phoneNumber: string) {}

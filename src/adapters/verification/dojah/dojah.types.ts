@@ -1,4 +1,4 @@
-export interface IDojahBvnVerificationFullResponse {
+export interface IDojahBvnFullResponse {
 	entity: {
 		bvn: string
 		first_name: string
@@ -12,7 +12,7 @@ export interface IDojahBvnVerificationFullResponse {
 	}
 }
 
-export interface IDojahBvnVerificationAdvanceResponse {
+export interface IDojahBvnAdvanceResponse {
 	entity: {
 		bvn: string
 		first_name: string
