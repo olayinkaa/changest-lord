@@ -77,3 +77,12 @@ export class CreatePinRequest {
 	})
 	pin!: string
 }
+
+/**
+ *
+ */
+export class SubmitLivenessCaptureRequest {
+	@IsNotEmpty({ message: "Image string is required" })
+	@IsString({ message: "Image must be a string" })
+	image!: string
+}

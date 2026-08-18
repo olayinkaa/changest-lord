@@ -11,3 +11,7 @@ export const OnboardingScopes = {
 	LIVENESS: "onboarding:liveness", // Issued after profile completion
 	PIN: "onboarding:pin", // Issued after passing liveness check
 } as const
+
+export const AwsCollectionId = {
+	USERS: "mychange-users",
+}

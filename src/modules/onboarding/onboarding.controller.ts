@@ -21,6 +21,7 @@ import { type ILiveness, LIVENESS_TYPES } from "../liveness/liveness.type"
 import {
 	CreatePinRequest,
 	OnboardingRequest,
+	type SubmitLivenessCaptureRequest,
 	ValidatePhoneRequest,
 } from "./onboarding.dto"
 import { type IOnboardingService, ONBOARDING_TYPES } from "./onboarding.type"
@@ -91,7 +92,7 @@ export class OnboardingController extends BaseHttpController {
 
 	@httpPost("/liveness-result/:sessionId")
 	@enforceOnboardingScope(OnboardingScopes.LIVENESS)
-	public async submitLivenessCapture(
+	public async getLivenessResult(
 		@requestParam("sessionId") sessionId: string,
 		@next() nxt: NextFunction,
 		@request() req: Request,
@@ -103,10 +104,28 @@ export class OnboardingController extends BaseHttpController {
 			)
 		}
 		try {
-			const result = await this.livenessService.submitLivenessSessionCapture(
-				user,
-				sessionId,
+			const result = await this.livenessService.getLivenessSessionResult(user, sessionId)
+			return this.json(ApiResponse.success(result))
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpPost("/liveness-capture/submit")
+	@enforceOnboardingScope(OnboardingScopes.LIVENESS)
+	public async submitLivenessCapture(
+		@next() nxt: NextFunction,
+		@request() req: Request,
+		@requestBody() body: SubmitLivenessCaptureRequest,
+	) {
+		const user = req.onboardingUser
+		if (!user) {
+			return nxt(
+				new UnauthorizedException("Onboarding user session is invalid or expired."),
 			)
+		}
+		try {
+			const result = await this.livenessService.submitLivenessSessionCapture(user, body)
 			return this.json(ApiResponse.success(result))
 		} catch (error) {
 			nxt(error)

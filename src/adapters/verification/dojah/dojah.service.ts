@@ -37,6 +37,6 @@ export class DojaService implements IVerificationService {
 		}
 	}
 	//
-	public async verifyBasicPhone(_phoneNumber: string) {}
+	// public async verifyBasicPhone(_phoneNumber: string) {}
 	//
 }

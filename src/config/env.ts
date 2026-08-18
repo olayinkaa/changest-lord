@@ -12,6 +12,10 @@ const envSchema = z
 			.max(8000)
 			.default(constants.SERVICE_PORT),
 		NODE_ENV: z.enum(["development", "production", "staging"]).default("development"),
+		APP_ENV: z
+			.enum(["development", "production", "staging"])
+			.optional()
+			.default("development"),
 		SERVICE_NAME: z.string().default("myChange-Service"),
 		DATABASE_URL: z.string(),
 		LOG_LEVEL: z

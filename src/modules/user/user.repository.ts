@@ -95,11 +95,16 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async updateLivenessStatus(userId: string) {
+	async updateLivenessStatus(
+		userId: string,
+		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
+	) {
 		return prisma.user.update({
 			where: { id: userId },
 			data: {
 				onboardingStep: "LIVENESS_PASSED",
+				livenessImageUrl: imageData.livenessImageUrl,
+				livenessImagePublicId: imageData.livenessImagePublicId,
 				kyc: {
 					update: {
 						livenessDone: true,

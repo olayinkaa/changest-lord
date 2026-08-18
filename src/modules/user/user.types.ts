@@ -21,7 +21,10 @@ export interface IUserRepository {
 	createUserPhoneNumber(phoneNumber: string): Promise<any>
 	findUser(id: any): Promise<any>
 	updateUserPin(userId: string, pinHash: string): Promise<any>
-	updateLivenessStatus(userId: string): Promise<any>
+	updateLivenessStatus(
+		userId: string,
+		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
+	): Promise<any>
 	findUserByPhone(phone: string): Promise<any>
 	findByEmail(email: string): Promise<any | null>
 }
