@@ -18,7 +18,7 @@ export class DojaService implements IVerificationService {
 		})
 	}
 	//
-	public async verifyNIN(nin: string) {}
+	public async verifyNIN(_nin: string) {}
 	//
 	public async verifyBVN(bvn: string) {
 		try {
@@ -37,6 +37,6 @@ export class DojaService implements IVerificationService {
 		}
 	}
 	//
-	public async verifyBasicPhone(phoneNumber: string) {}
+	public async verifyBasicPhone(_phoneNumber: string) {}
 	//
 }
