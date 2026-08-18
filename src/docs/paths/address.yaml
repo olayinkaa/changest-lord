@@ -1,0 +1,71 @@
+# Address module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/address.yaml#/<key>`.
+
+autocomplete:
+  get:
+    tags: [Address]
+    summary: Google Maps Places autocomplete
+    description: |
+      Forwards `search` to the Google Maps Places API and flattens the
+      response into `{ placeId, description, mainText, secondaryText }`.
+    security: []
+    parameters:
+      - in: query
+        name: search
+        required: true
+        schema:
+          type: string
+          minLength: 1
+        description: Free-text query (street, city, landmark, etc.).
+    responses:
+      "200":
+        description: Predictions wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/address.yaml#/AddressAutocompleteResponse"
+      "400":
+        description: Missing or empty `search` query.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+geometry:
+  get:
+    tags: [Address]
+    summary: Resolve a placeId to lat/lng
+    description: |
+      Takes a `placeId` returned by `/address/autocomplete` and resolves
+      it to `{ lat, lng }` via the Google Maps Place Details API.
+    security: []
+    parameters:
+      - in: query
+        name: placeId
+        required: true
+        schema:
+          type: string
+        description: Google place id from a prior autocomplete response.
+    responses:
+      "200":
+        description: Coordinates wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/address.yaml#/AddressGeometry"
+      "400":
+        description: Missing `placeId` query.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

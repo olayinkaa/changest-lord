@@ -26,7 +26,7 @@
 		"sourceMap": true,
 		"declaration": false,
 		"declarationMap": false,
-		"types": ["node"]
+		"types": ["node", "swagger-ui-express"]
 	},
 	"include": ["src/**/*", "env.d.ts"],
 	"exclude": ["node_modules", "dist", "trash/"]

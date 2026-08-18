@@ -8,6 +8,8 @@ import { CloudinaryService } from "./cloudinary/cloudinary.service"
 import type { ICloudinaryService } from "./cloudinary/cloudinary.types"
 import { GoogleMapsService } from "./google/google-map.service"
 import type { IGoogleMapsService } from "./google/google-map.type"
+import { VerificationFactory } from "./verification/verification.factory"
+import type { IVerificationService } from "./verification/verification.types"
 
 export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IGoogleMapsService>(ADAPTER_TYPES.GoogleMapsService).to(GoogleMapsService)
@@ -18,4 +20,7 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)
 	})
+	bind<IVerificationService>(ADAPTER_TYPES.VerificationService).toDynamicValue(
+		VerificationFactory,
+	)
 })

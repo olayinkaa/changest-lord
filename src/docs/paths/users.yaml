@@ -1,0 +1,64 @@
+# User module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/users.yaml#/<key>`.
+
+users:
+  get:
+    tags: [Users]
+    summary: List all users
+    description: |
+      Returns every user record. Currently **public** — auth will be wired
+      via passport-jwt in a follow-up; the OpenAPI spec already declares
+      `bearerAuth` globally for forward compatibility.
+    security: []
+    responses:
+      "200":
+        description: Array of users wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../schemas/user.yaml#/User"
+      "401":
+        description: Unauthorized (placeholder — auth is not yet enforced).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+usersById:
+  get:
+    tags: [Users]
+    summary: Get a user by id
+    security: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the user to fetch.
+    responses:
+      "200":
+        description: User record wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/user.yaml#/User"
+      "404":
+        description: User not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

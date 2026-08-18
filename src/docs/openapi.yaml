@@ -1,0 +1,67 @@
+# Root OpenAPI 3.1 spec for myChange backend.
+#
+# This file holds the bits that don't belong to any one module — info,
+# servers, security schemes, tags, and stitched-in $refs to per-module
+# paths and schemas. Each module owns its own YAML under ./paths and
+# ./schemas; add a new $ref here when you document a new module.
+#
+# Sibling files use standard OpenAPI $ref pointing back into this file
+# (e.g. ../schemas/_shared.yaml#/ApiResponse). @apidevtools/swagger-parser
+# resolves every $ref at boot so the served spec is one inlined document.
+
+openapi: 3.0.3
+
+info:
+  title: myChange-Service API
+  version: 1.0.0
+  description: |
+    MyChange backend — digital change collection, Keep Plan savings,
+    merchant ecosystem, and direct vendor payments.
+  contact:
+    name: myChange Engineering
+
+servers:
+  - url: http://localhost:6001/api/v1
+    description: development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Users
+    description: User lookup and listing
+  - name: Address
+    description: Google Maps address autocomplete and geometry
+
+paths:
+  /users:
+    $ref: "./paths/users.yaml#/users"
+  /users/{id}:
+    $ref: "./paths/users.yaml#/usersById"
+  /address/autocomplete:
+    $ref: "./paths/address.yaml#/autocomplete"
+  /address/geometry:
+    $ref: "./paths/address.yaml#/geometry"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT issued by /auth/login or by an onboarding step. Forward as
+        `Authorization: Bearer <token>`.
+  schemas:
+    ApiResponse:
+      $ref: "./schemas/_shared.yaml#/ApiResponse"
+    ErrorResponse:
+      $ref: "./schemas/_shared.yaml#/ErrorResponse"
+    User:
+      $ref: "./schemas/user.yaml#/User"
+    AddressPrediction:
+      $ref: "./schemas/address.yaml#/AddressPrediction"
+    AddressAutocompleteResponse:
+      $ref: "./schemas/address.yaml#/AddressAutocompleteResponse"
+    AddressGeometry:
+      $ref: "./schemas/address.yaml#/AddressGeometry"

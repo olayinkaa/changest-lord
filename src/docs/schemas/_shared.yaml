@@ -1,0 +1,50 @@
+# Shared OpenAPI 3.1 schemas reused across every controller's documentation.
+# Sibling files reference these via `$ref: '../schemas/_shared.yaml#/ApiResponse'`.
+
+ApiResponse:
+  type: object
+  description: |
+    Standard success envelope returned by every controller
+    (see src/utils/http-response.ts).
+  properties:
+    success:
+      type: boolean
+      example: true
+    statusCode:
+      type: integer
+      example: 200
+    message:
+      type: string
+      example: successfully processed
+    data:
+      description: |
+        Endpoint-specific payload. See the endpoint schema for the exact shape.
+  required:
+    - success
+    - statusCode
+    - message
+    - data
+
+ErrorResponse:
+  type: object
+  description: |
+    Standard error envelope produced by src/core/errors/error-handler.ts.
+  properties:
+    code:
+      type: string
+      example: NOT_FOUND
+    status:
+      type: string
+      enum: [error]
+      example: error
+    message:
+      type: string
+      example: Resource not found
+    data:
+      type: object
+      additionalProperties: true
+      nullable: true
+  required:
+    - code
+    - status
+    - message

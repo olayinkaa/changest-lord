@@ -1,9 +1,10 @@
 import { Expose } from "class-transformer"
 import { IsNotEmpty, IsString } from "class-validator"
+import z from "zod"
 
 export class CreateBusinessTypeDto {
 	@IsString()
-	@IsNotEmpty({ message: "Business yype is required" })
+	@IsNotEmpty({ message: "Business type is required" })
 	type!: string
 
 	@IsString()
@@ -21,3 +22,14 @@ export class BusinessTypeResponseDto {
 	@Expose() createdAt!: Date
 	@Expose() updatedAt!: Date
 }
+
+/**
+ *
+ */
+
+export const BusinessSchema = z.object({
+	type: z.string().min(1, { error: "Business type is required" }),
+	description: z.string().min(1, { error: "Business description is required" }),
+})
+
+export type BusinessInputs = z.infer<typeof BusinessSchema>

@@ -5,8 +5,10 @@ import helmet from "helmet"
 import type { Container } from "inversify"
 import { InversifyExpressServer } from "inversify-express-utils"
 import pinoHttp from "pino-http"
+import swaggerUi from "swagger-ui-express"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
+import { isSwaggerEnabled, swaggerSpecPromise, swaggerUiOptions } from "@/config/swagger"
 import { errorHandler } from "@/core/errors/error-handler"
 import { Application } from "@/utils/application"
 import AppModules from "./app.module"
@@ -26,6 +28,9 @@ export class App extends Application {
 			pinoLogger.error({ error }, "❌ Database connection failed:")
 			process.exit(1)
 		}
+		// Load and dereference the OpenAPI spec once before the server builds,
+		// so the synchronous `setConfig` callback below can mount Swagger UI.
+		const swaggerSpec = await swaggerSpecPromise
 		const server = new InversifyExpressServer(
 			this.container,
 			null, // Router
@@ -42,6 +47,13 @@ export class App extends Application {
 					contentSecurityPolicy: false,
 				}),
 			)
+			// Swagger UI is only rendered outside production (see src/config/swagger.ts).
+			// The raw spec at /docs.json is also gated, so production builds have
+			// no observable docs surface — set ENABLE_DOCS=true to override.
+			if (isSwaggerEnabled || process.env.ENABLE_DOCS === "true") {
+				app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions))
+				app.get("/docs.json", (_req, res) => res.json(swaggerSpec))
+			}
 			//   app.use((req, res, next) => {
 			//     RequestLogger.handler(req, res, next);
 			//   });

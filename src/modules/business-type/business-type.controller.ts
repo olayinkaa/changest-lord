@@ -29,6 +29,13 @@ export class BusinessTypeController extends BaseHttpController {
 		return this.json(ApiResponse.success(result))
 	}
 
+	//   @httpPost("/")
+	//   @validateZodSchema(BusinessSchema)
+	//   async create(@requestBody() body: CreateBusinessTypeDto) {
+	//     const result = await this.businessService.createBusinessType(body);
+	//     return this.json(ApiResponse.success(result), 201);
+	//   }
+
 	@httpPost("/")
 	@validateSchema(CreateBusinessTypeDto)
 	async create(@requestBody() body: CreateBusinessTypeDto) {

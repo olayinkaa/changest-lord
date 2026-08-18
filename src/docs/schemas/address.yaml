@@ -1,0 +1,54 @@
+# Schemas owned by the address module. Referenced from paths/address.yaml.
+
+AddressPrediction:
+  type: object
+  description: |
+    A single Google Maps Places autocomplete prediction,
+    flattened by AddressService.
+  properties:
+    placeId:
+      type: string
+      description: |
+        Stable Google place id; pass to `/address/geometry` for coordinates.
+    description:
+      type: string
+      description: Full human-readable address.
+    mainText:
+      type: string
+      description: Primary text (street + number / POI name).
+    secondaryText:
+      type: string
+      description: Secondary text (city, state, country).
+  required:
+    - placeId
+    - description
+    - mainText
+    - secondaryText
+
+AddressAutocompleteResponse:
+  type: object
+  description: |
+    Wrapper returned by GoogleMapsService.getPlacePredictions().
+  properties:
+    predictions:
+      type: array
+      items:
+        $ref: "./address.yaml#/AddressPrediction"
+  required:
+    - predictions
+
+AddressGeometry:
+  type: object
+  description: Lat/lng pair extracted from a Google Maps Place Details lookup.
+  properties:
+    lat:
+      type: number
+      format: double
+      example: 6.5244
+    lng:
+      type: number
+      format: double
+      example: 3.3792
+  required:
+    - lat
+    - lng
