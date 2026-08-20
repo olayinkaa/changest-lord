@@ -1,4 +1,7 @@
-import type { OnboardingRequest } from "./onboarding.dto"
+import type {
+	OnboardingBusinessProfileRequest,
+	OnboardingProfileRequest,
+} from "./onboarding.dto"
 
 export const ONBOARDING_TYPES = {
 	Service: Symbol.for("OnboardingService"),
@@ -7,9 +10,13 @@ export const ONBOARDING_TYPES = {
 
 export interface IOnboardingService {
 	validatePhone(phone: string): Promise<any>
-	onboardUser(
+	onboardUserProfile(
 		onboardingUser: { id: string; phone: string },
-		data: OnboardingRequest,
+		data: OnboardingProfileRequest,
+	): Promise<any>
+	onboardBusinessProfile(
+		onboardingUser: { id: string; phone: string },
+		data: OnboardingBusinessProfileRequest,
 	): Promise<any>
 	createPin(userId: string, pin: string): Promise<any>
 	validateEmail(email: string): Promise<any>

@@ -15,7 +15,7 @@ deploy:
 	./deploy.sh
 db-drop:
 	pnpm prisma migrate reset --force
-db-gen:
+db-generate:
 	pnpm prisma generate
 db-seed:
 	pnpm prisma db seed

@@ -20,7 +20,8 @@ import { ApiResponse } from "@/utils/http-response"
 import { type ILiveness, LIVENESS_TYPES } from "../liveness/liveness.type"
 import {
 	CreatePinRequest,
-	OnboardingRequest,
+	OnboardingBusinessProfileRequest,
+	OnboardingProfileRequest,
 	type SubmitLivenessCaptureRequest,
 	ValidatePhoneRequest,
 } from "./onboarding.dto"
@@ -51,11 +52,11 @@ export class OnboardingController extends BaseHttpController {
 		}
 	}
 
-	@httpPut("/register")
-	@validateSchema(OnboardingRequest)
+	@httpPut("/register/profile")
+	@validateSchema(OnboardingProfileRequest)
 	@enforceOnboardingScope(OnboardingScopes.PROFILE)
-	public async onboardUser(
-		@requestBody() body: OnboardingRequest,
+	public async onboardUserProfile(
+		@requestBody() body: OnboardingProfileRequest,
 		@next() nxt: NextFunction,
 		@request() req: Request,
 	) {
@@ -66,8 +67,36 @@ export class OnboardingController extends BaseHttpController {
 					new UnauthorizedException("Onboarding user is missing from the request."),
 				)
 			}
-			const data = await this.onboardingService.onboardUser(onboardingUser, body)
+			const data = await this.onboardingService.onboardUserProfile(onboardingUser, body)
 			return this.json(ApiResponse.success(data, "User onboarded successfully"), 201)
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpPut("/register/business")
+	@validateSchema(OnboardingBusinessProfileRequest)
+	@enforceOnboardingScope(OnboardingScopes.BUSINESS)
+	public async onboardUserBusiness(
+		@requestBody() body: OnboardingBusinessProfileRequest,
+		@next() nxt: NextFunction,
+		@request() req: Request,
+	) {
+		try {
+			const onboardingUser = req.onboardingUser
+			if (!onboardingUser) {
+				return nxt(
+					new UnauthorizedException("Onboarding user session is invalid or expired."),
+				)
+			}
+			const data = await this.onboardingService.onboardBusinessProfile(
+				onboardingUser,
+				body,
+			)
+			return this.json(
+				ApiResponse.success(data, "Business information submitted successfully"),
+				201,
+			)
 		} catch (error) {
 			nxt(error)
 		}
@@ -155,7 +184,7 @@ export class OnboardingController extends BaseHttpController {
 	}
 	//
 	@httpGet("/validate-email")
-	@enforceOnboardingScope(OnboardingScopes.PROFILE)
+	// @enforceOnboardingScope(OnboardingScopes.PROFILE)
 	public async validateEmail(@queryParam("email") email: string) {
 		const result = await this.onboardingService.validateEmail(email)
 		return this.json(ApiResponse.success(result), 200)

@@ -14,10 +14,11 @@ export interface IUserRepository {
 		kyc: { completedProfile: boolean } | null
 	} | null>
 	findAllWithKycAndBusiness(): Promise<any[]>
-	createUserOnboarding(
+	createUserProfile(
 		onboardingUser: { id: string; phone: string },
 		data: any,
 	): Promise<any>
+	updateBusinessProfile(userId: string, data: any): Promise<any>
 	createUserPhoneNumber(phoneNumber: string): Promise<any>
 	findUser(id: any): Promise<any>
 	updateUserPin(userId: string, pinHash: string): Promise<any>

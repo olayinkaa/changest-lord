@@ -7,7 +7,10 @@ import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
 import { mapStepToNextScope } from "@/utils/helper"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
-import type { OnboardingRequest } from "./onboarding.dto"
+import type {
+	OnboardingBusinessProfileRequest,
+	OnboardingProfileRequest,
+} from "./onboarding.dto"
 import type { IOnboardingService } from "./onboarding.type"
 
 @injectable()
@@ -25,10 +28,10 @@ export class OnboardingService implements IOnboardingService {
 		if (existing) {
 			// User exists AND has completed onboarding → block the new sign-up.
 			if (existing?.kyc?.completedProfile) {
-				throw new ConflictException(
-					"This phone number is already registered",
-					// "This phone number is already registered and has completed onboarding",
-				)
+				throw new ConflictException("This phone number is already registered", {
+					phoneNumber:
+						"This phone number is already registered and has completed onboarding",
+				})
 			}
 
 			const nextScope = mapStepToNextScope(existing.onboardingStep, existing?.userType)
@@ -38,6 +41,7 @@ export class OnboardingService implements IOnboardingService {
 			const payload = {
 				userId: existing.id,
 				phone: existing.phone,
+				userType: existing.userType,
 				scope: nextScope,
 			}
 
@@ -76,9 +80,12 @@ export class OnboardingService implements IOnboardingService {
 		}
 	}
 
-	async onboardUser(onboardingUser: IOnboardingUser, data: OnboardingRequest) {
+	async onboardUserProfile(
+		onboardingUser: IOnboardingUser,
+		data: OnboardingProfileRequest,
+	) {
 		// 1. Process profile registration database logic
-		const updatedUser = await this.userRepo.createUserOnboarding(onboardingUser, data)
+		const updatedUser = await this.userRepo.createUserProfile(onboardingUser, data)
 
 		// 2. Compute the correct next progressive security access scope
 		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType)
@@ -101,7 +108,37 @@ export class OnboardingService implements IOnboardingService {
 			message: "Profile details registered successfully.",
 			currentStep: updatedUser.onboardingStep,
 			temporaryToken: stepToken,
-			//   user: updatedUser,
+		}
+	}
+
+	async onboardBusinessProfile(
+		onboardingUser: IOnboardingUser,
+		data: OnboardingBusinessProfileRequest,
+	) {
+		// 1. Process profile registration database logic
+		const updatedUser = await this.userRepo.updateBusinessProfile(onboardingUser.id, data)
+
+		// 2. Compute the correct next progressive security access scope
+		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType)
+
+		// 3. Assemble structural JWT target payload parameters
+		const payload = {
+			userId: updatedUser.id,
+			phone: updatedUser.phone,
+			scope: nextScope,
+		}
+
+		// 4. Generate the continuous sequential temporary transaction token
+		const stepToken = this.authUtils.generateToken(
+			payload,
+			config.JWT_ONBOARDING_SECRET,
+			"60m", //TODO: revert back to "15m"
+		)
+
+		return {
+			message: "Profile details registered successfully.",
+			currentStep: updatedUser.onboardingStep,
+			temporaryToken: stepToken,
 		}
 	}
 
@@ -126,7 +163,7 @@ export class OnboardingService implements IOnboardingService {
 
 		return {
 			message: "PIN created successfully.",
-			nextStep: OnboardingStep.COMPLETED,
+			currentStep: OnboardingStep.PIN_COMPLETED,
 			accessToken,
 			refreshToken,
 		}
@@ -136,7 +173,9 @@ export class OnboardingService implements IOnboardingService {
 		const existingUser = await this.userRepo.findByEmail(email)
 
 		if (existingUser) {
-			throw new BadRequestException("Email already exists")
+			throw new BadRequestException("Email already exists", {
+				email: "Email already exist",
+			})
 		}
 
 		return { exists: false, message: "Email is available" }

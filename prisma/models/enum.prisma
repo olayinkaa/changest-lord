@@ -31,7 +31,8 @@ enum OtpType {
 
 enum OnboardingStep {
   PHONE_VALIDATED // Step 1: Phone checked (and verified via OTP if applicable)
-  PROFILE_COMPLETED // Step 2: Basic info (and Seller details if applicable) submitted
+  PROFILE_COMPLETED // Step 2: Basic info submitted
+  BUSINESSS_PROFILE_COMPLETED // Step 3: Seller details  submitted
   LIVENESS_PASSED // Step 3: Face scan successfully verified by AWS Rekognition
-  COMPLETED // Step 4: Security PIN is set. User is fully onboarded.
+  PIN_COMPLETED // Step 4: Security PIN is set. User is fully onboarded.
 }

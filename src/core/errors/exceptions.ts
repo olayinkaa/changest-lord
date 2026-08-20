@@ -14,22 +14,22 @@ export class HttpException extends Error {
 
 // NotFoundException
 export class NotFoundException extends HttpException {
-	constructor(message: string = "Resource not found") {
-		super(404, message)
+	constructor(message: string = "Resource not found", data?: any) {
+		super(404, message, data)
 	}
 }
 
 // ConflictException
 export class ConflictException extends HttpException {
-	constructor(message: string = "Resource conflict") {
-		super(409, message)
+	constructor(message: string = "Resource conflict", data?: any) {
+		super(409, message, data)
 	}
 }
 
-// ConflictException
+// ForbiddenException
 export class ForbiddenException extends HttpException {
-	constructor(message: string = "Forbidden") {
-		super(403, message)
+	constructor(message: string = "Forbidden", data?: any) {
+		super(403, message, data)
 	}
 }
 
@@ -42,8 +42,8 @@ export class BadRequestException extends HttpException {
 
 // UnauthorizedException
 export class UnauthorizedException extends HttpException {
-	constructor(message: string = "Unauthorized") {
-		super(401, message)
+	constructor(message: string = "Unauthorized", data?: any) {
+		super(401, message, data)
 	}
 }
 
@@ -61,30 +61,30 @@ export class UnprocessableEntityException extends HttpException {
 	}
 }
 
-// UnauthorizedException was already included, but here is TooManyRequestsException (429)
+// TooManyRequestsException (429)
 export class TooManyRequestsException extends HttpException {
-	constructor(message: string = "Too many requests") {
-		super(429, message)
+	constructor(message: string = "Too many requests", data?: any) {
+		super(429, message, data)
 	}
 }
 
 // GatewayTimeoutException (504) - Useful for microservices/external APIs
 export class GatewayTimeoutException extends HttpException {
-	constructor(message: string = "Gateway timeout") {
-		super(504, message)
+	constructor(message: string = "Gateway timeout", data?: any) {
+		super(504, message, data)
 	}
 }
 
 // ServiceUnavailableException (503)
 export class ServiceUnavailableException extends HttpException {
-	constructor(message: string = "Service unavailable") {
-		super(503, message)
+	constructor(message: string = "Service unavailable", data?: any) {
+		super(503, message, data)
 	}
 }
 
 // MethodNotAllowedException (405)
 export class MethodNotAllowedException extends HttpException {
-	constructor(message: string = "Method not allowed") {
-		super(405, message)
+	constructor(message: string = "Method not allowed", data?: any) {
+		super(405, message, data)
 	}
 }

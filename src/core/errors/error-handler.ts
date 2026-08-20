@@ -10,7 +10,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
 			code: err.status,
 			status: "error",
 			message: err.message,
-			data: err.data || undefined,
+			errorDetails: err.data || undefined,
 		})
 	}
 

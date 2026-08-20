@@ -51,17 +51,8 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async createUserOnboarding(onboardingUser: { id: string; phone: string }, data: any) {
-		const {
-			email,
-			firstName,
-			lastName,
-			homeAddress,
-			userType,
-			businessName,
-			businessLocation,
-			businessTypeId,
-		} = data
+	async createUserProfile(onboardingUser: { id: string; phone: string }, data: any) {
+		const { email, firstName, lastName, homeAddress, userType } = data
 
 		const isCustomer = userType?.toLowerCase() === "customer"
 		const resolvedStep = isCustomer ? "LIVENESS_PASSED" : "PROFILE_COMPLETED"
@@ -74,10 +65,6 @@ export class UserRepository implements IUserRepository {
 				lastName,
 				address: homeAddress,
 				userType,
-				// If customer, clear out business-specific fields to avoid foreign key errors
-				businessName: isCustomer ? null : businessName,
-				businessLocation: isCustomer ? null : businessLocation,
-				businessTypeId: isCustomer || !businessTypeId ? null : businessTypeId,
 				phone: onboardingUser.phone,
 				onboardingStep: resolvedStep,
 				kyc: {
@@ -87,6 +74,24 @@ export class UserRepository implements IUserRepository {
 						livenessDone: isCustomer, // Mark true if customer to align with liveness skip
 					},
 				},
+			},
+			include: {
+				kyc: true,
+				businessType: true,
+			},
+		})
+	}
+
+	async updateBusinessProfile(userId: string, data: any) {
+		const { businessName, businessLocation, businessTypeId } = data
+
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				businessName,
+				businessLocation,
+				businessTypeId,
+				onboardingStep: "BUSINESSS_PROFILE_COMPLETED",
 			},
 			include: {
 				kyc: true,
@@ -119,7 +124,7 @@ export class UserRepository implements IUserRepository {
 			where: { id: userId },
 			data: {
 				pinHash,
-				onboardingStep: "COMPLETED",
+				onboardingStep: "PIN_COMPLETED",
 				kyc: {
 					update: {
 						pinCreated: true,

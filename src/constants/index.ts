@@ -7,9 +7,10 @@ export const constants = {
 }
 
 export const OnboardingScopes = {
-	PROFILE: "onboarding:profile", // Issued after phone validation
-	LIVENESS: "onboarding:liveness", // Issued after profile completion
-	PIN: "onboarding:pin", // Issued after passing liveness check
+	PROFILE: "onboarding:profile", // After phone validation
+	BUSINESS: "onboarding:business", // After user profile completion (for sellers)
+	LIVENESS: "onboarding:liveness", // After business profile completion
+	PIN: "onboarding:pin", // After liveness or customer profile completion
 } as const
 
 export const AwsCollectionId = {

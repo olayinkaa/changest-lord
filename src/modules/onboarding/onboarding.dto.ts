@@ -25,7 +25,7 @@ export class ValidatePhoneRequest {
 /**
  *
  */
-export class OnboardingRequest {
+export class OnboardingProfileRequest {
 	@IsNotEmpty({ message: "First name is required" })
 	@IsString({ message: "First name must be a string" })
 	firstName!: string
@@ -49,8 +49,9 @@ export class OnboardingRequest {
 	userType!: UserType
 
 	@IsOptional() @IsString() referralCode?: string
+}
 
-	@ValidateIf((o) => o.userType === UserType.seller)
+export class OnboardingBusinessProfileRequest {
 	@IsString()
 	@IsNotEmpty({ message: "Business name is required for seller" })
 	businessName?: string
