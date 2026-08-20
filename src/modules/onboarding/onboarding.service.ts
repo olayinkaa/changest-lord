@@ -6,6 +6,10 @@ import { OnboardingStep } from "@/generated/prisma/enums"
 import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
 import { mapStepToNextScope } from "@/utils/helper"
+import {
+	BUSINESS_TYPES,
+	type IBusinessTypeService,
+} from "../business-type/business-type.types"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
 import type {
 	OnboardingBusinessProfileRequest,
@@ -19,9 +23,16 @@ export class OnboardingService implements IOnboardingService {
 
 	constructor(
 		@inject(USER_TYPES.Repository) private readonly userRepo: IUserRepository,
+		@inject(BUSINESS_TYPES.Service)
+		private businessTypeService: IBusinessTypeService,
 		@inject(AUTH_TYPES.AuthUtils) private readonly authUtils: IAuthUtils,
 	) {}
 
+	/**
+	 *
+	 * @param phone
+	 * @returns
+	 */
 	async validatePhone(phone: string): Promise<any> {
 		const existing = await this.userRepo.findByPhoneWithKyc(phone)
 
@@ -80,6 +91,12 @@ export class OnboardingService implements IOnboardingService {
 		}
 	}
 
+	/**
+	 *
+	 * @param onboardingUser
+	 * @param data
+	 * @returns
+	 */
 	async onboardUserProfile(
 		onboardingUser: IOnboardingUser,
 		data: OnboardingProfileRequest,
@@ -105,16 +122,23 @@ export class OnboardingService implements IOnboardingService {
 		)
 
 		return {
-			message: "Profile details registered successfully.",
+			description: "Profile details registered successfully.",
 			currentStep: updatedUser.onboardingStep,
 			temporaryToken: stepToken,
 		}
 	}
 
+	/**
+	 *
+	 * @param onboardingUser
+	 * @param data
+	 * @returns
+	 */
 	async onboardBusinessProfile(
 		onboardingUser: IOnboardingUser,
 		data: OnboardingBusinessProfileRequest,
 	) {
+		await this.businessTypeService.getBusinessTypeById(data.businessTypeId)
 		// 1. Process profile registration database logic
 		const updatedUser = await this.userRepo.updateBusinessProfile(onboardingUser.id, data)
 
@@ -136,7 +160,7 @@ export class OnboardingService implements IOnboardingService {
 		)
 
 		return {
-			message: "Profile details registered successfully.",
+			description: "Profile details registered successfully.",
 			currentStep: updatedUser.onboardingStep,
 			temporaryToken: stepToken,
 		}
@@ -162,13 +186,18 @@ export class OnboardingService implements IOnboardingService {
 		)
 
 		return {
-			message: "PIN created successfully.",
+			description: "PIN created successfully.",
 			currentStep: OnboardingStep.PIN_COMPLETED,
 			accessToken,
 			refreshToken,
 		}
 	}
-	//
+
+	/**
+	 *
+	 * @param email
+	 * @returns
+	 */
 	async validateEmail(email: string) {
 		const existingUser = await this.userRepo.findByEmail(email)
 

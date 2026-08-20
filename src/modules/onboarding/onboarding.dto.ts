@@ -5,7 +5,6 @@ import {
 	IsOptional,
 	IsString,
 	Matches,
-	ValidateIf,
 } from "class-validator"
 import { UserType } from "@/generated/prisma/enums"
 import { TransformNigeriaPhone } from "@/utils/custom-transformer"
@@ -53,18 +52,16 @@ export class OnboardingProfileRequest {
 
 export class OnboardingBusinessProfileRequest {
 	@IsString()
-	@IsNotEmpty({ message: "Business name is required for seller" })
-	businessName?: string
+	@IsNotEmpty({ message: "Business name is required" })
+	businessName!: string
 
-	@ValidateIf((o) => o.userType === UserType.seller)
 	@IsString()
-	@IsNotEmpty({ message: "Business location is required for seller" })
-	businessLocation?: string
+	@IsNotEmpty({ message: "Business location is required" })
+	businessLocation!: string
 
-	@ValidateIf((o) => o.userType === UserType.seller)
 	@IsString()
-	@IsNotEmpty({ message: "Business type is required for seller" })
-	businessTypeId?: string
+	@IsNotEmpty({ message: "Business type is required" })
+	businessTypeId!: string
 }
 
 /**

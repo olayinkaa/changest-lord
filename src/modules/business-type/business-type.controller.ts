@@ -12,12 +12,12 @@ import {
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
 import { CreateBusinessTypeDto, UpdateBusinessTypeDto } from "./business-type.dto"
-import { type IBusinessTypeService, TYPES } from "./business-type.types"
+import { BUSINESS_TYPES, type IBusinessTypeService } from "./business-type.types"
 
 @controller("/business-types")
 export class BusinessTypeController extends BaseHttpController {
 	constructor(
-		@inject(TYPES.BusinessTypeService)
+		@inject(BUSINESS_TYPES.Service)
 		private readonly businessService: IBusinessTypeService,
 	) {
 		super()

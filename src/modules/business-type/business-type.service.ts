@@ -3,15 +3,15 @@ import { BadRequestException, NotFoundException } from "@/core/errors/exceptions
 import type { BusinessType } from "@/generated/prisma/client"
 import type { CreateBusinessTypeDto, UpdateBusinessTypeDto } from "./business-type.dto"
 import {
+	BUSINESS_TYPES,
 	type IBusinessTypeRepository,
 	type IBusinessTypeService,
-	TYPES,
 } from "./business-type.types"
 
 @injectable()
 export class BusinessTypeService implements IBusinessTypeService {
 	constructor(
-		@inject(TYPES.BusinessTypeRepository)
+		@inject(BUSINESS_TYPES.Repository)
 		private readonly repository: IBusinessTypeRepository,
 	) {}
 
@@ -22,7 +22,7 @@ export class BusinessTypeService implements IBusinessTypeService {
 	async getBusinessTypeById(id: string): Promise<BusinessType> {
 		const businessType = await this.repository.findById(id)
 		if (!businessType) {
-			throw new NotFoundException(`Business Type with ID ${id} not found`)
+			throw new NotFoundException(`Business Type with ID "${id}" not found`)
 		}
 		return businessType
 	}

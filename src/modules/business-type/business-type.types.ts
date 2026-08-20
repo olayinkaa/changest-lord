@@ -1,9 +1,9 @@
 import type { BusinessType } from "@/generated/prisma/client"
 import type { CreateBusinessTypeDto } from "./business-type.dto"
 
-export const TYPES = {
-	BusinessTypeRepository: Symbol.for("BusinessTypeRepository"),
-	BusinessTypeService: Symbol.for("BusinessTypeService"),
+export const BUSINESS_TYPES = {
+	Repository: Symbol.for("BusinessTypeRepository"),
+	Service: Symbol.for("BusinessTypeService"),
 }
 
 export interface IBusinessTypeRepository {
