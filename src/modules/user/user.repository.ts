@@ -91,7 +91,7 @@ export class UserRepository implements IUserRepository {
 				businessName,
 				businessLocation,
 				businessTypeId,
-				onboardingStep: "BUSINESSS_PROFILE_COMPLETED",
+				onboardingStep: "BUSINESS_PROFILE_COMPLETED",
 			},
 			include: {
 				kyc: true,

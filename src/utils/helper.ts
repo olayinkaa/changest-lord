@@ -12,7 +12,7 @@ export const mapStepToNextScope = (step: OnboardingStep, userType?: UserType): s
 				return OnboardingScopes.PIN
 			}
 			return OnboardingScopes.BUSINESS
-		case OnboardingStep.BUSINESSS_PROFILE_COMPLETED:
+		case OnboardingStep.BUSINESS_PROFILE_COMPLETED:
 			return OnboardingScopes.LIVENESS
 		case OnboardingStep.LIVENESS_PASSED:
 			return OnboardingScopes.PIN
