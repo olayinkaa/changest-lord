@@ -48,7 +48,7 @@ export class LivenessService implements ILiveness {
 				throw new UnprocessableEntityException(
 					`An account with this biometric signature already exists (Similarity: ${match.Similarity?.toFixed(2)}%).`,
 					{
-						error: "BIOMETRIC_DUPLICATE_ACCOUNT",
+						errorType: "BIOMETRIC_DUPLICATE_ACCOUNT",
 					},
 				)
 			}
