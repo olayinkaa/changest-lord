@@ -48,7 +48,7 @@ export class LivenessService implements ILiveness {
 				throw new UnprocessableEntityException(
 					`An account with this biometric signature already exists (Similarity: ${match.Similarity?.toFixed(2)}%).`,
 					{
-						errorType: "BIOMETRIC_DUPLICATE_ACCOUNT",
+						error: "BIOMETRIC_DUPLICATE_ACCOUNT",
 					},
 				)
 			}
@@ -185,11 +185,14 @@ export class LivenessService implements ILiveness {
 			return {
 				success: true,
 				description: "Liveness evaluation submitted.",
-				// image: data.image,
 				temporaryToken: pinToken,
 			}
 		} catch (error: any) {
 			pinoLogger.error({ error }, "Error in submitting liveness result")
+			if (error?.status) {
+				throw error
+			}
+			// Otherwise, fallback to the generic BadRequestException for unknown errors
 			throw new BadRequestException(
 				error?.message || "Error in submitting liveness result",
 			)
