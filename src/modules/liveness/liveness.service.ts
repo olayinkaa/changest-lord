@@ -163,7 +163,7 @@ export class LivenessService implements ILiveness {
 
 			return {
 				success: true,
-				message: "Liveness evaluation submitted.",
+				description: "Liveness evaluation submitted.",
 				// image: data.image,
 				temporaryToken: pinToken,
 			}
