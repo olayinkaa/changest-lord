@@ -2,6 +2,7 @@ import {
 	CreateCollectionCommand,
 	CreateFaceLivenessSessionCommand,
 	DeleteCollectionCommand,
+	DeleteFacesCommand,
 	DescribeCollectionCommand,
 	GetFaceLivenessSessionResultsCommand,
 	IndexFacesCommand,
@@ -115,6 +116,24 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 			return response.FaceRecords
 		} catch (e) {
 			pinoLogger.error(e, `Error indexing face for collectionId: ${collectionId} `)
+			throw e
+		}
+	}
+	//
+	// 2. Added implementation for deleting face vectors from collection
+	async deleteFacesFromCollection(
+		collectionId: string,
+		faceIds: string[],
+	): Promise<string[]> {
+		try {
+			const command = new DeleteFacesCommand({
+				CollectionId: this.resolveCollectionName(collectionId),
+				FaceIds: faceIds,
+			})
+			const response = await this.rekognitionClient.send(command)
+			return response.DeletedFaces || []
+		} catch (e) {
+			pinoLogger.error(e, `Error deleting faces from collectionId: ${collectionId}`)
 			throw e
 		}
 	}

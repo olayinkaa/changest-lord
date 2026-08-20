@@ -47,7 +47,28 @@ export class LivenessService implements ILiveness {
 			if (matchedUserId && matchedUserId !== currentUserId) {
 				throw new UnprocessableEntityException(
 					`An account with this biometric signature already exists (Similarity: ${match.Similarity?.toFixed(2)}%).`,
+					{
+						errorType: "BIOMETRIC_DUPLICATE_ACCOUNT",
+					},
 				)
+			}
+			// clean up their old face record from the collection to avoid accumulation bloat.
+			if (matchedUserId === currentUserId && match.Face?.FaceId) {
+				try {
+					await this.awsRekognitionService.deleteFacesFromCollection(
+						AwsCollectionId.USERS,
+						[match.Face.FaceId],
+					)
+					pinoLogger.info(
+						{ faceId: match.Face.FaceId, userId: currentUserId },
+						"Deleted old face record for user re-submission",
+					)
+				} catch (deleteError) {
+					pinoLogger.error(
+						{ deleteError },
+						"Failed to delete old face record during update",
+					)
+				}
 			}
 		}
 	}
