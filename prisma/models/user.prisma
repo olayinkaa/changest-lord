@@ -19,7 +19,7 @@ model User {
     pinHash          String?
     onboardingStep   OnboardingStep @default(PHONE_VALIDATED)
     livenessImageUrl String?
-    livenessPublicId String?
+    livenessImagePublicId String?
     latitude         Decimal?       @db.Decimal(9, 6)
     longitude        Decimal?       @db.Decimal(9, 6)
     deviceBindingId  String?

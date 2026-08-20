@@ -31,7 +31,6 @@ export class OnboardingService implements IOnboardingService {
 				)
 			}
 
-			// const nextScope = mapStepToNextScope(existing.onboardingStep)
 			const nextScope = mapStepToNextScope(existing.onboardingStep, existing?.userType)
 
 			// User exist but has not completed profile
@@ -95,7 +94,7 @@ export class OnboardingService implements IOnboardingService {
 		const stepToken = this.authUtils.generateToken(
 			payload,
 			config.JWT_ONBOARDING_SECRET,
-			"15m",
+			"60m", //TODO: revert back to "15m"
 		)
 
 		return {

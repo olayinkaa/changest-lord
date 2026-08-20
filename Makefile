@@ -4,7 +4,7 @@ secret:
 	@echo "generating secret key..."
 	openssl rand -base64 32
 dev:
-	@echo "start local server [.env.local]..."
+	@echo "start local server [.env]..."
 	pnpm run dev
 migrate:
 	@read -p "Enter migration name: " name; \
@@ -21,3 +21,6 @@ db-seed:
 	pnpm prisma db seed
 db-push:
 	pnpm prisma db push
+
+
+	

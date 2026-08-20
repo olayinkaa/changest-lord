@@ -3,4 +3,9 @@ export interface IAwsRekognitionService {
 	getLivenessSessionResult(sessionId: string): any
 	addFaceToCollection(collectionId: string, imageBuffer: Buffer, identifier: string): any
 	searchFaceInCollection(targetImageBuffer: Buffer, collectionId: string): any
+	deleteCollection(collectionId: string): any
+	ensureCollectionExists(collectionId: string): any
+	listCollections(): Promise<string[]>
+	describeCollectionDetails(collectionId: string): any
+	listFacesInCollection(collectionId: string): any
 }

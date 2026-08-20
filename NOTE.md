@@ -19,3 +19,5 @@ otp-generator
 socket.io
 swagger-ui-express
 ```
+# Render build command
+pnpm install && pnpm run build && pnpm prisma generate

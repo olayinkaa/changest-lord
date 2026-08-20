@@ -39,10 +39,12 @@ export class LivenessService implements ILiveness {
 
 		pinoLogger.info({ searchResult }, "Search face collection result")
 
-		if (searchResult.UserMatches && searchResult.UserMatches.length > 0) {
-			const match = searchResult.UserMatches[0]
-			// Ensure we don't block the user if they are updating their own session capture
-			if (match.User?.UserId && match.User.UserId !== currentUserId) {
+		if (searchResult.FaceMatches && searchResult.FaceMatches.length > 0) {
+			const match = searchResult.FaceMatches[0]
+			const matchedUserId = match.Face?.ExternalImageId
+
+			// If the face belongs to someone else, block it!
+			if (matchedUserId && matchedUserId !== currentUserId) {
 				throw new UnprocessableEntityException(
 					`An account with this biometric signature already exists (Similarity: ${match.Similarity?.toFixed(2)}%).`,
 				)
@@ -161,8 +163,8 @@ export class LivenessService implements ILiveness {
 
 			return {
 				success: true,
-				message: "Liveness evaluation passed.",
-				image: data.image,
+				message: "Liveness evaluation submitted.",
+				// image: data.image,
 				temporaryToken: pinToken,
 			}
 		} catch (error: any) {

@@ -11,8 +11,11 @@ import { pinoLogger } from "@/config/pino-logger"
 import { isSwaggerEnabled, swaggerSpecPromise, swaggerUiOptions } from "@/config/swagger"
 import { errorHandler } from "@/core/errors/error-handler"
 import { Application } from "@/utils/application"
+import { ADAPTER_TYPES } from "./adapters/adapters.types"
+import type { IAwsRekognitionService } from "./adapters/aws-rekognition/aws-rekogniction.type"
 import AppModules from "./app.module"
 import { configureCors } from "./config/cors"
+import { AwsCollectionId } from "./constants"
 import { prisma } from "./core/database/db"
 
 export class App extends Application {
@@ -28,6 +31,16 @@ export class App extends Application {
 			pinoLogger.error({ error }, "❌ Database connection failed:")
 			process.exit(1)
 		}
+
+		try {
+			const awsRekognitionService = this.container.get<IAwsRekognitionService>(
+				ADAPTER_TYPES.AwsRekognitionService,
+			)
+			await awsRekognitionService.ensureCollectionExists(AwsCollectionId.USERS)
+		} catch (error) {
+			pinoLogger.error({ error }, "❌ Failed to initialize AWS Rekognition collection:")
+		}
+
 		// Load and dereference the OpenAPI spec once before the server builds,
 		// so the synchronous `setConfig` callback below can mount Swagger UI.
 		const swaggerSpec = await swaggerSpecPromise

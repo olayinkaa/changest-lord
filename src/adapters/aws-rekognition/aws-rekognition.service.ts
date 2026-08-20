@@ -1,9 +1,15 @@
 import {
+	CreateCollectionCommand,
 	CreateFaceLivenessSessionCommand,
+	DeleteCollectionCommand,
+	DescribeCollectionCommand,
 	GetFaceLivenessSessionResultsCommand,
 	IndexFacesCommand,
+	ListCollectionsCommand,
+	ListFacesCommand,
 	RekognitionClient,
-	SearchUsersByImageCommand,
+	SearchFacesByImageCommand,
+	// SearchUsersByImageCommand,
 } from "@aws-sdk/client-rekognition"
 import { injectable } from "inversify"
 import { config } from "@/config/env"
@@ -24,6 +30,30 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 
 	private resolveCollectionName(collectionName: string): string {
 		return `${collectionName}-${this.config.APP_ENV}`
+	}
+
+	/**
+	 * Helper method to ensure a collection exists, creating it if it doesn't.
+	 */
+	public async ensureCollectionExists(collectionId: string): Promise<void> {
+		const resolvedName = this.resolveCollectionName(collectionId)
+		try {
+			await this.rekognitionClient.send(
+				new DescribeCollectionCommand({ CollectionId: resolvedName }),
+			)
+			pinoLogger.info(`AWS Rekognition collection '${resolvedName}' exists.`)
+		} catch (error: any) {
+			if (error.name === "ResourceNotFoundException") {
+				pinoLogger.info(`Collection '${resolvedName}' not found. Creating it now...`)
+				await this.createCollection(collectionId)
+				pinoLogger.info(
+					`✅ Successfully created AWS Rekognition collection: '${resolvedName}'`,
+				)
+			} else {
+				pinoLogger.error(error, `Error checking/creating collection: ${resolvedName}`)
+				throw error
+			}
+		}
 	}
 
 	async initiateLivenessSession(token: string) {
@@ -91,18 +121,95 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 	//
 	async searchFaceInCollection(targetImageBuffer: Buffer, collectionId: string) {
 		try {
-			const command = new SearchUsersByImageCommand({
+			// const command = new SearchUsersByImageCommand({
+			//   CollectionId: this.resolveCollectionName(collectionId),
+			//   Image: {
+			//     Bytes: targetImageBuffer,
+			//   },
+			//   UserMatchThreshold: 95.0,
+			//   MaxUsers: 1,
+			// });
+			const command = new SearchFacesByImageCommand({
 				CollectionId: this.resolveCollectionName(collectionId),
 				Image: {
 					Bytes: targetImageBuffer,
 				},
-				UserMatchThreshold: 95.0, // Minimum similarity percentage to flag a duplicate (e.g., 95%)
-				MaxUsers: 1, // We only care if at least one match exists
+				FaceMatchThreshold: 95.0,
+				MaxFaces: 1,
 			})
 			const response = await this.rekognitionClient.send(command)
 			return response
 		} catch (e) {
 			pinoLogger.error(e, `Error searching face for collectionId: ${collectionId} `)
+			throw e
+		}
+	}
+	//
+	async createCollection(collectionId: string) {
+		try {
+			const command = new CreateCollectionCommand({
+				CollectionId: this.resolveCollectionName(collectionId),
+			})
+			const response = await this.rekognitionClient.send(command)
+			return response
+		} catch (e) {
+			pinoLogger.error(e, `Error creating collectionId: ${collectionId} `)
+			throw e
+		}
+	}
+	//
+	async listCollections(): Promise<string[]> {
+		try {
+			const command = new ListCollectionsCommand({})
+			const response = await this.rekognitionClient.send(command)
+			return response.CollectionIds || []
+		} catch (e) {
+			pinoLogger.error(e, "Error listing Rekognition collections")
+			throw e
+		}
+	}
+	//
+	async deleteCollection(collectionId: string) {
+		try {
+			const command = new DeleteCollectionCommand({
+				CollectionId: this.resolveCollectionName(collectionId),
+			})
+			const response = await this.rekognitionClient.send(command)
+			return response
+		} catch (e) {
+			pinoLogger.error(e, `Error deleting collectionId: ${collectionId} `)
+			throw e
+		}
+	}
+	//
+	async describeCollectionDetails(collectionId: string) {
+		try {
+			const resolvedName = this.resolveCollectionName(collectionId)
+			const command = new DescribeCollectionCommand({
+				CollectionId: resolvedName,
+			})
+			const response = await this.rekognitionClient.send(command)
+			return {
+				collectionArn: response.CollectionARN,
+				faceCount: response.FaceCount,
+				userCount: response.UserCount,
+				faceModelVersion: response.FaceModelVersion,
+				createdAt: response.CreationTimestamp,
+			}
+		} catch (e) {
+			pinoLogger.error(e, `Error describing collection: ${collectionId}`)
+			throw e
+		}
+	}
+
+	async listFacesInCollection(collectionId: string) {
+		try {
+			const resolvedName = this.resolveCollectionName(collectionId)
+			const command = new ListFacesCommand({ CollectionId: resolvedName })
+			const response = await this.rekognitionClient.send(command)
+			return response.Faces || [] // Returns face IDs, ExternalImageIds (user.id), etc.
+		} catch (e) {
+			pinoLogger.error(e, `Error listing faces for collection: ${collectionId}`)
 			throw e
 		}
 	}
