@@ -112,3 +112,31 @@
   - `src/config/swagger.ts` — fallback spec `openapi` field bumped down to match.
 - **Rationale:** VS Code's bundled YAML OpenAPI schema (the `swaggerviewer:openapi` model) only validates up to `3.0.x` and flags `3.1.0` with `String does not match the pattern of "^3\.0\.\d(-.+)?$"`. The spec doesn't use any 3.1-specific features, so pinning to `3.0.3` is the lowest-friction fix. Easy to bump back to 3.1.0 once the schema the IDE ships catches up, or when the team installs an OpenAPI 3.1-aware VS Code extension (e.g. `redocly.openapi-cli`).
 - **Verified:** IDE diagnostics clean across all `src/docs/**` files. `pnpm run docs:check` still reports `4 paths, 6 schemas` and exits 0.
+
+## 2026-08-21
+
+### Feat: Paginate user list, add BVN flag, generate 5-digit userId for sellers
+- **High-level description:** Added server-side pagination + filtering to `GET /users`, surface-only response shaping via `UserResponseDto`, BVN-verified flag on the KYC record, and a utility that mints a unique 5-digit `userId5` for seller accounts during PIN creation.
+- **Files added:**
+  - `prisma/migrations/20260821211742_include_bvn_verified/migration.sql` — adds `bvnVerified BOOLEAN NOT NULL DEFAULT false` to `user_kycs`.
+  - `src/common/dto/pagination.dto.ts` — `PaginationQueryDto` (`page` / `size` with sane defaults + bounds).
+  - `src/common/utility/utility.module.ts` — Inversify `ContainerModule` binding `UtilityService`.
+  - `src/common/utility/utility.service.ts` — `generateUniqueUserId5()` retry-loop against `findByUserId5`.
+  - `src/common/utility/utility.type.ts` — `UTILITY_TYPES` symbol + `IUtilityService` contract.
+  - `src/modules/user/user.dto.ts` — `UserQueryDto` (extends `PaginationQueryDto`), `UserResponseDto`, `UserBusinessTypeResponseDto`.
+  - `src/modules/kyc/kyc.dto.ts` — `KycResponseDto` (Exposes a vetted subset; hides emailVerified/phoneVerified/locationVerified/whatsappVerified/isSmsVerified via `@Exclude`).
+- **Files modified:**
+  - `prisma/models/user.prisma` — `UserKyc.bvnVerified Boolean @default(false)`.
+  - `src/app.module.ts` — registers `UtilityModule` alongside existing modules; formatting aligned with Biome (semicolons, double quotes).
+  - `src/types/base.ts` — adds `PaginatedResult<T>` and `PaginatedResponse<T>` shapes.
+  - `src/types/enum.ts` — adds `ErrorType.USER_NOT_FOUND`.
+  - `tsconfig.json` — sets `strictPropertyInitialization: false` (Inversify parameter-decorator ergonomics).
+  - `src/modules/user/user.controller.ts` — `GET /` now accepts `UserQueryDto` validated by `validateQuery`; pass-through to service.
+  - `src/modules/user/user.service.ts` — `getAllUsers(query)` returns `PaginatedResponse<UserResponseDto>`; `getUser(id)` returns a single sanitized `UserResponseDto`.
+  - `src/modules/user/user.repository.ts` — replaces `findAllWithKycAndBusiness` with `findAll(query)` (filter + skip/take + parallel count), adds `findByUserId5`, adds `updateUserPinAndUserId5`, removes `livenessDone` auto-set on profile create.
+  - `src/modules/user/user.types.ts` — updates `IUserRepository`/`IUserService` contracts; `getAllUsers` now takes `UserQueryDto` and returns `PaginatedResponse<UserResponseDto>`.
+  - `src/modules/onboarding/onboarding.service.ts` — `createPin` now looks up the user, generates `userId5` for sellers via `UtilityService`, persists both atomically with `updateUserPinAndUserId5`, and includes `userType` in the access/refresh token payload.
+  - `src/modules/business-type/business-type.dto.ts` — Biome formatting (tabs → spaces, semicolons) plus dropping the unused `// @Exclude() userId!: string;` line in `BusinessTypeResponseDto`.
+- **Rationale:** Lists were unbounded (`findMany`) which would not scale; pagination is needed before any admin UI reads from `GET /users`. `UserResponseDto` prevents sensitive fields (`pinHash`, `livenessImagePublicId`, `businessTypeId`) from leaking. `userId5` is the seller's display identifier surfaced to merchants / POS flows, so it must be unique and assigned the moment onboarding finalises. The BVN flag mirrors the existing NIN / phone-verification pattern and unlocks a follow-up KYC endpoint without another migration.
+- **Verified:** Biome passes (`pnpm exec biome check --write ./src` → 93 files, only style nits, 0 errors). Husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 16 staged files and re-staged them — commit landed on `feature/user-pagination-kyc-bvn` (commit `f2c6a62`). Schema fields confirmed: `UserKyc.bvnVerified` and `User.userId5 @unique` exist in `prisma/models/user.prisma`. `validateQuery` middleware exists at `src/core/middleware/validate-query.ts`.
+- **Follow-ups (intentionally not in this commit):** Wire `passport-jwt` so `GET /users` is auth-gated; document `GET /users` (and the new query params) in `src/docs/paths/users.yaml`; expose a `KycResponseDto` mapping helper (today `plainToInstance(UserResponseDto, …)` triggers class-transformer on `kyc`, but no transformer is wired for the nested `UserBusinessTypeResponseDto` until DTO refs are tightened).
