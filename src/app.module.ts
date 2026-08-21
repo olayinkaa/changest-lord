@@ -1,4 +1,5 @@
 import { AdaptersModule } from "./adapters/adapters.module"
+import { UtilityModule } from "./common/utility/utility.module"
 import { LoggerModule } from "./config/pino-logger"
 import { AddressModule } from "./modules/address/address.module"
 import { AuthModule } from "./modules/auth/auth.module"
@@ -18,6 +19,7 @@ const AppModules = [
 	LivenessModule,
 	OnboardingModule,
 	KycModule,
+	UtilityModule,
 ]
 
 export default AppModules

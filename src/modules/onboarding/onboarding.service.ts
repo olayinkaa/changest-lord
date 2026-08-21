@@ -1,10 +1,12 @@
 import { inject, injectable } from "inversify"
+import { type IUtilityService, UTILITY_TYPES } from "@/common/utility/utility.type"
 import { config } from "@/config/env"
 import { OnboardingScopes } from "@/constants"
 import { BadRequestException, ConflictException } from "@/core/errors/exceptions"
-import { OnboardingStep } from "@/generated/prisma/enums"
+import { OnboardingStep, UserType } from "@/generated/prisma/enums"
 import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
+import { ErrorType } from "@/types/enum"
 import { mapStepToNextScope } from "@/utils/helper"
 import {
 	BUSINESS_TYPES,
@@ -26,6 +28,8 @@ export class OnboardingService implements IOnboardingService {
 		@inject(BUSINESS_TYPES.Service)
 		private businessTypeService: IBusinessTypeService,
 		@inject(AUTH_TYPES.AuthUtils) private readonly authUtils: IAuthUtils,
+		@inject(UTILITY_TYPES.Service)
+		private readonly utilityService: IUtilityService,
 	) {}
 
 	/**
@@ -118,7 +122,7 @@ export class OnboardingService implements IOnboardingService {
 		const stepToken = this.authUtils.generateToken(
 			payload,
 			config.JWT_ONBOARDING_SECRET,
-			"60m", //TODO: revert back to "15m"
+			"15m",
 		)
 
 		return {
@@ -156,7 +160,7 @@ export class OnboardingService implements IOnboardingService {
 		const stepToken = this.authUtils.generateToken(
 			payload,
 			config.JWT_ONBOARDING_SECRET,
-			"60m", //TODO: revert back to "15m"
+			"15m",
 		)
 
 		return {
@@ -168,10 +172,32 @@ export class OnboardingService implements IOnboardingService {
 
 	async createPin(userId: string, pin: string) {
 		const pinHash = this.authUtils.hashPin(pin)
-		const user = await this.userRepo.updateUserPin(userId, pinHash)
+
+		const user = await this.userRepo.findUser(userId)
+		if (!user) {
+			throw new BadRequestException("User not found", {
+				errorType: ErrorType.USER_NOT_FOUND,
+			})
+		}
+		let userId5 = user.userId5
+
+		if (user.userType === UserType.seller && !userId5) {
+			userId5 = await this.utilityService.generateUniqueUserId5()
+		}
+
+		// 3. Update pin and userId5 together
+		const updatedUser = await this.userRepo.updateUserPinAndUserId5(
+			userId,
+			pinHash,
+			userId5,
+		)
 
 		// Generate an access token for automatic login/dashboard access
-		const payload = { id: user.id, phone: user.phone }
+		const payload = {
+			id: updatedUser.id,
+			phone: updatedUser.phone,
+			userType: updatedUser.userType,
+		}
 
 		const accessToken = this.authUtils.generateToken(
 			payload,
@@ -209,4 +235,5 @@ export class OnboardingService implements IOnboardingService {
 
 		return { exists: false, message: "Email is available" }
 	}
+	//
 }

@@ -1,5 +1,8 @@
 import { injectable } from "inversify"
 import { prisma } from "@/core/database/db"
+import type { User } from "@/generated/prisma/client"
+import type { PaginatedResult } from "@/types/base"
+import type { UserQueryDto } from "./user.dto"
 import type { IUserRepository } from "./user.types"
 
 @injectable()
@@ -21,21 +24,42 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async findAllWithKycAndBusiness() {
-		return prisma.user.findMany({
-			include: {
-				kyc: true,
-				businessType: true,
-			},
-			orderBy: {
-				createdAt: "desc", // Sorts by newest records first
-			},
-		})
+	async findAll(query: UserQueryDto): Promise<PaginatedResult<User>> {
+		const { page, size, emailLike, userType, businessNameLike } = query
+
+		const where: any = {}
+		if (businessNameLike) {
+			where.branchName = { contains: businessNameLike, mode: "insensitive" }
+		}
+
+		if (emailLike) {
+			where.email = { contains: emailLike, mode: "insensitive" }
+		}
+
+		if (userType) {
+			where.userType = userType
+		}
+
+		const [content, total] = await Promise.all([
+			prisma.user.findMany({
+				where,
+				skip: (page - 1) * size,
+				take: size,
+				orderBy: { createdAt: "desc" },
+				include: {
+					kyc: true,
+					businessType: true,
+				},
+			}),
+			prisma.user.count({ where }),
+		])
+
+		return { content, total }
 	}
 
-	async findUser(id: string) {
+	async findUser(userId: string) {
 		return prisma.user.findUnique({
-			where: { id },
+			where: { id: userId },
 			include: {
 				kyc: true,
 				businessType: true,
@@ -71,7 +95,6 @@ export class UserRepository implements IUserRepository {
 					create: {
 						completedProfile: false,
 						phoneVerified: false,
-						livenessDone: isCustomer, // Mark true if customer to align with liveness skip
 					},
 				},
 			},
@@ -135,13 +158,29 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	async updateUserPinAndUserId5(userId: string, pinHash: string, userId5?: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				pinHash,
+				userId5,
+				onboardingStep: "PIN_COMPLETED",
+				kyc: {
+					update: {
+						pinCreated: true,
+						completedProfile: true,
+					},
+				},
+			},
+		})
+	}
+
 	async findUserByPhone(phone: string) {
 		return prisma.user.findUnique({
 			where: { phone },
 		})
 	}
-	//
-	// Inside UserRepository class
+
 	async findByEmail(email: string) {
 		return prisma.user.findUnique({
 			where: { email },
@@ -149,6 +188,12 @@ export class UserRepository implements IUserRepository {
 				id: true,
 				email: true,
 			},
+		})
+	}
+
+	async findByUserId5(userId5: string) {
+		return prisma.user.findUnique({
+			where: { userId5 },
 		})
 	}
 }

@@ -42,6 +42,7 @@ model UserKyc {
     emailVerified    Boolean @default(false)
     phoneVerified    Boolean @default(false)
     ninVerified      Boolean @default(false)
+    bvnVerified      Boolean @default(false)
     locationVerified Boolean @default(false)
     whatsappVerified Boolean @default(false)
     pinCreated       Boolean @default(false)

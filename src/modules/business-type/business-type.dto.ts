@@ -18,7 +18,6 @@ export class BusinessTypeResponseDto {
 	@Expose() id!: string
 	@Expose() type!: string
 	@Expose() description!: string
-	// @Exclude() userId!: string;
 	@Expose() createdAt!: Date
 	@Expose() updatedAt!: Date
 }
