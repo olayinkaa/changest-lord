@@ -3,16 +3,8 @@ import pino from "pino"
 import { TYPES } from "@/types/di-types"
 import { config } from "./env"
 
-// console.log("NODE_ENV is:", process.env.NODE_ENV);
-
-const getTransports = () => {
-	const targets = []
-	if (config.NODE_ENV === "development") {
-		targets.push({ target: "pino-pretty", options: { colorize: true } })
-	}
-	// Simplified: Add New Relic target here if needed
-	return pino.transport({ targets })
-}
+// Only use pino-pretty transport locally
+const isDev = config.NODE_ENV === "development"
 
 export const pinoLogger = pino(
 	{
@@ -21,18 +13,22 @@ export const pinoLogger = pino(
 			err: pino.stdSerializers.err,
 			error: pino.stdSerializers.err,
 		},
-		base: { app: config.SERVICE_NAME, env: process.env.NODE_ENV },
+		base: { app: config.SERVICE_NAME, env: config.NODE_ENV },
 		timestamp: pino.stdTimeFunctions.isoTime,
 		redact: {
 			paths: ["req.headers.authorization", "password", "pin"],
 			censor: "****REDACTED****",
 		},
 	},
-	getTransports(),
+	// Pass transport ONLY if in development, otherwise omit it to log straight to stdout
+	isDev
+		? pino.transport({
+				targets: [{ target: "pino-pretty", options: { colorize: true } }],
+			})
+		: undefined,
 )
 
 export const LoggerModule = new ContainerModule((bind: interfaces.Bind) => {
-	// Generates an isolated, request-tagged child logger for every unique incoming API call
 	bind<pino.Logger>(TYPES.Logger)
 		.toDynamicValue(() => {
 			return pinoLogger.child({
