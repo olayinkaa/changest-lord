@@ -9,6 +9,7 @@ import {
 	BadRequestException,
 	UnprocessableEntityException,
 } from "@/core/errors/exceptions"
+import { ErrorType } from "@/types/enum"
 import { AUTH_TYPES, type IAuthUtils } from "../auth/auth.types"
 import type { SubmitLivenessCaptureRequest } from "../onboarding/onboarding.dto"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
@@ -37,8 +38,6 @@ export class LivenessService implements ILiveness {
 			AwsCollectionId.USERS,
 		)
 
-		pinoLogger.info({ searchResult }, "Search face collection result")
-
 		if (searchResult.FaceMatches && searchResult.FaceMatches.length > 0) {
 			const match = searchResult.FaceMatches[0]
 			const matchedUserId = match.Face?.ExternalImageId
@@ -48,7 +47,7 @@ export class LivenessService implements ILiveness {
 				throw new UnprocessableEntityException(
 					`An account with this biometric signature already exists (Similarity: ${match.Similarity?.toFixed(2)}%).`,
 					{
-						errorType: "BIOMETRIC_DUPLICATE_ACCOUNT",
+						errorType: ErrorType.BIOMETRIC_DUPLICATE_ACCOUNT,
 					},
 				)
 			}
@@ -85,7 +84,9 @@ export class LivenessService implements ILiveness {
 		const sessionId =
 			await this.awsRekognitionService.initiateLivenessSession(hashedToken)
 		if (!sessionId) {
-			throw new UnprocessableEntityException("Failed to initiate Liveness Session")
+			throw new UnprocessableEntityException("Failed to initiate Liveness Session", {
+				errorType: ErrorType.NO_SESSION_ID,
+			})
 		}
 
 		return {
