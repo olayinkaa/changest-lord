@@ -1,32 +1,32 @@
 model User {
-    id               String         @id @default(uuid())
-    email            String?        @unique
-    phone            String         @unique
-    firstName        String?
-    lastName         String?
-    middleName       String?
-    isMarketer       Boolean       @default(false)
-    userType         UserType?
-    businessLocation String?
-    businessName     String?
-    address          String?
-    nin              String?
-    bvn              String?
-    businessTypeId   String?
-    businessType     BusinessType?  @relation(fields: [businessTypeId], references: [id], onDelete: SetNull)
-    kyc              UserKyc?
-    userId5          String?        @unique
-    pinHash          String?
-    onboardingStep   OnboardingStep @default(PHONE_VALIDATED)
-    livenessImageUrl String?
+    id                    String         @id @default(uuid())
+    email                 String?        @unique
+    phone                 String         @unique
+    firstName             String?
+    lastName              String?
+    middleName            String?
+    isMarketer            Boolean        @default(false)
+    userType              UserType?
+    businessLocation      String?
+    businessName          String?
+    address               String?
+    nin                   String?        @unique
+    bvn                   String?        @unique
+    businessTypeId        String?
+    businessType          BusinessType?  @relation(fields: [businessTypeId], references: [id], onDelete: SetNull)
+    kyc                   UserKyc?
+    userId5               String?        @unique
+    pinHash               String?
+    onboardingStep        OnboardingStep @default(PHONE_VALIDATED)
+    livenessImageUrl      String?
     livenessImagePublicId String?
-    latitude         Decimal?       @db.Decimal(9, 6)
-    longitude        Decimal?       @db.Decimal(9, 6)
-    deviceBindingId  String?
-    virtualAccountNo String?        @unique
-    createdAt        DateTime       @default(now())
-    updatedAt        DateTime       @updatedAt
-    device           UserDevice?
+    latitude              Decimal?       @db.Decimal(9, 6)
+    longitude             Decimal?       @db.Decimal(9, 6)
+    deviceBindingId       String?
+    virtualAccountNo      String?        @unique
+    createdAt             DateTime       @default(now())
+    updatedAt             DateTime       @updatedAt
+    device                UserDevice?
 
     @@index([email])
     @@index([phone])
@@ -47,6 +47,7 @@ model UserKyc {
     whatsappVerified Boolean @default(false)
     pinCreated       Boolean @default(false)
     isSmsVerified    Boolean @default(false)
+    bvnFaceVerified  Boolean @default(false)
 
     @@map("user_kycs")
 }

@@ -4,7 +4,17 @@ export const KYC_TYPES = {
 }
 
 export interface IKycService {
-	validateBVN(bvn: string): Promise<any>
+	validateBvn(bvn: string): Promise<any>
 }
 
-export type IKycRepository = {}
+export type IKycRepository = {
+	findBvnRecordLocally(bvn: string): Promise<any | null>
+	saveBvnRecordLocally(data: {
+		bvn: string
+		firstName?: string
+		lastName?: string
+		dob?: string
+		phone?: string
+		image?: string
+	}): Promise<any>
+}

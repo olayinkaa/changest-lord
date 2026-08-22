@@ -5,6 +5,7 @@ declare global {
 	namespace Express {
 		interface Request {
 			onboardingUser?: IOnboardingUser
+			authUser: IAuthUser
 		}
 	}
 }

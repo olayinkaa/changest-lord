@@ -2,6 +2,10 @@ import type { AxiosInstance } from "axios"
 import axios from "axios"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
+import {
+	BadRequestException,
+	ServiceUnavailableException,
+} from "@/core/errors/exceptions"
 import type { ApiResponse } from "@/types/base"
 import type { IVerificationService } from "../verification.types"
 import type { IDojahBvnFullResponse } from "./dojah.types"
@@ -31,12 +35,16 @@ export class DojaService implements IVerificationService {
 				},
 			)
 			return res.data.entity
-		} catch (err) {
+		} catch (err: any) {
 			pinoLogger.error({ err }, "BVN verification failed")
-			throw err
+			// 1. Extract the exact error string returned by Dojah (e.g., "Invalid BVN")
+			if (err.response) {
+				throw new BadRequestException("Your BVN does not exist, please enter a valid BVN")
+			}
+			// Case 2: Network error, timeout, or Dojah server is down (no response received)
+			throw new ServiceUnavailableException(
+				"We are unable to verify your BVN now, please try again later",
+			)
 		}
 	}
-	//
-	// public async verifyBasicPhone(_phoneNumber: string) {}
-	//
 }

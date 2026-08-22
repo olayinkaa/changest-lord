@@ -1,4 +1,5 @@
 import type { AxiosResponse } from "axios"
+import type { JwtPayload } from "jsonwebtoken"
 
 export type ApiResponse<T = any> = AxiosResponse<T>
 
@@ -14,3 +15,5 @@ export interface PaginatedResponse<T> {
 	totalPages: number
 	totalElements: number
 }
+
+export interface AuthJwtPayload extends JwtPayload, IAuthUser {}

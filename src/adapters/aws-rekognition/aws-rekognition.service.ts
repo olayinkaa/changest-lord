@@ -64,6 +64,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 				Settings: {
 					ChallengePreferences: [
 						{
+							// Type: "FaceMovementAndLightChallenge",
 							Type: "FaceMovementAndLightChallenge",
 						},
 					],

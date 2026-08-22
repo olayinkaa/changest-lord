@@ -17,6 +17,7 @@ import AppModules from "./app.module"
 import { configureCors } from "./config/cors"
 import { AwsCollectionId } from "./constants"
 import { prisma } from "./core/database/db"
+import { AuthProvider } from "./providers/auth-provider"
 
 export class App extends Application {
 	configureService(container: Container): void {
@@ -49,7 +50,9 @@ export class App extends Application {
 			null, // Router
 			{
 				rootPath: "/api/v1",
-			},
+			}, // path
+			null, // app
+			AuthProvider,
 		)
 
 		server.setConfig((app) => {

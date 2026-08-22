@@ -1,6 +1,6 @@
 import { Exclude, Expose } from "class-transformer"
+import { IsString, Length } from "class-validator"
 
-// @Exclude()
 export class KycResponseDto {
 	@Expose() id: string
 	@Expose() userId: string
@@ -14,4 +14,10 @@ export class KycResponseDto {
 	@Exclude() whatsappVerified: boolean
 	@Expose() pinCreated: boolean
 	@Exclude() isSmsVerified: boolean
+}
+
+export class VerifyBvnDto {
+	@IsString()
+	@Length(11, 11, { message: "BVN must be exactly 11 digits" })
+	bvn: string
 }

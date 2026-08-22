@@ -2,6 +2,13 @@ declare global {
 	interface IOnboardingUser {
 		id: string
 		phone: string
+		userType?: "seller" | "customer"
+	}
+
+	interface IAuthUser {
+		id: string
+		phone: string
+		userType: "seller" | "customer"
 	}
 
 	interface AnchorBank {

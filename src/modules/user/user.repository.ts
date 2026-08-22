@@ -7,23 +7,11 @@ import type { IUserRepository } from "./user.types"
 
 @injectable()
 export class UserRepository implements IUserRepository {
-	async findByPhoneWithKyc(phone: string) {
-		return prisma.user.findUnique({
-			where: { phone },
-			select: {
-				id: true,
-				onboardingStep: true,
-				phone: true,
-				userType: true,
-				kyc: {
-					select: {
-						completedProfile: true,
-					},
-				},
-			},
-		})
-	}
-
+	/**
+	 *
+	 * @param query
+	 * @returns
+	 */
 	async findAll(query: UserQueryDto): Promise<PaginatedResult<User>> {
 		const { page, size, emailLike, userType, businessNameLike } = query
 
@@ -57,6 +45,33 @@ export class UserRepository implements IUserRepository {
 		return { content, total }
 	}
 
+	/**
+	 *
+	 * @param phone
+	 * @returns
+	 */
+	async findByPhoneWithKyc(phone: string) {
+		return prisma.user.findUnique({
+			where: { phone },
+			select: {
+				id: true,
+				onboardingStep: true,
+				phone: true,
+				userType: true,
+				kyc: {
+					select: {
+						completedProfile: true,
+					},
+				},
+			},
+		})
+	}
+
+	/**
+	 *
+	 * @param userId
+	 * @returns
+	 */
 	async findUser(userId: string) {
 		return prisma.user.findUnique({
 			where: { id: userId },
@@ -67,6 +82,59 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	/**
+	 *
+	 * @param phone
+	 * @returns
+	 */
+	async findUserByPhone(phone: string) {
+		return prisma.user.findUnique({
+			where: { phone },
+		})
+	}
+
+	/**
+	 *
+	 * @param email
+	 * @returns
+	 */
+	async findByEmail(email: string) {
+		return prisma.user.findUnique({
+			where: { email },
+			select: {
+				id: true,
+				email: true,
+			},
+		})
+	}
+
+	/**
+	 *
+	 * @param bvn
+	 * @returns
+	 */
+	async findByBvn(bvn: string): Promise<User | null> {
+		return prisma.user.findUnique({
+			where: { bvn },
+		})
+	}
+
+	/**
+	 *
+	 * @param userId5
+	 * @returns
+	 */
+	async findByUserId5(userId5: string): Promise<User | null> {
+		return prisma.user.findUnique({
+			where: { userId5 },
+		})
+	}
+
+	/**
+	 *
+	 * @param phoneNumber
+	 * @returns
+	 */
 	async createUserPhoneNumber(phoneNumber: string) {
 		return prisma.user.create({
 			data: {
@@ -75,6 +143,12 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	/**
+	 *
+	 * @param onboardingUser
+	 * @param data
+	 * @returns
+	 */
 	async createUserProfile(onboardingUser: { id: string; phone: string }, data: any) {
 		const { email, firstName, lastName, homeAddress, userType } = data
 
@@ -105,7 +179,13 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
-	async updateBusinessProfile(userId: string, data: any) {
+	/**
+	 *
+	 * @param userId
+	 * @param data
+	 * @returns
+	 */
+	async updateBusinessProfile(userId: string, data: any): Promise<User> {
 		const { businessName, businessLocation, businessTypeId } = data
 
 		return prisma.user.update({
@@ -123,6 +203,12 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	/**
+	 *
+	 * @param userId
+	 * @param imageData
+	 * @returns
+	 */
 	async updateLivenessStatus(
 		userId: string,
 		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
@@ -142,6 +228,12 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	/**
+	 *
+	 * @param userId
+	 * @param pinHash
+	 * @returns
+	 */
 	async updateUserPin(userId: string, pinHash: string) {
 		return prisma.user.update({
 			where: { id: userId },
@@ -158,6 +250,13 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	/**
+	 *
+	 * @param userId
+	 * @param pinHash
+	 * @param userId5
+	 * @returns
+	 */
 	async updateUserPinAndUserId5(userId: string, pinHash: string, userId5?: string) {
 		return prisma.user.update({
 			where: { id: userId },
@@ -172,28 +271,6 @@ export class UserRepository implements IUserRepository {
 					},
 				},
 			},
-		})
-	}
-
-	async findUserByPhone(phone: string) {
-		return prisma.user.findUnique({
-			where: { phone },
-		})
-	}
-
-	async findByEmail(email: string) {
-		return prisma.user.findUnique({
-			where: { email },
-			select: {
-				id: true,
-				email: true,
-			},
-		})
-	}
-
-	async findByUserId5(userId5: string) {
-		return prisma.user.findUnique({
-			where: { userId5 },
 		})
 	}
 }
