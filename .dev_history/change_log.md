@@ -140,3 +140,32 @@
 - **Rationale:** Lists were unbounded (`findMany`) which would not scale; pagination is needed before any admin UI reads from `GET /users`. `UserResponseDto` prevents sensitive fields (`pinHash`, `livenessImagePublicId`, `businessTypeId`) from leaking. `userId5` is the seller's display identifier surfaced to merchants / POS flows, so it must be unique and assigned the moment onboarding finalises. The BVN flag mirrors the existing NIN / phone-verification pattern and unlocks a follow-up KYC endpoint without another migration.
 - **Verified:** Biome passes (`pnpm exec biome check --write ./src` → 93 files, only style nits, 0 errors). Husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 16 staged files and re-staged them — commit landed on `feature/user-pagination-kyc-bvn` (commit `f2c6a62`). Schema fields confirmed: `UserKyc.bvnVerified` and `User.userId5 @unique` exist in `prisma/models/user.prisma`. `validateQuery` middleware exists at `src/core/middleware/validate-query.ts`.
 - **Follow-ups (intentionally not in this commit):** Wire `passport-jwt` so `GET /users` is auth-gated; document `GET /users` (and the new query params) in `src/docs/paths/users.yaml`; expose a `KycResponseDto` mapping helper (today `plainToInstance(UserResponseDto, …)` triggers class-transformer on `kyc`, but no transformer is wired for the nested `UserBusinessTypeResponseDto` until DTO refs are tightened).
+
+## 2026-08-22
+
+### Feat: BVN validation endpoint with local cache, JWT auth provider, AWS Rekognition collection bootstrap
+- **High-level description:** Stand up the production KYC slice — a `POST /kyc/validate-bvn` flow backed by Dojah with a `bvn_caches` table that short-circuits repeat lookups; wire `inversify-express-utils`' `AuthProvider` so the `AuthGuard` decorator can gate controllers behind a real Bearer-token JWT; and bootstrap the AWS Rekognition face-collection at process start so the first `compareFaces` call doesn't race the create-if-missing.
+- **Files added:**
+  - `prisma/migrations/20260821232454_added_bvn_cache_table/migration.sql` — creates `bvn_caches` (unique on `bvn`); adds unique constraints on `users.nin` and `users.bvn`.
+  - `prisma/models/bvn_cache.prisma` — `BvnCache` model mapped to `bvn_caches`.
+  - `src/core/guards/auth.guard.ts` — `AuthGuard()` decorator; reads `interfaces.HttpContext` from request metadata and rejects unauthenticated principals via `UnauthorizedException`.
+  - `src/providers/auth-provider.ts` — `AuthProvider implements interfaces.AuthProvider`. Pulls Bearer token, verifies with `JWT_TOKEN_SECRET`, builds a `UserPrincipal` from the decoded payload.
+  - `src/providers/user-principal.ts` — `UserPrincipal implements interfaces.Principal` with `isAuthenticated()` (returns `Promise<boolean>` per contract).
+- **Files modified:**
+  - `prisma/models/user.prisma` — unique indexes on `nin` and `bvn`.
+  - `src/index.ts` — `setup()` now `await`s the AWS Rekognition collection bootstrap (non-fatal on error so the service still starts in dev) before building the `InversifyExpressServer`; passes `AuthProvider` as the 5th ctor arg.
+  - `src/modules/kyc/kyc.controller.ts` — `POST /kyc/validate-bvn` (`@validateSchema(VerifyBvnDto)`).
+  - `src/modules/kyc/kyc.dto.ts` — `VerifyBvnDto` (`@IsString`, `@Length(11, 11)`). `KycResponseDto` already in place from the 2026-08-21 commit.
+  - `src/modules/kyc/kyc.service.ts` — `validateBvn` flow: existing-user → 400; cache hit → return; else call Dojah adapter and persist to `bvn_caches`. Returns `savedCache`. (Face-comparison + user-table update are wired but commented as steps 4 / 6 — implementation left for the follow-up.)
+  - `src/modules/kyc/kyc.repository.ts` — `findBvnRecordLocally(bvn)` and `saveBvnRecordLocally(...)` over `prisma.bvnCache`.
+  - `src/modules/kyc/kyc.types.ts` — `KYC_TYPES`, `IKycService`, `IKycRepository` contracts.
+  - `src/modules/user/user.repository.ts` + `user.types.ts` — adds `findByBvn(bvn): Promise<User | null>` (used by `KycService.validateBvn` step 1).
+  - `src/modules/user/user.controller.ts` — applies the new `AuthGuard` decorator so `GET /users` and `GET /users/:id` require an authenticated principal.
+  - `src/adapters/aws-rekognition/aws-rekognition.service.ts` — `ensureCollectionExists(collectionId)` no-op if it already exists; logs and rethrows otherwise. (Implementation changes are a Biome-driven format pass — no behaviour added beyond the bootstrap call site.)
+  - `src/adapters/verification/dojah/dojah.service.ts` — Biome formatting; behaviour unchanged.
+  - `src/types/base.ts` — adds `AuthJwtPayload extends JwtPayload, IAuthUser` (consumed by `AuthProvider`).
+  - `src/types/enum.ts` — adds `ErrorType.BVN_ALREADY_EXISTS`.
+  - `src/types/express.d.ts` / `src/types/global.d.ts` — small type augmentation + Biome format pass.
+- **Rationale:** Until now, `KycModule` was scaffolded but had no endpoint or persistence layer. The BVN cache is the most cost-sensitive part of the Dojah integration (every lookup is paid), so it's added at the same time as the endpoint rather than as a follow-up. Wiring `AuthProvider` now means every subsequent controller can opt into auth via a single decorator rather than retrofitting passport-jwt. Bootstrap-time Rekognition collection creation removes a race where the first `compareFaces` call during onboarding would otherwise fail with `ResourceNotFoundException`.
+- **Verified:** Biome passes on src (`pnpm exec biome check --write ./src` → 96 files, 1 unsafe-fix warning left alone — unused private `api` in `YouVerifyService`, intentionally out of scope). Husky pre-commit re-ran Biome on the 18 staged files and re-staged them. Commit `0e6efb2` landed on `feature/kyc-bvn-cache-and-jwt-auth`. Cross-file consistency confirmed: `ADAPTER_TYPES.VerificationService` resolves to a `VerificationFactory` whose `IVerificationService.verifyBVN` matches `KycService.validateBvn`; `KycRepository.findBvnRecordLocally` ↔ `prisma.bvnCache.findUnique`; `userRepo.findByBvn` exists and is typed `Promise<User | null>`; `ErrorType.BVN_ALREADY_EXISTS` and `AuthJwtPayload` exported from the expected paths.
+- **Follow-ups (intentionally not in this commit):** Step 4 (face comparison against liveness image) and step 6 (write `bvn`/`bvnVerified` to `users`) inside `KycService.validateBvn` — stubbed with comments. OpenAPI docs for `POST /kyc/validate-bvn` (add to `src/docs/paths/kyc.yaml`). Storing the `UserPrincipal.details` shape on the `Request` so downstream middleware can read `req.user.id` without re-decoding.
