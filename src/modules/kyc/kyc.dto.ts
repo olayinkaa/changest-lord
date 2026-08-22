@@ -3,7 +3,7 @@ import { IsString, Length } from "class-validator"
 
 export class KycResponseDto {
 	@Expose() id: string
-	@Expose() userId: string
+	@Exclude() userId: string
 	@Expose() livenessDone: boolean
 	@Expose() completedProfile: boolean
 	@Exclude() emailVerified: boolean
