@@ -1,4 +1,5 @@
 import { inject, injectable } from "inversify"
+import { pinoLogger } from "@/config/pino-logger"
 import { type IUserRepository, USER_TYPES } from "@/modules/user/user.types"
 import type { IUtilityService } from "./utility.type"
 
@@ -24,5 +25,32 @@ export class UtilityService implements IUtilityService {
 		}
 
 		return randomUserId5
+	}
+	//
+	/**
+	 * Fetches an image from an external URL (such as Cloudinary) and returns it as a Buffer.
+	 */
+	async fetchImageBufferFromUrl(imageUrl: string): Promise<Buffer> {
+		try {
+			const response = await fetch(imageUrl)
+			if (!response.ok) {
+				throw new Error(
+					`Failed to fetch image from URL: ${imageUrl} (Status: ${response.status})`,
+				)
+			}
+			const arrayBuffer = await response.arrayBuffer()
+			return Buffer.from(arrayBuffer)
+		} catch (error) {
+			pinoLogger.error({ error, imageUrl }, "Error fetching image buffer from URL")
+			throw error
+		}
+	}
+
+	/**
+	 * Converts a Base64 image string (with or without data prefix) into a Buffer.
+	 */
+	convertBase64ToBuffer(base64String: string): Buffer {
+		const cleanBase64 = base64String.replace(/^data:image\/\w+;base64,/, "")
+		return Buffer.from(cleanBase64, "base64")
 	}
 }

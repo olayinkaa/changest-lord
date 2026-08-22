@@ -1,12 +1,17 @@
 // import type { UserCreateInput } from "@/generated/prisma/models";
 
-import type { User } from "@/generated/prisma/client"
+import type { BusinessType, User, UserKyc } from "@/generated/prisma/client"
 import type { PaginatedResponse, PaginatedResult } from "@/types/base"
 import type { UserQueryDto, UserResponseDto } from "./user.dto"
 
 export const USER_TYPES = {
 	Service: Symbol.for("UserService"),
 	Repository: Symbol.for("UserRepository"),
+}
+
+export type UserWithRelations = User & {
+	kyc?: UserKyc | null
+	businessType?: BusinessType | null
 }
 
 export interface IUserRepository {
@@ -24,7 +29,7 @@ export interface IUserRepository {
 	): Promise<any>
 	updateBusinessProfile(userId: string, data: any): Promise<any>
 	createUserPhoneNumber(phoneNumber: string): Promise<any>
-	findUser(userId: string): Promise<any>
+	findUser(userId: string): Promise<UserWithRelations | null>
 	updateUserPin(userId: string, pinHash: string): Promise<any>
 	updateLivenessStatus(
 		userId: string,
@@ -36,9 +41,10 @@ export interface IUserRepository {
 	updateUserPinAndUserId5(
 		userId: string,
 		pinHash: string,
-		userId5?: string,
+		userId5?: string | null,
 	): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
+	updateBvnVerification(userId: string, bvn: string): Promise<any>
 }
 
 export interface IUserService {
