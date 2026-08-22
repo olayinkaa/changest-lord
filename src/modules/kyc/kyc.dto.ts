@@ -10,6 +10,7 @@ export class KycResponseDto {
 	@Exclude() phoneVerified: boolean
 	@Expose() ninVerified: boolean
 	@Expose() bvnVerified: boolean
+	@Expose() bvnFaceVerified: boolean
 	@Exclude() locationVerified: boolean
 	@Exclude() whatsappVerified: boolean
 	@Expose() pinCreated: boolean

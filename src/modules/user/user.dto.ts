@@ -53,7 +53,7 @@ export class UserResponseDto {
 	@Expose() userId5?: string
 	@Exclude() pinHash?: string
 	@Exclude() businessTypeId?: string
-	@Expose() onboardingStep?: string
+	@Exclude() onboardingStep?: string
 	@Expose() livenessImageUrl?: string
 	@Exclude() livenessImagePublicId?: string
 	@Expose() latitude?: number

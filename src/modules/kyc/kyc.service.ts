@@ -23,6 +23,15 @@ export class KycService implements IKycService {
 	) {}
 
 	//
+	async getAllCachedBvns() {
+		return this.kycRepo.getAllCachedBvns()
+	}
+
+	async getCachedBvnByID(id: string) {
+		return this.kycRepo.findCachedBvnByID(id)
+	}
+
+	//
 	async validateBvn(userId: string, bvn: string): Promise<any> {
 		// Fetch the user from the database using the token's userId to get their uploaded profile image (Cloudinary URL)
 		const user = await this.userRepo.findUser(userId)
