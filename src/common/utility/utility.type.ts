@@ -4,4 +4,6 @@ export const UTILITY_TYPES = {
 
 export type IUtilityService = {
 	generateUniqueUserId5(): Promise<string>
+	fetchImageBufferFromUrl(imageUrl: string): Promise<Buffer>
+	convertBase64ToBuffer(base64String: string): Buffer
 }

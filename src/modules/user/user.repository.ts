@@ -279,6 +279,7 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 	//
+
 	/**
 	 * @param userId
 	 * @returns
@@ -288,6 +289,25 @@ export class UserRepository implements IUserRepository {
 			where: { id: userId },
 			include: {
 				kyc: true,
+			},
+		})
+	}
+	/**
+	 * @param userId
+	 * @param bvn
+	 * @returns
+	 */
+	async updateBvnVerification(userId: string, bvn: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				bvn,
+				kyc: {
+					update: {
+						bvnVerified: true,
+						bvnFaceVerified: true,
+					},
+				},
 			},
 		})
 	}

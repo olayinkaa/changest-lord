@@ -1,4 +1,5 @@
 import {
+	CompareFacesCommand,
 	CreateCollectionCommand,
 	CreateFaceLivenessSessionCommand,
 	DeleteCollectionCommand,
@@ -90,6 +91,32 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 			}
 		} catch (e) {
 			pinoLogger.error(e, "Error getting liveness session results")
+			throw e
+		}
+	}
+
+	async compareFaces(
+		sourceImageBuffer: Buffer,
+		targetImageBuffer: Buffer,
+		similarityThreshold: number = 98,
+	): Promise<number> {
+		try {
+			const command = new CompareFacesCommand({
+				SourceImage: { Bytes: sourceImageBuffer },
+				TargetImage: { Bytes: targetImageBuffer },
+				SimilarityThreshold: similarityThreshold,
+			})
+
+			const response = await this.rekognitionClient.send(command)
+
+			// Check if a match was found
+			const match = response.FaceMatches?.[0]
+			if (!match?.Similarity) {
+				return 0 // No match found
+			}
+			return match.Similarity // Returns confidence percentage (e.g., 95.5)
+		} catch (e) {
+			pinoLogger.error(e, "Error comparing faces")
 			throw e
 		}
 	}

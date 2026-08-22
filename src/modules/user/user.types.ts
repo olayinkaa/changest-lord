@@ -10,8 +10,8 @@ export const USER_TYPES = {
 }
 
 export type UserWithRelations = User & {
-	kyc: UserKyc | null
-	businessType: BusinessType | null
+	kyc?: UserKyc | null
+	businessType?: BusinessType | null
 }
 
 export interface IUserRepository {
@@ -48,6 +48,7 @@ export interface IUserRepository {
 		userId5?: string | null,
 	): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
+	updateBvnVerification(userId: string, bvn: string): Promise<any>
 	deleteUser(userId: string): Promise<User>
 }
 
