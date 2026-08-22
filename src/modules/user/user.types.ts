@@ -45,7 +45,7 @@ export interface IUserRepository {
 	updateUserPinAndUserId5(
 		userId: string,
 		pinHash: string,
-		userId5?: string,
+		userId5?: string | null,
 	): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
 	deleteUser(userId: string): Promise<User>

@@ -54,7 +54,7 @@ export class AuthService implements IAuthService {
 
 	async verifyTransaction(userId: string, plainPin: string) {
 		const user = await this.userRepo.findUser(userId)
-		if (!user) throw new Error("PIN not set")
+		if (!user?.pinHash) throw new Error("PIN not set")
 
 		const isPinValid = await this.authUtils.verifyPin(plainPin, user.pinHash)
 		if (!isPinValid) throw new Error("Incorrect transaction PIN")
