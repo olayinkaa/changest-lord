@@ -13,6 +13,7 @@ export class KycResponseDto {
 	@Exclude() locationVerified: boolean
 	@Exclude() whatsappVerified: boolean
 	@Expose() pinCreated: boolean
+	@Expose() faceId: string
 	@Exclude() isSmsVerified: boolean
 }
 
