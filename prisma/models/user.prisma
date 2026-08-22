@@ -48,6 +48,7 @@ model UserKyc {
     pinCreated       Boolean @default(false)
     isSmsVerified    Boolean @default(false)
     bvnFaceVerified  Boolean @default(false)
+    faceId           String? @unique
 
     @@map("user_kycs")
 }

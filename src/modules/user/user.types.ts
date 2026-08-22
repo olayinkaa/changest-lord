@@ -28,7 +28,11 @@ export interface IUserRepository {
 	updateUserPin(userId: string, pinHash: string): Promise<any>
 	updateLivenessStatus(
 		userId: string,
-		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
+		data: {
+			livenessImageUrl: string
+			livenessImagePublicId: string
+			faceId: string
+		},
 	): Promise<any>
 	findUserByPhone(phone: string): Promise<any>
 	findByEmail(email: string): Promise<any | null>

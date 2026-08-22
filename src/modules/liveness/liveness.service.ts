@@ -141,7 +141,7 @@ export class LivenessService implements ILiveness {
 			const base64Data = data.image.replace(/^data:image\/\w+;base64,/, "")
 			const imageBuffer = Buffer.from(base64Data, "base64")
 
-			// 2. Perform duplicate account check using the private helper
+			// Perform duplicate account check using the private helper
 			await this.ensureFaceIsUnique(imageBuffer, user.id)
 
 			/**
@@ -153,17 +153,23 @@ export class LivenessService implements ILiveness {
 				"liveness-verifications",
 			)
 
-			await this.userRepo.updateLivenessStatus(user.id, {
-				livenessImageUrl: cloudinaryResponse.secure_url,
-				livenessImagePublicId: cloudinaryResponse.public_id,
-			})
-
-			// 5. Index the face into the AWS Rekognition collection mapped to this user's ID
-			await this.awsRekognitionService.addFaceToCollection(
+			// Index the face into the AWS Rekognition collection mapped to this user's ID
+			const rekognitionResponse = await this.awsRekognitionService.addFaceToCollection(
 				AwsCollectionId.USERS,
 				imageBuffer,
 				user.id,
 			)
+
+			const awsFaceId = rekognitionResponse?.[0]?.Face?.FaceId
+
+			/**
+			 * Update the user table
+			 */
+			await this.userRepo.updateLivenessStatus(user.id, {
+				livenessImageUrl: cloudinaryResponse.secure_url,
+				livenessImagePublicId: cloudinaryResponse.public_id,
+				faceId: awsFaceId,
+			})
 
 			/**
 			 *  payload for the new token with updated scope
