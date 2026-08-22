@@ -50,7 +50,7 @@ export class UserResponseDto {
 	@Expose() address: string
 	@Expose() nin?: string
 	@Expose() bvn?: string
-	@Expose() userId?: string
+	@Expose() userId5?: string
 	@Exclude() pinHash?: string
 	@Exclude() businessTypeId?: string
 	@Expose() onboardingStep?: string
