@@ -39,7 +39,7 @@ export interface IUserRepository {
 			faceId: string
 		},
 	): Promise<any>
-	findUserByPhone(phone: string): Promise<any>
+	findUserByPhone(phone: string): Promise<User | null>
 	findByEmail(email: string): Promise<any | null>
 	findByUserId5(userId5: string): Promise<User | null>
 	findByBusinessName(

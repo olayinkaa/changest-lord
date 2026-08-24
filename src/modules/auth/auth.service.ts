@@ -33,7 +33,11 @@ export class AuthService implements IAuthService {
 			throw new UnauthorizedException("Invalid phone number or PIN")
 		}
 
-		const payload = { id: user.id, phone: user.phone }
+		const payload = {
+			id: user.id,
+			phone: user.phone,
+			userType: user.userType,
+		}
 
 		const accessToken = this.authUtils.generateToken(
 			payload,
