@@ -230,17 +230,22 @@ export class UserRepository implements IUserRepository {
 	 */
 	async updateLivenessStatus(
 		userId: string,
-		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
+		data: {
+			livenessImageUrl: string
+			livenessImagePublicId: string
+			faceId: string
+		},
 	) {
 		return prisma.user.update({
 			where: { id: userId },
 			data: {
 				onboardingStep: "LIVENESS_PASSED",
-				livenessImageUrl: imageData.livenessImageUrl,
-				livenessImagePublicId: imageData.livenessImagePublicId,
+				livenessImageUrl: data.livenessImageUrl,
+				livenessImagePublicId: data.livenessImagePublicId,
 				kyc: {
 					update: {
 						livenessDone: true,
+						faceId: data.faceId,
 					},
 				},
 			},
@@ -293,6 +298,19 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 	//
+
+	/**
+	 * @param userId
+	 * @returns
+	 */
+	async deleteUser(userId: string): Promise<User> {
+		return prisma.user.delete({
+			where: { id: userId },
+			include: {
+				kyc: true,
+			},
+		})
+	}
 	/**
 	 * @param userId
 	 * @param bvn

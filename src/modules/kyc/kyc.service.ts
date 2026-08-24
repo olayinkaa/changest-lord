@@ -23,6 +23,15 @@ export class KycService implements IKycService {
 	) {}
 
 	//
+	async getAllCachedBvns() {
+		return this.kycRepo.getAllCachedBvns()
+	}
+
+	async getCachedBvnByID(id: string) {
+		return this.kycRepo.findCachedBvnByID(id)
+	}
+
+	//
 	async validateBvn(userId: string, bvn: string): Promise<any> {
 		// Fetch the user from the database using the token's userId to get their uploaded profile image (Cloudinary URL)
 		const user = await this.userRepo.findUser(userId)
@@ -93,8 +102,11 @@ export class KycService implements IKycService {
 		const isFaceMatched = similarityScore >= 80
 		if (!isFaceMatched) {
 			throw new BadRequestException(
-				`Face verification failed. The face does not match the BVN record (Score: ${similarityScore.toFixed(2)}%)`,
-				{ errorType: ErrorType.FACE_MISMATCH },
+				`The BVN entered doesn’t match your account details. Please enter the correct BVN.`,
+				{
+					errorType: ErrorType.FACE_MISMATCH,
+					description: `Face verification failed. The face does not match the BVN record (Score: ${similarityScore.toFixed(2)}%)`,
+				},
 			)
 		}
 

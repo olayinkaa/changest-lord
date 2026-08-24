@@ -4,6 +4,18 @@ import type { IKycRepository } from "./kyc.types"
 
 @injectable()
 export class KycRepository implements IKycRepository {
+	async getAllCachedBvns() {
+		return prisma.bvnCache.findMany({
+			orderBy: { createdAt: "desc" },
+		})
+	}
+
+	async findCachedBvnByID(id: string) {
+		return prisma.bvnCache.findUnique({
+			where: { id },
+		})
+	}
+
 	async findBvnRecordLocally(bvn: string) {
 		return prisma.bvnCache.findUnique({
 			where: { bvn },

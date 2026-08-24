@@ -5,6 +5,8 @@ export const KYC_TYPES = {
 
 export interface IKycService {
 	validateBvn(userId: string, bvn: string): Promise<any>
+	getAllCachedBvns(): Promise<any[]>
+	getCachedBvnByID(id: string): Promise<any>
 }
 
 export type IKycRepository = {
@@ -17,4 +19,6 @@ export type IKycRepository = {
 		phone?: string
 		image?: string
 	}): Promise<any>
+	getAllCachedBvns(): Promise<any[]>
+	findCachedBvnByID(id: string): Promise<any>
 }

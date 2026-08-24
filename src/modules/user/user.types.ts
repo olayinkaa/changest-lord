@@ -33,7 +33,11 @@ export interface IUserRepository {
 	updateUserPin(userId: string, pinHash: string): Promise<any>
 	updateLivenessStatus(
 		userId: string,
-		imageData: { livenessImageUrl: string; livenessImagePublicId: string },
+		data: {
+			livenessImageUrl: string
+			livenessImagePublicId: string
+			faceId: string
+		},
 	): Promise<any>
 	findUserByPhone(phone: string): Promise<any>
 	findByEmail(email: string): Promise<any | null>
@@ -48,9 +52,11 @@ export interface IUserRepository {
 	): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
 	updateBvnVerification(userId: string, bvn: string): Promise<any>
+	deleteUser(userId: string): Promise<User>
 }
 
 export interface IUserService {
 	getAllUsers(query: UserQueryDto): Promise<PaginatedResponse<UserResponseDto>>
 	getUser(id: string): Promise<any>
+	deleteUser(id: string): Promise<any>
 }

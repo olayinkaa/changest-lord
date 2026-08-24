@@ -1,5 +1,10 @@
 import { plainToInstance } from "class-transformer"
 import { inject, injectable } from "inversify"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
+import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekogniction.type"
+import { pinoLogger } from "@/config/pino-logger"
+import { AwsCollectionId } from "@/constants"
+import { NotFoundException, UnprocessableEntityException } from "@/core/errors/exceptions"
 import type { PaginatedResponse } from "@/types/base"
 import { type UserQueryDto, UserResponseDto } from "./user.dto"
 import type { IUserRepository, IUserService } from "./user.types"
@@ -10,6 +15,8 @@ export class UserService implements IUserService {
 	constructor(
 		@inject(USER_TYPES.Repository)
 		private userRepository: IUserRepository,
+		@inject(ADAPTER_TYPES.AwsRekognitionService)
+		private awsRekognitionService: IAwsRekognitionService,
 	) {}
 
 	async getAllUsers(query: UserQueryDto): Promise<PaginatedResponse<UserResponseDto>> {
@@ -32,5 +39,31 @@ export class UserService implements IUserService {
 			excludeExtraneousValues: true,
 		})
 		return sanitizedResult
+	}
+
+	async deleteUser(id: string) {
+		const user = await this.userRepository.findUser(id)
+		if (!user) {
+			throw new NotFoundException("User not found")
+		}
+		if (user.kyc?.faceId) {
+			try {
+				await this.awsRekognitionService.deleteFacesFromCollection(
+					AwsCollectionId.USERS,
+					[user.kyc.faceId],
+				)
+			} catch (awsError) {
+				pinoLogger.error(
+					{ awsError, userId: id, faceId: user.kyc.faceId },
+					"Failed to delete face from AWS Rekognition during user deletion",
+				)
+				throw new UnprocessableEntityException(
+					"Failed to clean up biometric data from cloud provider.",
+				)
+			}
+		}
+		// Delete the user from the database (Cascades to UserKyc and UserDevice)
+		await this.userRepository.deleteUser(id)
+		return "The user information and its faceId has been successfully deleted"
 	}
 }

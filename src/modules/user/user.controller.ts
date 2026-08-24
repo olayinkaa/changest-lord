@@ -3,6 +3,7 @@ import { inject } from "inversify"
 import {
 	BaseHttpController,
 	controller,
+	httpDelete,
 	httpGet,
 	next,
 	principal,
@@ -55,6 +56,16 @@ export class UserController extends BaseHttpController {
 	public async getUser(@requestParam("id") id: string, @next() nxt: NextFunction) {
 		try {
 			const user = await this.userService.getUser(id)
+			return this.json(ApiResponse.success(user), 200)
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpDelete("/:id")
+	public async deleteUser(@requestParam("id") id: string, @next() nxt: NextFunction) {
+		try {
+			const user = await this.userService.deleteUser(id)
 			return this.json(ApiResponse.success(user), 200)
 		} catch (error) {
 			nxt(error)

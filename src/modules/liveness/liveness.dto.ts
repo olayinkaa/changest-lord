@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator"
+import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator"
 
 export class InitiateLivenessRequest {
 	@IsNotEmpty({ message: "Token is required" })
@@ -6,4 +6,10 @@ export class InitiateLivenessRequest {
 	token!: string
 
 	@IsOptional() @IsString() callbackUrl?: string
+}
+
+export class DeleteFacesDto {
+	@IsArray()
+	@IsString({ each: true })
+	faceIds!: string[]
 }
