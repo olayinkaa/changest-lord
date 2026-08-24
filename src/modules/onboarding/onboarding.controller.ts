@@ -189,4 +189,10 @@ export class OnboardingController extends BaseHttpController {
 		const result = await this.onboardingService.validateEmail(email)
 		return this.json(ApiResponse.success(result), 200)
 	}
+	//
+	@httpGet("/validate-business-name")
+	public async validateBusinessName(@queryParam("businessName") businessName: string) {
+		const result = await this.onboardingService.validateBusinessName(businessName)
+		return this.json(ApiResponse.success(result), 200)
+	}
 }

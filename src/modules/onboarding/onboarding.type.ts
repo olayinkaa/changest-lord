@@ -10,6 +10,7 @@ export const ONBOARDING_TYPES = {
 
 export interface IOnboardingService {
 	validatePhone(phone: string): Promise<any>
+	validateBusinessName(businessName: string): Promise<any>
 	onboardUserProfile(
 		onboardingUser: { id: string; phone: string },
 		data: OnboardingProfileRequest,

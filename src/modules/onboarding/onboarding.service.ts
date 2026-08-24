@@ -226,7 +226,6 @@ export class OnboardingService implements IOnboardingService {
 	 */
 	async validateEmail(email: string) {
 		const existingUser = await this.userRepo.findByEmail(email)
-
 		if (existingUser) {
 			throw new BadRequestException("Email already exists", {
 				email: "Email already exist",
@@ -234,6 +233,20 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		return { exists: false, message: "Email is available" }
+	}
+	/**
+	 * @param businessName
+	 * @returns
+	 */
+	async validateBusinessName(businessName: string) {
+		const existingBusiness = await this.userRepo.findByBusinessName(businessName)
+		if (existingBusiness) {
+			throw new BadRequestException("Business name already exists", {
+				businessName: "Business name already exists",
+			})
+		}
+
+		return { exists: false, message: "Business name is available" }
 	}
 	//
 }

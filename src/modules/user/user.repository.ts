@@ -109,6 +109,25 @@ export class UserRepository implements IUserRepository {
 	}
 
 	/**
+	 * @param businessName
+	 * @returns
+	 */
+	async findByBusinessName(businessName: string) {
+		return prisma.user.findFirst({
+			where: {
+				businessName: {
+					equals: businessName,
+					mode: "insensitive",
+				},
+			},
+			select: {
+				id: true,
+				businessName: true,
+			},
+		})
+	}
+
+	/**
 	 *
 	 * @param bvn
 	 * @returns

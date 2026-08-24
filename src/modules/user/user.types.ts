@@ -38,6 +38,9 @@ export interface IUserRepository {
 	findUserByPhone(phone: string): Promise<any>
 	findByEmail(email: string): Promise<any | null>
 	findByUserId5(userId5: string): Promise<User | null>
+	findByBusinessName(
+		businessName: string,
+	): Promise<{ id: string; businessName: string | null } | null>
 	updateUserPinAndUserId5(
 		userId: string,
 		pinHash: string,
