@@ -102,8 +102,11 @@ export class KycService implements IKycService {
 		const isFaceMatched = similarityScore >= 80
 		if (!isFaceMatched) {
 			throw new BadRequestException(
-				`Face verification failed. The face does not match the BVN record (Score: ${similarityScore.toFixed(2)}%)`,
-				{ errorType: ErrorType.FACE_MISMATCH },
+				`The BVN entered doesn’t match your account details. Please enter the correct BVN.`,
+				{
+					errorType: ErrorType.FACE_MISMATCH,
+					description: `Face verification failed. The face does not match the BVN record (Score: ${similarityScore.toFixed(2)}%)`,
+				},
 			)
 		}
 
