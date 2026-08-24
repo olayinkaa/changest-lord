@@ -330,4 +330,22 @@ export class UserRepository implements IUserRepository {
 			},
 		})
 	}
+	/**
+	 * @param userId
+	 * @param nin
+	 * @returns
+	 */
+	async updateNinVerification(userId: string, nin: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				nin,
+				kyc: {
+					update: {
+						ninVerified: true,
+					},
+				},
+			},
+		})
+	}
 }

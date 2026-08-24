@@ -24,7 +24,7 @@ export class AuthController extends BaseHttpController {
 
 	@httpPost("/login")
 	@validateSchema(LoginRequest)
-	public async login2(
+	public async login(
 		@requestBody() body: LoginRequest,
 		@next() nxt: NextFunction,
 	): Promise<unknown> {
