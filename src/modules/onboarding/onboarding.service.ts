@@ -69,6 +69,7 @@ export class OnboardingService implements IOnboardingService {
 			return {
 				description: "Resuming incomplete registration",
 				currentStep: existing.onboardingStep,
+				userType: existing.userType,
 				temporaryToken: resumptionToken,
 			}
 		}
@@ -109,12 +110,16 @@ export class OnboardingService implements IOnboardingService {
 		const updatedUser = await this.userRepo.createUserProfile(onboardingUser, data)
 
 		// 2. Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType)
+		const nextScope = mapStepToNextScope(
+			updatedUser.onboardingStep,
+			updatedUser.userType ?? undefined,
+		)
 
 		// 3. Assemble structural JWT target payload parameters
 		const payload = {
 			userId: updatedUser.id,
 			phone: updatedUser.phone,
+			userType: updatedUser.userType,
 			scope: nextScope,
 		}
 
@@ -128,6 +133,7 @@ export class OnboardingService implements IOnboardingService {
 		return {
 			description: "Profile details registered successfully.",
 			currentStep: updatedUser.onboardingStep,
+			userType: updatedUser.userType,
 			temporaryToken: stepToken,
 		}
 	}
@@ -147,12 +153,16 @@ export class OnboardingService implements IOnboardingService {
 		const updatedUser = await this.userRepo.updateBusinessProfile(onboardingUser.id, data)
 
 		// 2. Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType)
+		const nextScope = mapStepToNextScope(
+			updatedUser.onboardingStep,
+			updatedUser.userType ?? undefined,
+		)
 
 		// 3. Assemble structural JWT target payload parameters
 		const payload = {
 			userId: updatedUser.id,
 			phone: updatedUser.phone,
+			userType: updatedUser.userType,
 			scope: nextScope,
 		}
 
@@ -164,8 +174,9 @@ export class OnboardingService implements IOnboardingService {
 		)
 
 		return {
-			description: "Profile details registered successfully.",
+			description: "Business details registered successfully.",
 			currentStep: updatedUser.onboardingStep,
+			userType: updatedUser.userType,
 			temporaryToken: stepToken,
 		}
 	}

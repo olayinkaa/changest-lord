@@ -140,6 +140,17 @@ export class UserRepository implements IUserRepository {
 
 	/**
 	 *
+	 * @param bvn
+	 * @returns
+	 */
+	async findByNin(nin: string): Promise<User | null> {
+		return prisma.user.findUnique({
+			where: { nin },
+		})
+	}
+
+	/**
+	 *
 	 * @param userId5
 	 * @returns
 	 */
@@ -170,9 +181,9 @@ export class UserRepository implements IUserRepository {
 	 */
 	async createUserProfile(onboardingUser: { id: string; phone: string }, data: any) {
 		const { email, firstName, lastName, homeAddress, userType } = data
-
-		const isCustomer = userType?.toLowerCase() === "customer"
-		const resolvedStep = isCustomer ? "LIVENESS_PASSED" : "PROFILE_COMPLETED"
+		// const isCustomer = userType?.toLowerCase() === "customer";
+		// const resolvedStep = isCustomer ? "LIVENESS_PASSED" : "PROFILE_COMPLETED";
+		const resolvedStep = "PROFILE_COMPLETED"
 
 		return prisma.user.update({
 			where: { id: onboardingUser.id },
