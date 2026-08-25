@@ -2,6 +2,7 @@ import { plainToInstance } from "class-transformer"
 import { inject, injectable } from "inversify"
 import { ADAPTER_TYPES } from "@/adapters/adapters.types"
 import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekogniction.type"
+import type { ICloudinaryService } from "@/adapters/cloudinary/cloudinary.types"
 import { pinoLogger } from "@/config/pino-logger"
 import { AwsCollectionId } from "@/constants"
 import { NotFoundException, UnprocessableEntityException } from "@/core/errors/exceptions"
@@ -17,6 +18,8 @@ export class UserService implements IUserService {
 		private userRepository: IUserRepository,
 		@inject(ADAPTER_TYPES.AwsRekognitionService)
 		private awsRekognitionService: IAwsRekognitionService,
+		@inject(ADAPTER_TYPES.CloudinaryService)
+		private cloudinaryService: ICloudinaryService,
 	) {}
 
 	async getAllUsers(query: UserQueryDto): Promise<PaginatedResponse<UserResponseDto>> {
@@ -62,8 +65,25 @@ export class UserService implements IUserService {
 				)
 			}
 		}
+		// 2. Delete liveness image from Cloudinary if publicId exists
+		if (user.livenessImagePublicId) {
+			try {
+				await this.cloudinaryService.destroy(user.livenessImagePublicId)
+				pinoLogger.info(
+					{ publicId: user.livenessImagePublicId, userId: id },
+					"Deleted user liveness image from Cloudinary",
+				)
+			} catch (cloudinaryError) {
+				// Log the error but you can choose whether to block deletion or proceed.
+				// Typically safe to log and continue so orphaned records don't lock account deletion.
+				pinoLogger.error(
+					{ cloudinaryError, userId: id, publicId: user.livenessImagePublicId },
+					"Failed to delete image from Cloudinary during user deletion",
+				)
+			}
+		}
 		// Delete the user from the database (Cascades to UserKyc and UserDevice)
 		await this.userRepository.deleteUser(id)
-		return "The user information and its faceId has been successfully deleted"
+		return "The user information has been successfully deleted"
 	}
 }

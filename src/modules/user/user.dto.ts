@@ -55,7 +55,7 @@ export class UserResponseDto {
 	@Exclude() businessTypeId?: string
 	@Exclude() onboardingStep?: string
 	@Expose() livenessImageUrl?: string
-	@Exclude() livenessImagePublicId?: string
+	@Expose() livenessImagePublicId?: string
 	@Expose() latitude?: number
 	@Expose() longitude?: number
 	@Expose() deviceBindingId?: string
