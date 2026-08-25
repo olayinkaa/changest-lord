@@ -1,4 +1,6 @@
 import { inject, injectable } from "inversify"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
+import type { IAwsSesService } from "@/adapters/aws-ses/aws-ses.types"
 import { type IUtilityService, UTILITY_TYPES } from "@/common/utility/utility.type"
 import { config } from "@/config/env"
 import { OnboardingScopes } from "@/constants"
@@ -30,6 +32,8 @@ export class OnboardingService implements IOnboardingService {
 		@inject(AUTH_TYPES.AuthUtils) private readonly authUtils: IAuthUtils,
 		@inject(UTILITY_TYPES.Service)
 		private readonly utilityService: IUtilityService,
+		@inject(ADAPTER_TYPES.AmazonSesService)
+		private readonly awsSesService: IAwsSesService,
 	) {}
 
 	/**
@@ -230,20 +234,49 @@ export class OnboardingService implements IOnboardingService {
 		}
 	}
 
-	/**
-	 *
-	 * @param email
-	 * @returns
-	 */
 	async validateEmail(email: string) {
+		// 1. Check if email is already bound to an existing user account in DB
 		const existingUser = await this.userRepo.findByEmail(email)
 		if (existingUser) {
 			throw new BadRequestException("Email already exists", {
-				email: "Email already exist",
+				email: "Email already exists",
 			})
 		}
 
-		return { exists: false, message: "Email is available" }
+		// 2. Fetch mailbox diagnostics using AWS SESv2
+		const result = await this.awsSesService.checkEmailInsights(email)
+		const mailboxValidation = result.MailboxValidation
+
+		// Optional: Add guards based on AWS validation confidence or disposal status
+		const confidenceVerdict = mailboxValidation?.IsValid?.ConfidenceVerdict
+		const isDisposable = mailboxValidation?.Evaluations?.IsDisposable?.ConfidenceVerdict
+
+		if (isDisposable === "HIGH") {
+			throw new BadRequestException(
+				"Disposable or temporary email addresses are not allowed",
+				{
+					email: "Please use a permanent, valid email address",
+				},
+			)
+		}
+
+		if (confidenceVerdict === "LOW" || confidenceVerdict === "NONE") {
+			throw new BadRequestException(
+				"The provided email address appears to be invalid or undeliverable",
+				{
+					email: "Invalid email address format or mailbox",
+				},
+			)
+		}
+
+		return {
+			exists: false,
+			message: "Email is available and valid",
+			data: {
+				confidenceVerdict,
+				isValid: mailboxValidation?.IsValid,
+			},
+		}
 	}
 	/**
 	 * @param businessName

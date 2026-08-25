@@ -25,7 +25,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 
 	constructor() {
 		this.rekognitionClient = new RekognitionClient({
-			region: config.AWS_REKOGNITION_REGION,
+			region: config.AWS_REGION,
 		})
 		this.config = config
 	}

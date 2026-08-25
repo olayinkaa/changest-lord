@@ -5,4 +5,5 @@ export const ADAPTER_TYPES = {
 	AmazonSesService: Symbol.for("AmazonSesService"),
 	CloudinaryService: Symbol.for("CloudinaryService"),
 	VerificationService: Symbol.for("VerificationService"),
+	AwsSesService: Symbol.for("AwsSesService "),
 }
