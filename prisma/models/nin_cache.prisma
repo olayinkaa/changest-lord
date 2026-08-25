@@ -1,0 +1,13 @@
+model NinCache {
+    id        String   @id @default(uuid())
+    nin       String   @unique
+    firstName String?
+    lastName  String?
+    dob       String? // Date of birth
+    phone     String?
+    image     String? // Base64 or image URL returned by Dojah
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("nin_caches")
+}

@@ -51,6 +51,7 @@ export interface IUserRepository {
 		userId5?: string | null,
 	): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
+	findByNin(bvn: string): Promise<User | null>
 	updateBvnVerification(userId: string, bvn: string): Promise<any>
 	updateNinVerification(userId: string, nin: string): Promise<any>
 	deleteUser(userId: string): Promise<User>

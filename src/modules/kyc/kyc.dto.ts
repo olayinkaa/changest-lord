@@ -1,5 +1,4 @@
 import { Exclude, Expose } from "class-transformer"
-import { IsString, Length } from "class-validator"
 
 export class KycResponseDto {
 	@Expose() id: string
@@ -16,10 +15,4 @@ export class KycResponseDto {
 	@Expose() pinCreated: boolean
 	@Expose() faceId: string
 	@Exclude() isSmsVerified: boolean
-}
-
-export class VerifyBvnDto {
-	@IsString()
-	@Length(11, 11, { message: "BVN must be exactly 11 digits" })
-	bvn: string
 }

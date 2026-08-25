@@ -8,8 +8,11 @@ export const mapStepToNextScope = (step: OnboardingStep, userType?: UserType): s
 			return OnboardingScopes.PROFILE
 		case OnboardingStep.PROFILE_COMPLETED:
 			// If user is a customer, skip liveness and go straight to PIN
+			// if (isCustomer) {
+			// 	return OnboardingScopes.PIN
+			// }
 			if (isCustomer) {
-				return OnboardingScopes.PIN
+				return OnboardingScopes.LIVENESS
 			}
 			return OnboardingScopes.BUSINESS
 		case OnboardingStep.BUSINESS_PROFILE_COMPLETED:

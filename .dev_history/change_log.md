@@ -169,3 +169,39 @@
 - **Rationale:** Until now, `KycModule` was scaffolded but had no endpoint or persistence layer. The BVN cache is the most cost-sensitive part of the Dojah integration (every lookup is paid), so it's added at the same time as the endpoint rather than as a follow-up. Wiring `AuthProvider` now means every subsequent controller can opt into auth via a single decorator rather than retrofitting passport-jwt. Bootstrap-time Rekognition collection creation removes a race where the first `compareFaces` call during onboarding would otherwise fail with `ResourceNotFoundException`.
 - **Verified:** Biome passes on src (`pnpm exec biome check --write ./src` → 96 files, 1 unsafe-fix warning left alone — unused private `api` in `YouVerifyService`, intentionally out of scope). Husky pre-commit re-ran Biome on the 18 staged files and re-staged them. Commit `0e6efb2` landed on `feature/kyc-bvn-cache-and-jwt-auth`. Cross-file consistency confirmed: `ADAPTER_TYPES.VerificationService` resolves to a `VerificationFactory` whose `IVerificationService.verifyBVN` matches `KycService.validateBvn`; `KycRepository.findBvnRecordLocally` ↔ `prisma.bvnCache.findUnique`; `userRepo.findByBvn` exists and is typed `Promise<User | null>`; `ErrorType.BVN_ALREADY_EXISTS` and `AuthJwtPayload` exported from the expected paths.
 - **Follow-ups (intentionally not in this commit):** Step 4 (face comparison against liveness image) and step 6 (write `bvn`/`bvnVerified` to `users`) inside `KycService.validateBvn` — stubbed with comments. OpenAPI docs for `POST /kyc/validate-bvn` (add to `src/docs/paths/kyc.yaml`). Storing the `UserPrincipal.details` shape on the `Request` so downstream middleware can read `req.user.id` without re-decoding.
+
+## 2026-08-25
+
+### Feat: Split BVN/NIN into dedicated modules + verification adapter refactor
+- **High-level description:** Lift BVN and NIN verification out of `KycController` / `KycService` into their own `BvnModule` and `NinModule` so each ID-verification path can iterate independently; introduce a YouVerify adapter alongside Dojah against a shared `IVerificationService` contract; mirror the existing BVN cache with a `NinCache` Prisma model; and fix an onboarding-scope bug where customers were incorrectly skipping liveness after profile completion.
+- **Files added:**
+  - `src/modules/bvn/bvn.dto.ts` — `bvnResponseDto` (`@Expose` id/firstName/lastName) + `VerifyBvnDto` (11-digit `@Length`).
+  - `src/modules/bvn/bvn.module.ts` — Inversify `ContainerModule` binding `BVN_TYPES.Service` → `BvnService` and `BVN_TYPES.Repository` → `bvnRepository`.
+  - `src/modules/bvn/bvn.repository.ts` — Prisma-backed repository for the BVN lookup cache.
+  - `src/modules/bvn/bvn.service.ts` — BVN orchestration (cache lookup → adapter fallback → persist).
+  - `src/modules/bvn/bvn.types.ts` — `BVN_TYPES` symbol, `IBvnService` / `IBvnRepository` contracts.
+  - `src/modules/nin/nin.dto.ts` — `NinResponseDto` + `VerifyNinDto` (11-digit).
+  - `src/modules/nin/nin.module.ts` — Inversify `ContainerModule` binding `NIN_TYPES.Service` → `NinService` and `NIN_TYPES.Repository` → `ninRepository`.
+  - `src/modules/nin/nin.repository.ts` — Prisma-backed repository for the NIN lookup cache.
+  - `src/modules/nin/nin.service.ts` — NIN orchestration (cache lookup → adapter fallback → persist).
+  - `src/modules/nin/nin.types.ts` — `NIN_TYPES` symbol, `INinService` / `INinRepository` contracts.
+  - `prisma/models/nin_cache.prisma` — `NinCache` model mirroring the existing `bvn_cache.prisma`.
+  - `src/adapters/verification/you-verify/youverify.type.ts` — types for the YouVerify adapter (request/response/error shapes aligned to the unified `IVerificationService` contract).
+- **Files modified:**
+  - `src/app.module.ts` — imports `BvnModule` and `NinModule` and appends them to `AppModules` (Biome pass: tabs → spaces, semicolons).
+  - `src/modules/kyc/kyc.controller.ts` — BVN/NIN endpoints removed; controller now only owns the orchestration-only KYC surface.
+  - `src/modules/kyc/kyc.dto.ts` — `VerifyBvnDto` moved out (lives in `bvn.dto.ts` now); remaining DTOs slimmed to orchestration concerns.
+  - `src/modules/kyc/kyc.repository.ts` — slimmed (BVN-cache methods move into `bvn.repository.ts`).
+  - `src/modules/kyc/kyc.service.ts` — slimmed (BVN/NIN orchestration moves into `bvn.service.ts` / `nin.service.ts`).
+  - `src/modules/kyc/kyc.types.ts` — contracts trimmed; BVN/NIN-specific tokens live in their own `*.types.ts`.
+  - `src/adapters/verification/verification.types.ts` — consolidates the shared `IVerificationService` contract (`verifyBVN` / `verifyNIN` / provider-agnostic error shapes).
+  - `src/adapters/verification/dojah/dojah.service.ts` — implements the unified `IVerificationService` contract; surfaces both BVN and NIN paths (Biome format pass).
+  - `src/adapters/verification/dojah/dojah.types.ts` — Dojah-specific request/response/error types aligned to the shared contract.
+  - `src/adapters/verification/you-verify/youverify.service.ts` — YouVerify adapter refactored to match the shared `IVerificationService` interface.
+  - `src/modules/user/user.repository.ts` — repository contract widened to support the BVN/NIN services' user-lookup needs.
+  - `src/modules/user/user.types.ts` — `IUserRepository` / `IUserService` contracts updated for the new lookup entry points.
+  - `src/types/enum.ts` — adds `NIN_ALREADY_EXIST` and `NIN_DOES_NOT_EXIST` (Biome format pass on the whole enum).
+  - `src/utils/helper.ts` — `mapStepToNextScope`: customers now go `PROFILE_COMPLETED → LIVENESS` (was `PROFILE_COMPLETED → PIN`, which bypassed liveness). The old short-circuit is left as a commented-out block for traceability.
+- **Rationale:** BVN and NIN verification are independent verticals — different providers, different caching tables, different upstream contracts — and bundling them into `KycModule` made that module do too much. Splitting them lets each service own its own cache and adapter choice, and lets the verification adapter layer evolve (Dojah vs YouVerify, fallback strategies) without churning `KycModule`. The `NinCache` model is added preemptively so the NIN endpoint has the same cost-protection story as the BVN endpoint. The onboarding-scope fix corrects a latent bug where a customer could complete onboarding without ever passing liveness — important because liveness is what populates the face image used downstream by `KycService.validateBvn` step 4.
+- **Verified:** Biome passes — husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 25 staged files and re-staged them. Commit `a705171` landed on `feature/kyc-bvn-nin-modules`. Cross-file consistency confirmed: `BvnModule` / `NinModule` registered in `AppModules`; `VerifyBvnDto` / `VerifyNinDto` validate 11-digit strings; `ErrorType.NIN_ALREADY_EXIST` / `NIN_DOES_NOT_EXIST` mirror the BVN pair; `prisma/models/nin_cache.prisma` exists; `dojah.service.ts` and `youverify.service.ts` both implement the shared `IVerificationService` contract.
+- **Follow-ups (intentionally not in this commit):** Compose `prisma/models/nin_cache.prisma` into `prisma/schema.prisma` and generate a migration (`make migrate` once the BVN-cache migration pattern is replayed). Decide between Dojah and YouVerify as the canonical NIN provider (today both implement the contract; only one is bound). Wire the customer-side liveness-skip behaviour back as an opt-in flag once product confirms whether KYC-tier customers should bypass liveness. OpenAPI docs for `POST /bvn/verify` and `POST /nin/verify`.

@@ -9,9 +9,10 @@ import {
 import type { ApiResponse } from "@/types/base"
 import { ErrorType } from "@/types/enum"
 import type { IVerificationService } from "../verification.types"
-import type { IDojahBvnFullResponse } from "./dojah.types"
+import type { IDojahBvnFullResponse, IDojahNinResponse } from "./dojah.types"
 
 export class DojaService implements IVerificationService {
+	readonly providerName = "dojah" as const
 	private readonly api: AxiosInstance
 	constructor() {
 		this.api = axios.create({
@@ -22,12 +23,50 @@ export class DojaService implements IVerificationService {
 			},
 		})
 	}
-	//
-	public async verifyNIN(_nin: string) {}
-	//
-	public async verifyBVN(bvn: string) {
+
+	/**
+	 *
+	 * @param nin
+	 * @returns
+	 */
+	public async verifyNIN(nin: string): Promise<IDojahNinResponse> {
 		try {
-			const res: ApiResponse<IDojahBvnFullResponse> = await this.api.get(
+			const res: ApiResponse<Pick<IDojahNinResponse, "entity">> = await this.api.get(
+				"/api/v1/kyc/nin",
+				{
+					params: {
+						nin,
+					},
+				},
+			)
+			return {
+				provider: "dojah",
+				entity: res.data.entity,
+			}
+		} catch (err: any) {
+			pinoLogger.error({ err }, "NIN verification failed")
+			if (err.response) {
+				throw new BadRequestException(
+					"Your NIN does not exist, please enter a valid NIN",
+					{
+						errorType: ErrorType.NIN_DOES_NOT_EXIST,
+					},
+				)
+			}
+			throw new ServiceUnavailableException(
+				"We are unable to verify your NIN now, please try again later",
+			)
+		}
+	}
+
+	/**
+	 *
+	 * @param bvn
+	 * @returns
+	 */
+	public async verifyBVN(bvn: string): Promise<IDojahBvnFullResponse> {
+		try {
+			const res: ApiResponse<Pick<IDojahBvnFullResponse, "entity">> = await this.api.get(
 				"/api/v1/kyc/bvn/full",
 				{
 					params: {
@@ -35,7 +74,11 @@ export class DojaService implements IVerificationService {
 					},
 				},
 			)
-			return res.data.entity
+			// return res.data.entity;
+			return {
+				provider: "dojah",
+				entity: res.data.entity,
+			}
 		} catch (err: any) {
 			pinoLogger.error({ err }, "BVN verification failed")
 			// 1. Extract the exact error string returned by Dojah (e.g., "Invalid BVN")
