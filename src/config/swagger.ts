@@ -10,7 +10,8 @@ import { config } from "@/config/env"
 // which dereferences every $ref so the served spec is one inlined document.
 const SPEC_PATH = path.resolve(process.cwd(), "src/docs/openapi.yaml")
 
-const SWAGGER_ENABLED = config.NODE_ENV !== "production"
+// const SWAGGER_ENABLED = config.NODE_ENV !== "production"
+const SWAGGER_ENABLED = true
 const theme = new SwaggerTheme()
 
 /**
