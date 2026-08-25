@@ -26,8 +26,8 @@ export interface IUserRepository {
 	createUserProfile(
 		onboardingUser: { id: string; phone: string },
 		data: any,
-	): Promise<any>
-	updateBusinessProfile(userId: string, data: any): Promise<any>
+	): Promise<UserWithRelations>
+	updateBusinessProfile(userId: string, data: any): Promise<UserWithRelations>
 	createUserPhoneNumber(phoneNumber: string): Promise<any>
 	findUser(userId: string): Promise<UserWithRelations | null>
 	updateUserPin(userId: string, pinHash: string): Promise<any>
