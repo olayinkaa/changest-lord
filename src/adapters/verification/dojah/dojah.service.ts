@@ -46,12 +46,21 @@ export class DojaService implements IVerificationService {
 		} catch (err: any) {
 			pinoLogger.error({ err }, "NIN verification failed")
 			if (err.response) {
-				throw new BadRequestException(
-					"Your NIN does not exist, please enter a valid NIN",
-					{
-						errorType: ErrorType.NIN_DOES_NOT_EXIST,
-					},
-				)
+				const status = err.response.status
+				const errorMessage = err.response.data?.error || err.response.data?.message
+
+				// Handle specific 404 or invalid lookup responses from Dojah
+				if (status === 404 || typeof errorMessage === "string") {
+					throw new BadRequestException(
+						"Your NIN does not exist, please enter a valid NIN",
+						{
+							errorType: ErrorType.NIN_DOES_NOT_EXIST,
+						},
+					)
+				}
+
+				// Handle other client-side errors (e.g., bad format, insufficient wallet balance, unauthorized)
+				throw new BadRequestException(errorMessage || "Invalid NIN verification request")
 			}
 			throw new ServiceUnavailableException(
 				"We are unable to verify your NIN now, please try again later",
