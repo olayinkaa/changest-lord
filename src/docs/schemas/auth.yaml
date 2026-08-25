@@ -1,0 +1,45 @@
+# Schemas owned by the auth module. Referenced from paths/auth.yaml.
+
+LoginRequest:
+  type: object
+  description: |
+    Phone + PIN credentials for an existing user. Mirrors
+    `LoginRequest` (see src/modules/auth/auth.dto.ts) — the phone
+    is normalised to the Nigerian E.164 form by `TransformNigeriaPhone`
+    and validated by the custom `IsNigeriaPhone` rule.
+  required:
+    - phone
+    - pin
+  properties:
+    phone:
+      type: string
+      description: Nigerian phone number (Nigerian format accepted; normalised to `+234…` server-side).
+      example: "+2348012345678"
+    pin:
+      type: string
+      pattern: "^\\d{4}$"
+      description: 4-digit transaction PIN.
+      example: "1234"
+
+TokenResponse:
+  type: object
+  description: |
+    Token pair returned on successful login. Mirrors the value
+    returned by `AuthService.login` (see src/modules/auth/auth.service.ts).
+  required:
+    - accessToken
+    - refreshToken
+  properties:
+    accessToken:
+      type: string
+      description: |
+        Short-lived access JWT (default 30m, controlled by
+        `JWT_TOKEN_EXPIRES_IN`). Forward as
+        `Authorization: Bearer <token>` on subsequent calls.
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    refreshToken:
+      type: string
+      description: |
+        Long-lived refresh JWT (default 7d, controlled by
+        `JWT_REFRESH_TOKEN_EXPIRES_IN`).
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

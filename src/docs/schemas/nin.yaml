@@ -1,0 +1,63 @@
+# Schemas owned by the NIN module. Referenced from paths/nin.yaml.
+#
+# NOTE: the nin module (src/modules/nin/) currently exposes a service
+# (`NinService.validateNin`) but no controller — there is no HTTP route
+# mounted in the bootstrap. The schemas below document the *planned*
+# `POST /nin/verify` contract so the spec stays ahead of the wire-up
+# (see CLAUDE.md "Follow-ups").
+
+VerifyNinRequest:
+  type: object
+  description: |
+    Body for `POST /nin/verify`. Mirrors `VerifyNinDto`
+    (see src/modules/nin/nin.dto.ts). Despite the in-class message
+    saying "BVN must be exactly 11 digits" (carried over from
+    `VerifyBvnDto`), the field and behaviour are NIN.
+  required: [nin]
+  properties:
+    nin:
+      type: string
+      pattern: "^\\d{11}$"
+      minLength: 11
+      maxLength: 11
+      description: 11-digit National Identification Number.
+      example: "12345678901"
+
+NinDetails:
+  type: object
+  description: |
+    NIN record returned by the verification provider (Dojah). Mirrors
+    the `entity` payload mapped into `NinService.validateNin`.
+  required: [nin, firstName, lastName, dob, phone, image]
+  properties:
+    nin:
+      type: string
+    firstName:
+      type: string
+    lastName:
+      type: string
+    dob:
+      type: string
+      description: Date of birth (provider-format, typically `YYYY-MM-DD`).
+    phone:
+      type: string
+      example: "+2348012345678"
+    image:
+      type: string
+      description: Base64-encoded NIN photo used for face matching.
+
+NinVerificationResponse:
+  type: object
+  description: Returned by `POST /nin/verify` on success.
+  required: [description, similarityScore, ninDetails]
+  properties:
+    description:
+      type: string
+      example: "NIN verified successfully"
+    similarityScore:
+      type: number
+      format: float
+      description: AWS Rekognition similarity score (0–100). 80% threshold.
+      example: 91.20
+    ninDetails:
+      $ref: "#/NinDetails"

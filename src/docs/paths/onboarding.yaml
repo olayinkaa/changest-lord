@@ -1,0 +1,353 @@
+# Onboarding module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/onboarding.yaml#/<key>`.
+#
+# The onboarding flow uses its own short-lived JWT (issued at each
+# progressive step as `temporaryToken`) instead of the global
+# `bearerAuth`. The scope encoded in the token decides which
+# step is reachable — `enforceOnboardingScope` middleware enforces
+# this server-side. We declare a separate `onboardingToken` security
+# scheme on the relevant operations so the spec reflects the
+# different token lifetime and audience.
+
+onboardingValidatePhone:
+  post:
+    tags: [Onboarding]
+    summary: Validate phone / start a new onboarding session
+    description: |
+      First step of the onboarding flow. Validates the phone,
+      then either:
+        - creates a fresh user row (and issues a `temporaryToken`
+          scoped to `onboarding:profile`); or
+        - resumes an in-progress user (and issues a `temporaryToken`
+          scoped to whichever step the user is up to); or
+        - rejects with 409 if the phone already belongs to a user
+          that has completed onboarding.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/onboarding.yaml#/ValidatePhoneRequest"
+    responses:
+      "200":
+        description: Phone validated — new or resumed onboarding step.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/OnboardingStepResponse"
+      "400":
+        description: Invalid phone (validation rule failed).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "409":
+        description: Phone is already registered and onboarding is complete.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingRegisterProfile:
+  put:
+    tags: [Onboarding]
+    summary: Register user profile (personal info)
+    description: |
+      Second step. Requires the `temporaryToken` issued by
+      `validate-phone` (or the prior step), with scope
+      `onboarding:profile`. Persists the profile fields, advances
+      `onboardingStep` and returns a fresh `temporaryToken` for
+      the next step.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/onboarding.yaml#/OnboardingProfileRequest"
+    responses:
+      "201":
+        description: Profile registered — next step token issued.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/OnboardingStepResponse"
+      "400":
+        description: Validation failure on the body.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingRegisterBusiness:
+  put:
+    tags: [Onboarding]
+    summary: Register business profile (sellers only)
+    description: |
+      Third step. Requires scope `onboarding:business`. Also
+      validates the supplied `businessTypeId` against the
+      business-types catalog (returns 404 if it doesn't exist).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/onboarding.yaml#/OnboardingBusinessProfileRequest"
+    responses:
+      "201":
+        description: Business profile registered — next step token issued.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/OnboardingStepResponse"
+      "400":
+        description: Validation failure on the body.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "404":
+        description: The supplied `businessTypeId` does not exist.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingLivenessInitiate:
+  post:
+    tags: [Onboarding]
+    summary: Start a liveness session
+    description: |
+      Fourth step. Requires scope `onboarding:liveness`. Returns
+      a `sessionId` (and typically a `redirectUrl`) that the
+      client uses to drive the user through the liveness check.
+    responses:
+      "200":
+        description: Liveness session started.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/LivenessInitiateResponse"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingLivenessResult:
+  post:
+    tags: [Onboarding]
+    summary: Poll / fetch a liveness session result
+    description: |
+      Requires scope `onboarding:liveness`. The `:sessionId` was
+      returned by `POST /onboarding/liveness-initiate`.
+    parameters:
+      - in: path
+        name: sessionId
+        required: true
+        schema:
+          type: string
+        description: Provider-issued liveness session id.
+    responses:
+      "200":
+        description: Liveness session result.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/LivenessSessionResult"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingLivenessCapture:
+  post:
+    tags: [Onboarding]
+    summary: Submit a liveness image capture
+    description: |
+      Submit a captured frame for the in-progress liveness session.
+      Requires scope `onboarding:liveness`. The image is forwarded
+      to the liveness provider (currently via the AWS Rekognition
+      adapter).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/onboarding.yaml#/SubmitLivenessCaptureRequest"
+    responses:
+      "200":
+        description: Capture accepted; provider-specific acknowledgement.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      additionalProperties: true
+      "400":
+        description: Validation failure (missing/empty `image`).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingCreatePin:
+  post:
+    tags: [Onboarding]
+    summary: Create the transaction PIN
+    description: |
+      Final step. Requires scope `onboarding:pin`. Hashes the PIN
+      and persists it; for sellers also generates a `userId5`
+      (via `IUtilityService.generateUniqueUserId5`). On success
+      returns a real access/refresh token pair (same shape as
+      `POST /auth/login`) so the client can move straight into
+      the authenticated app.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/onboarding.yaml#/CreatePinRequest"
+    responses:
+      "200":
+        description: PIN created; tokens issued.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/PinCompletionResponse"
+      "400":
+        description: Validation failure (e.g. PIN not 4 digits) or user not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "401":
+        description: Onboarding session is invalid or expired.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingValidateEmail:
+  get:
+    tags: [Onboarding]
+    summary: Check if an email is available
+    description: |
+      Returns `{ exists: false }` if the email is free, or 400
+      with a domain error if the email is already registered.
+      Currently public (no scope check) — the scope check is
+      commented out in code with a TODO.
+    security: []
+    parameters:
+      - in: query
+        name: email
+        required: true
+        schema:
+          type: string
+          format: email
+    responses:
+      "200":
+        description: Email is available.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/ValidateEmailResponse"
+      "400":
+        description: Email is already registered.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+onboardingValidateBusinessName:
+  get:
+    tags: [Onboarding]
+    summary: Check if a business name is available
+    description: |
+      Returns `{ exists: false }` if the name is free, or 400
+      with a domain error if it is already taken.
+    security: []
+    parameters:
+      - in: query
+        name: businessName
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Business name is available.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/onboarding.yaml#/ValidateBusinessNameResponse"
+      "400":
+        description: Business name is already taken.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

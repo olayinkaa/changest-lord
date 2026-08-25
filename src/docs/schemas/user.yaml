@@ -1,8 +1,63 @@
 # Schemas owned by the user module. Referenced from paths/users.yaml.
 
+UserType:
+  type: string
+  description: Role of the user within the myChange ecosystem.
+  enum: [customer, merchant, agent]
+  example: customer
+
+KycSummary:
+  type: object
+  description: |
+    KYC flags exposed on the user record. Mirrors `KycResponseDto`
+    (see src/modules/kyc/kyc.dto.ts) — only public-facing fields are
+    returned; `userId`, internal email/phone verification flags, etc.
+    are stripped by class-transformer's `excludeExtraneousValues`.
+  properties:
+    id:
+      type: string
+      format: uuid
+    livenessDone:
+      type: boolean
+      example: true
+    completedProfile:
+      type: boolean
+    ninVerified:
+      type: boolean
+    bvnVerified:
+      type: boolean
+    bvnFaceVerified:
+      type: boolean
+    pinCreated:
+      type: boolean
+    faceId:
+      type: string
+      description: AWS Rekognition face id associated with the user.
+
+BusinessTypeSummary:
+  type: object
+  description: |
+    Business-type metadata attached to merchant/agent users.
+    Mirrors `UserBusinessTypeResponseDto` (a trimmed view of
+    `BusinessTypeResponseDto` with `createdAt`/`updatedAt` stripped).
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+      example: "Retail"
+    description:
+      type: string
+      nullable: true
+
 User:
   type: object
-  description: Canonical user record returned by the user module.
+  description: |
+    Canonical user record returned by the user module. Mirrors
+    `UserResponseDto` (see src/modules/user/user.dto.ts) — fields
+    annotated `@Exclude()` (e.g. `pinHash`, `businessTypeId`,
+    `onboardingStep`) are not exposed via the API.
   properties:
     id:
       type: string
@@ -12,6 +67,7 @@ User:
       type: string
       format: email
       nullable: true
+      example: ada@example.com
     phone:
       type: string
       nullable: true
@@ -19,16 +75,102 @@ User:
     firstName:
       type: string
       nullable: true
+      example: Ada
     lastName:
       type: string
       nullable: true
-    userType:
+      example: Lovelace
+    middleName:
       type: string
-      enum: [customer, merchant, agent]
       nullable: true
+    userType:
+      $ref: "#/UserType"
+    businessLocation:
+      type: string
+      nullable: true
+      description: Free-text business address (set during onboarding).
+    businessName:
+      type: string
+      nullable: true
+    address:
+      type: string
+      nullable: true
+      description: Home or primary address captured during onboarding.
+    nin:
+      type: string
+      nullable: true
+      description: National Identification Number (sensitive — mask in clients).
+    bvn:
+      type: string
+      nullable: true
+      description: Bank Verification Number (sensitive — mask in clients).
+    userId5:
+      type: string
+      nullable: true
+    livenessImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: Cloudinary-hosted liveness selfie URL.
+    livenessImagePublicId:
+      type: string
+      nullable: true
+      description: Cloudinary public id; used to clean up the asset on delete.
+    latitude:
+      type: number
+      format: double
+      nullable: true
+    longitude:
+      type: number
+      format: double
+      nullable: true
+    deviceBindingId:
+      type: string
+      nullable: true
+    virtualAccountNo:
+      type: string
+      nullable: true
+      description: Anchor virtual account number issued to the user.
     createdAt:
       type: string
       format: date-time
     updatedAt:
       type: string
       format: date-time
+    kyc:
+      $ref: "#/KycSummary"
+    businessType:
+      $ref: "#/BusinessTypeSummary"
+  required:
+    - id
+    - createdAt
+    - updatedAt
+
+PaginatedUsers:
+  type: object
+  description: |
+    Paginated envelope returned by `GET /users`. Mirrors
+    `PaginatedResponse<T>` from src/types/base.ts.
+  properties:
+    content:
+      type: array
+      items:
+        $ref: "#/User"
+    page:
+      type: integer
+      example: 1
+    size:
+      type: integer
+      example: 20
+    totalPages:
+      type: integer
+      example: 5
+    totalElements:
+      type: integer
+      example: 100
+  required:
+    - content
+    - page
+    - size
+    - totalPages
+    - totalElements

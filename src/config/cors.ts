@@ -10,6 +10,8 @@ export const configureCors = () => {
 				"http://localhost:5173", //local dev
 				"http://localhost:4006", //local dev
 				"http://127.0.0.1:5173",
+				"http://localhost:6001",
+				"https://changest-lord-1.onrender.com",
 			]
 
 			if (!origin || allowedOrigins.indexOf(origin) !== -1) {

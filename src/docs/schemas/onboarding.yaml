@@ -1,0 +1,214 @@
+# Schemas owned by the onboarding module. Referenced from paths/onboarding.yaml.
+
+OnboardingScope:
+  type: string
+  description: |
+    Onboarding session scope (encoded in the `temporaryToken` /
+    `onboardingUser` payload). See `OnboardingScopes` in
+    src/constants/index.ts.
+  enum:
+    - onboarding:profile
+    - onboarding:business
+    - onboarding:liveness
+    - onboarding:pin
+  example: onboarding:profile
+
+OnboardingStep:
+  type: string
+  description: |
+    Current step in the progressive onboarding flow. Mirrors the
+    `OnboardingStep` Prisma enum (see src/generated/prisma/enums.ts).
+  enum:
+    - PHONE_VALIDATED
+    - PROFILE_COMPLETED
+    - BUSINESS_PROFILE_COMPLETED
+    - LIVENESS_PASSED
+    - PIN_COMPLETED
+  example: PROFILE_COMPLETED
+
+OnboardingUserType:
+  type: string
+  description: |
+    User type. Reuses the same `UserType` Prisma enum used by the
+    user module — duplicated here so onboarding consumers don't
+    need to follow a second `$ref` to read it.
+  enum: [customer, merchant, agent]
+  example: customer
+
+ValidatePhoneRequest:
+  type: object
+  description: |
+    Body for `POST /onboarding/validate-phone`. The phone is
+    normalised to the Nigerian E.164 form by `TransformNigeriaPhone`
+    and validated by the custom `IsNigeriaPhone` rule.
+  required: [phone]
+  properties:
+    phone:
+      type: string
+      example: "+2348012345678"
+
+OnboardingProfileRequest:
+  type: object
+  description: |
+    Body for `PUT /onboarding/register/profile`. Mirrors
+    `OnboardingProfileRequest` (see src/modules/onboarding/onboarding.dto.ts).
+  required: [firstName, lastName, email, homeAddress, userType]
+  properties:
+    firstName:
+      type: string
+    lastName:
+      type: string
+    email:
+      type: string
+      format: email
+    homeAddress:
+      type: string
+    userType:
+      $ref: "#/OnboardingUserType"
+    referralCode:
+      type: string
+      nullable: true
+      description: Optional referral code captured during onboarding.
+
+OnboardingBusinessProfileRequest:
+  type: object
+  description: |
+    Body for `PUT /onboarding/register/business`. Mirrors
+    `OnboardingBusinessProfileRequest`.
+  required: [businessName, businessLocation, businessTypeId]
+  properties:
+    businessName:
+      type: string
+    businessLocation:
+      type: string
+    businessTypeId:
+      type: string
+      format: uuid
+      description: UUID of the business type (see `/business-types`).
+
+CreatePinRequest:
+  type: object
+  description: Body for `POST /onboarding/create-pin`. Mirrors `CreatePinRequest`.
+  required: [pin]
+  properties:
+    pin:
+      type: string
+      pattern: "^\\d{4}$"
+      description: 4-digit transaction PIN.
+      example: "1234"
+
+SubmitLivenessCaptureRequest:
+  type: object
+  description: |
+    Body for `POST /onboarding/liveness-capture/submit`. Mirrors
+    `SubmitLivenessCaptureRequest`.
+  required: [image]
+  properties:
+    image:
+      type: string
+      description: Base64-encoded image bytes of the captured frame.
+      example: "/9j/4AAQSkZJRgABAQEA..."
+
+OnboardingStepResponse:
+  type: object
+  description: |
+    Generic response shape returned by every progressive onboarding
+    step (validate-phone, register/profile, register/business,
+    create-pin). Mirrors the values returned by the corresponding
+    `OnboardingService` methods.
+  required: [description, currentStep, temporaryToken]
+  properties:
+    description:
+      type: string
+      example: "Profile details registered successfully."
+    currentStep:
+      $ref: "#/OnboardingStep"
+    userType:
+      $ref: "#/OnboardingUserType"
+      nullable: true
+      description: |
+        Echoed on the profile/business steps. May be `null` on the
+        very first step (phone validation) before the user picks
+        a role.
+    temporaryToken:
+      type: string
+      description: |
+        Short-lived JWT (15m) carrying the next allowed onboarding
+        scope. Forward as `Authorization: Bearer <token>` on the
+        next step.
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+PinCompletionResponse:
+  type: object
+  description: |
+    Returned by `POST /onboarding/create-pin`. After the PIN is
+    set the service also issues a real access/refresh token pair
+    so the client can move straight into the authenticated app.
+  required: [description, currentStep, accessToken, refreshToken]
+  properties:
+    description:
+      type: string
+      example: "PIN created successfully."
+    currentStep:
+      $ref: "#/OnboardingStep"
+    accessToken:
+      type: string
+      description: Short-lived access JWT.
+    refreshToken:
+      type: string
+      description: Long-lived refresh JWT.
+
+ValidateEmailResponse:
+  type: object
+  description: Returned by `GET /onboarding/validate-email`.
+  required: [exists, message]
+  properties:
+    exists:
+      type: boolean
+      example: false
+    message:
+      type: string
+      example: "Email is available"
+
+ValidateBusinessNameResponse:
+  type: object
+  description: Returned by `GET /onboarding/validate-business-name`.
+  required: [exists, message]
+  properties:
+    exists:
+      type: boolean
+      example: false
+    message:
+      type: string
+      example: "Business name is available"
+
+LivenessSessionResult:
+  type: object
+  description: |
+    Loose shape returned by the liveness adapter (see
+    `ILivenessResultResponse` in src/modules/liveness/liveness.type.ts).
+    The exact key set depends on the underlying provider, so this
+    schema is intentionally permissive (`additionalProperties: true`)
+    on the `result` payload.
+  properties:
+    score:
+      type: number
+      description: Confidence score returned by the liveness provider.
+    result:
+      type: object
+      additionalProperties: true
+      description: Raw provider payload — see liveness adapter.
+
+LivenessInitiateResponse:
+  type: object
+  description: Returned by `POST /onboarding/liveness-initiate`.
+  properties:
+    sessionId:
+      type: string
+      description: Provider-issued liveness session id.
+    redirectUrl:
+      type: string
+      format: uri
+      description: |
+        Where the client should send the user to perform the
+        liveness check.

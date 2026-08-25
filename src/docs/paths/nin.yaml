@@ -1,0 +1,70 @@
+# NIN module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/nin.yaml#/<key>`.
+#
+# NOTE: the nin module currently exposes `NinService` but no
+# controller — the route below documents the *planned* endpoint
+# (see CLAUDE.md "Follow-ups"). Once `NinController` is added and
+# bound via `NinModule`, the spec is ready to ship.
+
+ninVerify:
+  post:
+    tags: [NIN]
+    summary: Verify the caller's NIN
+    description: |
+      Runs the NIN verification pipeline for the authenticated user.
+      Mirrors the BVN flow:
+        1. Loads the user; fails with 404 if missing, 400 if no
+           liveness image has been captured yet.
+        2. Rejects with 400 (`NIN_ALREADY_EXIST`) if the NIN is
+           already attached to another user.
+        3. Looks up a local NIN cache first; falls back to the
+           verification provider (Dojah) on miss.
+        4. Compares the NIN photo against the user's liveness
+           capture via AWS Rekognition. Scores below 80% are
+           rejected with 400 (`FACE_MISMATCH`).
+        5. On success, persists the NIN on the user and updates
+           KYC flags.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/nin.yaml#/VerifyNinRequest"
+    responses:
+      "200":
+        description: NIN verified and face matched.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/nin.yaml#/NinVerificationResponse"
+      "400":
+        description: |
+          One of:
+            - Liveness capture missing
+            - NIN already registered to another user (`NIN_ALREADY_EXIST`)
+            - NIN record has no image for face comparison
+            - Face mismatch (`FACE_MISMATCH`)
+            - Validation failure on the body
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "404":
+        description: Authenticated user not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "500":
+        description: |
+          Upstream verification provider or AWS Rekognition returned
+          an unexpected error.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

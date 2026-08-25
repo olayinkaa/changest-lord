@@ -1,0 +1,171 @@
+# Business-type module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/business-types.yaml#/<key>`.
+#
+# All endpoints inherit the global `bearerAuth` requirement declared
+# in openapi.yaml. The controller does not currently apply `AuthGuard`
+# (matches the rest of the catalog endpoints — `address`); `security: []`
+# overrides the global requirement so the spec matches runtime behaviour.
+
+businessTypesRoot:
+  get:
+    tags: [BusinessTypes]
+    summary: List all business types
+    description: |
+      Returns the full catalog of business types, ordered by the
+      repository's default sort.
+    security: []
+    responses:
+      "200":
+        description: List of business types wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../schemas/business-type.yaml#/BusinessType"
+  post:
+    tags: [BusinessTypes]
+    summary: Create a business type
+    description: |
+      Creates a new catalog entry. Returns 400 if a business type
+      with the same `type` already exists.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/business-type.yaml#/CreateBusinessTypeRequest"
+    responses:
+      "201":
+        description: Business type created.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/business-type.yaml#/BusinessType"
+      "400":
+        description: Validation failure or duplicate business type.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+businessTypesById:
+  get:
+    tags: [BusinessTypes]
+    summary: Get a business type by id
+    description: Returns a single catalog entry.
+    security: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Business type wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/business-type.yaml#/BusinessType"
+      "404":
+        description: Business type not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+  put:
+    tags: [BusinessTypes]
+    summary: Update a business type
+    description: |
+      Replaces the `type` / `description` on an existing entry.
+      Returns 404 if the id does not exist (the service does a
+      `findById` pre-check before persisting).
+    security: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/business-type.yaml#/UpdateBusinessTypeRequest"
+    responses:
+      "200":
+        description: Updated business type wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/business-type.yaml#/BusinessType"
+      "400":
+        description: Validation failure on the body.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "404":
+        description: Business type not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+  delete:
+    tags: [BusinessTypes]
+    summary: Delete a business type
+    description: |
+      Deletes the entry. Returns the deleted record on success
+      (per the controller's `return this.json(ApiResponse.success(result, ...))`
+      pattern), and 404 if it didn't exist.
+    security: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Business type deleted; deleted record returned.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/business-type.yaml#/BusinessType"
+      "404":
+        description: Business type not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

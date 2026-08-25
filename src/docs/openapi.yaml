@@ -21,6 +21,8 @@ info:
     name: myChange Engineering
 
 servers:
+  - url: https://changest-lord-1.onrender.com/api/v1
+    description: staging server
   - url: http://localhost:6001/api/v1
     description: development server
 
@@ -28,16 +30,56 @@ security:
   - bearerAuth: []
 
 tags:
+  - name: Auth
+    description: Phone + PIN authentication.
   - name: Users
-    description: User lookup and listing
+    description: User lookup, listing, and deletion.
+  - name: Onboarding
+    description: Progressive onboarding flow (phone → profile → business → liveness → PIN).
+  - name: BusinessTypes
+    description: Catalog of business types used during seller onboarding.
+  - name: BVN
+    description: BVN verification pipeline (planned — controller not yet wired).
+  - name: NIN
+    description: NIN verification pipeline (planned — controller not yet wired).
   - name: Address
-    description: Google Maps address autocomplete and geometry
+    description: Google Maps address autocomplete and geometry.
 
 paths:
   /users:
     $ref: "./paths/users.yaml#/users"
+  /users/me:
+    $ref: "./paths/users.yaml#/usersMe"
   /users/{id}:
     $ref: "./paths/users.yaml#/usersById"
+  /auth/login:
+    $ref: "./paths/auth.yaml#/login"
+  /onboarding/validate-phone:
+    $ref: "./paths/onboarding.yaml#/onboardingValidatePhone"
+  /onboarding/register/profile:
+    $ref: "./paths/onboarding.yaml#/onboardingRegisterProfile"
+  /onboarding/register/business:
+    $ref: "./paths/onboarding.yaml#/onboardingRegisterBusiness"
+  /onboarding/liveness-initiate:
+    $ref: "./paths/onboarding.yaml#/onboardingLivenessInitiate"
+  /onboarding/liveness-result/{sessionId}:
+    $ref: "./paths/onboarding.yaml#/onboardingLivenessResult"
+  /onboarding/liveness-capture/submit:
+    $ref: "./paths/onboarding.yaml#/onboardingLivenessCapture"
+  /onboarding/create-pin:
+    $ref: "./paths/onboarding.yaml#/onboardingCreatePin"
+  /onboarding/validate-email:
+    $ref: "./paths/onboarding.yaml#/onboardingValidateEmail"
+  /onboarding/validate-business-name:
+    $ref: "./paths/onboarding.yaml#/onboardingValidateBusinessName"
+  /business-types:
+    $ref: "./paths/business-types.yaml#/businessTypesRoot"
+  /business-types/{id}:
+    $ref: "./paths/business-types.yaml#/businessTypesById"
+  /bvn/verify:
+    $ref: "./paths/bvn.yaml#/bvnVerify"
+  /nin/verify:
+    $ref: "./paths/nin.yaml#/ninVerify"
   /address/autocomplete:
     $ref: "./paths/address.yaml#/autocomplete"
   /address/geometry:
@@ -50,8 +92,8 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        JWT issued by /auth/login or by an onboarding step. Forward as
-        `Authorization: Bearer <token>`.
+        JWT issued by /auth/login or by the onboarding flow's
+        create-pin step. Forward as `Authorization: Bearer <token>`.
   schemas:
     ApiResponse:
       $ref: "./schemas/_shared.yaml#/ApiResponse"
@@ -59,6 +101,64 @@ components:
       $ref: "./schemas/_shared.yaml#/ErrorResponse"
     User:
       $ref: "./schemas/user.yaml#/User"
+    UserType:
+      $ref: "./schemas/user.yaml#/UserType"
+    KycSummary:
+      $ref: "./schemas/user.yaml#/KycSummary"
+    BusinessTypeSummary:
+      $ref: "./schemas/user.yaml#/BusinessTypeSummary"
+    PaginatedUsers:
+      $ref: "./schemas/user.yaml#/PaginatedUsers"
+    LoginRequest:
+      $ref: "./schemas/auth.yaml#/LoginRequest"
+    TokenResponse:
+      $ref: "./schemas/auth.yaml#/TokenResponse"
+    OnboardingStep:
+      $ref: "./schemas/onboarding.yaml#/OnboardingStep"
+    OnboardingScope:
+      $ref: "./schemas/onboarding.yaml#/OnboardingScope"
+    OnboardingUserType:
+      $ref: "./schemas/onboarding.yaml#/OnboardingUserType"
+    ValidatePhoneRequest:
+      $ref: "./schemas/onboarding.yaml#/ValidatePhoneRequest"
+    OnboardingProfileRequest:
+      $ref: "./schemas/onboarding.yaml#/OnboardingProfileRequest"
+    OnboardingBusinessProfileRequest:
+      $ref: "./schemas/onboarding.yaml#/OnboardingBusinessProfileRequest"
+    CreatePinRequest:
+      $ref: "./schemas/onboarding.yaml#/CreatePinRequest"
+    SubmitLivenessCaptureRequest:
+      $ref: "./schemas/onboarding.yaml#/SubmitLivenessCaptureRequest"
+    OnboardingStepResponse:
+      $ref: "./schemas/onboarding.yaml#/OnboardingStepResponse"
+    PinCompletionResponse:
+      $ref: "./schemas/onboarding.yaml#/PinCompletionResponse"
+    ValidateEmailResponse:
+      $ref: "./schemas/onboarding.yaml#/ValidateEmailResponse"
+    ValidateBusinessNameResponse:
+      $ref: "./schemas/onboarding.yaml#/ValidateBusinessNameResponse"
+    LivenessSessionResult:
+      $ref: "./schemas/onboarding.yaml#/LivenessSessionResult"
+    LivenessInitiateResponse:
+      $ref: "./schemas/onboarding.yaml#/LivenessInitiateResponse"
+    BusinessType:
+      $ref: "./schemas/business-type.yaml#/BusinessType"
+    CreateBusinessTypeRequest:
+      $ref: "./schemas/business-type.yaml#/CreateBusinessTypeRequest"
+    UpdateBusinessTypeRequest:
+      $ref: "./schemas/business-type.yaml#/UpdateBusinessTypeRequest"
+    VerifyBvnRequest:
+      $ref: "./schemas/bvn.yaml#/VerifyBvnRequest"
+    BvnDetails:
+      $ref: "./schemas/bvn.yaml#/BvnDetails"
+    BvnVerificationResponse:
+      $ref: "./schemas/bvn.yaml#/BvnVerificationResponse"
+    VerifyNinRequest:
+      $ref: "./schemas/nin.yaml#/VerifyNinRequest"
+    NinDetails:
+      $ref: "./schemas/nin.yaml#/NinDetails"
+    NinVerificationResponse:
+      $ref: "./schemas/nin.yaml#/NinVerificationResponse"
     AddressPrediction:
       $ref: "./schemas/address.yaml#/AddressPrediction"
     AddressAutocompleteResponse:

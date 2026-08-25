@@ -1,18 +1,64 @@
 # User module path entries. Referenced from openapi.yaml as
 # `$ref: ./paths/users.yaml#/<key>`.
+#
+# All four endpoints inherit the global `bearerAuth` requirement declared
+# in openapi.yaml. Endpoints that do not yet enforce auth in code
+# (currently `GET /` and `DELETE /:id`) override this with
+# `security: []` so the spec matches runtime behaviour. The override
+# is a temporary measure; once the passport-jwt strategy is wired in
+# (see CLAUDE.md "Stubs / to be implemented") the override can be
+# removed.
 
 users:
   get:
     tags: [Users]
-    summary: List all users
+    summary: List users (paginated)
     description: |
-      Returns every user record. Currently **public** — auth will be wired
-      via passport-jwt in a follow-up; the OpenAPI spec already declares
-      `bearerAuth` globally for forward compatibility.
+      Returns a paginated list of users. Query parameters `page` and
+      `size` are validated by `PaginationQueryDto` (defaults:
+      `page=1`, `size=20`; `size` capped at 100). Optional filters:
+      `emailLike` (case-insensitive contains), `businessNameLike`
+      (case-insensitive contains), and `userType` (enum).
     security: []
+    parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: 1-based page index.
+      - in: query
+        name: size
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        description: Page size (max 100).
+      - in: query
+        name: emailLike
+        required: false
+        schema:
+          type: string
+        description: Case-insensitive substring match against `email`.
+      - in: query
+        name: businessNameLike
+        required: false
+        schema:
+          type: string
+        description: Case-insensitive substring match against `businessName`.
+      - in: query
+        name: userType
+        required: false
+        schema:
+          $ref: "../schemas/user.yaml#/UserType"
+        description: Restrict results to a single user role.
     responses:
       "200":
-        description: Array of users wrapped in the standard ApiResponse envelope.
+        description: Paginated users wrapped in the standard ApiResponse envelope.
         content:
           application/json:
             schema:
@@ -21,11 +67,56 @@ users:
                 - type: object
                   properties:
                     data:
-                      type: array
-                      items:
-                        $ref: "../schemas/user.yaml#/User"
+                      $ref: "../schemas/user.yaml#/PaginatedUsers"
+      "400":
+        description: Invalid query parameters (e.g. non-integer `page` or `size > 100`).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
       "401":
-        description: Unauthorized (placeholder — auth is not yet enforced).
+        description: Unauthorized (placeholder — auth is not yet enforced on this route).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+usersMe:
+  get:
+    tags: [Users]
+    summary: Get the currently authenticated user
+    description: |
+      Returns the user identified by the JWT in the `Authorization`
+      header. Convenience wrapper around `GET /users/{id}` that pulls
+      the id from the principal instead of the URL.
+    parameters:
+      - in: header
+        name: Authorization
+        required: true
+        schema:
+          type: string
+          example: Bearer eyJhbGciOi...
+        description: JWT issued by `/auth/login`.
+    responses:
+      "200":
+        description: Current user wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/user.yaml#/User"
+      "401":
+        description: Missing or invalid JWT.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "404":
+        description: User not found.
         content:
           application/json:
             schema:
@@ -35,7 +126,10 @@ usersById:
   get:
     tags: [Users]
     summary: Get a user by id
-    security: []
+    description: |
+      Fetches a single user by UUID. Protected by `AuthGuard` — the
+      caller must present a valid `Authorization: Bearer <token>`
+      header.
     parameters:
       - in: path
         name: id
@@ -56,8 +150,64 @@ usersById:
                   properties:
                     data:
                       $ref: "../schemas/user.yaml#/User"
+      "401":
+        description: Missing or invalid JWT.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
       "404":
         description: User not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+  delete:
+    tags: [Users]
+    summary: Delete a user (and clean up external assets)
+    description: |
+      Deletes the user identified by `id` and cascades to related
+      `UserKyc` / `UserDevice` rows. As part of the deletion it
+      also:
+        - removes the user's face from the AWS Rekognition
+          `USERS` collection (when `kyc.faceId` is set) — failure
+          here returns `422 Unprocessable Entity`;
+        - removes the user's liveness image from Cloudinary
+          (when `livenessImagePublicId` is set) — a Cloudinary
+          failure is logged but does not block the deletion.
+    security: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the user to delete.
+    responses:
+      "200":
+        description: Deletion confirmation wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: string
+                      example: The user information has been successfully deleted
+      "404":
+        description: User not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "422":
+        description: |
+          Biometric cleanup failed (e.g. AWS Rekognition rejected the
+          face delete). The database row is left intact so the caller
+          can retry.
         content:
           application/json:
             schema:

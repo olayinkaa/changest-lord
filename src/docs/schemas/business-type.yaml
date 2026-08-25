@@ -1,0 +1,57 @@
+# Schemas owned by the business-type module. Referenced from paths/business-types.yaml.
+
+BusinessType:
+  type: object
+  description: |
+    A business type catalog entry. Mirrors `BusinessTypeResponseDto`
+    (see src/modules/business-type/business-type.dto.ts).
+  required: [id, type, description, createdAt, updatedAt]
+  properties:
+    id:
+      type: string
+      format: uuid
+    type:
+      type: string
+      description: Display name of the business type.
+      example: "Retail"
+    description:
+      type: string
+      description: Free-text description of the business type.
+      example: "Stores selling finished goods to end consumers."
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+CreateBusinessTypeRequest:
+  type: object
+  description: |
+    Body for `POST /business-types`. Mirrors `CreateBusinessTypeDto`
+    (see src/modules/business-type/business-type.dto.ts).
+  required: [type, description]
+  properties:
+    type:
+      type: string
+      minLength: 1
+      example: "Retail"
+    description:
+      type: string
+      minLength: 1
+      example: "Stores selling finished goods to end consumers."
+
+UpdateBusinessTypeRequest:
+  type: object
+  description: |
+    Body for `PUT /business-types/{id}`. Mirrors
+    `UpdateBusinessTypeDto` (which currently extends
+    `CreateBusinessTypeDto` with no additional fields).
+  required: [type, description]
+  properties:
+    type:
+      type: string
+      minLength: 1
+    description:
+      type: string
+      minLength: 1

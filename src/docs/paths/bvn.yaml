@@ -1,0 +1,70 @@
+# BVN module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/bvn.yaml#/<key>`.
+#
+# NOTE: the bvn module currently exposes `BvnService` but no
+# controller — the routes below document the *planned* endpoints
+# (see CLAUDE.md "Follow-ups"). Once `BvnController` is added and
+# bound via `BvnModule`, the spec is ready to ship.
+
+bvnVerify:
+  post:
+    tags: [BVN]
+    summary: Verify the caller's BVN
+    description: |
+      Runs the BVN verification pipeline for the authenticated user:
+        1. Loads the user; fails with 404 if missing, 400 if no
+           liveness image has been captured yet.
+        2. Rejects with 400 (`BVN_ALREADY_EXIST`) if the BVN is
+           already attached to another user.
+        3. Looks up a local BVN cache first; falls back to the
+           verification provider (Dojah) on miss.
+        4. Compares the BVN photo against the user's liveness
+           capture via AWS Rekognition. Scores below 80% are
+           rejected with 400 (`FACE_MISMATCH`).
+        5. On success, persists the BVN on the user and updates
+           KYC flags.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/bvn.yaml#/VerifyBvnRequest"
+    responses:
+      "200":
+        description: BVN verified and face matched.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/bvn.yaml#/BvnVerificationResponse"
+      "400":
+        description: |
+          One of:
+            - Liveness capture missing
+            - BVN already registered to another user (`BVN_ALREADY_EXIST`)
+            - BVN record has no image for face comparison
+            - Face mismatch (`FACE_MISMATCH`)
+            - Validation failure on the body
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "404":
+        description: Authenticated user not found.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "500":
+        description: |
+          Upstream verification provider or AWS Rekognition returned
+          an unexpected error. Body uses the standard `ErrorResponse`
+          envelope.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

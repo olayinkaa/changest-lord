@@ -1,0 +1,69 @@
+# Schemas owned by the BVN module. Referenced from paths/bvn.yaml.
+#
+# NOTE: the bvn module (src/modules/bvn/) currently exposes a service
+# (`BvnService.validateBvn`) but no controller — there is no HTTP route
+# mounted in the bootstrap. The schemas below document the *planned*
+# `POST /bvn/verify` contract so the spec stays ahead of the wire-up
+# (see CLAUDE.md "Follow-ups").
+
+VerifyBvnRequest:
+  type: object
+  description: |
+    Body for `POST /bvn/verify`. Mirrors `VerifyBvnDto`
+    (see src/modules/bvn/bvn.dto.ts).
+  required: [bvn]
+  properties:
+    bvn:
+      type: string
+      pattern: "^\\d{11}$"
+      minLength: 11
+      maxLength: 11
+      description: 11-digit Bank Verification Number.
+      example: "12345678901"
+
+BvnDetails:
+  type: object
+  description: |
+    BVN record returned by the verification provider (Dojah). Mirrors
+    the `entity` payload mapped into `BvnService.validateBvn`.
+  required: [bvn, firstName, lastName, dob, phone, image]
+  properties:
+    bvn:
+      type: string
+    firstName:
+      type: string
+    lastName:
+      type: string
+    dob:
+      type: string
+      description: |
+        Date of birth. Format depends on the upstream provider
+        (Dojah typically returns `YYYY-MM-DD`).
+      example: "1990-01-01"
+    phone:
+      type: string
+      example: "+2348012345678"
+    image:
+      type: string
+      description: |
+        Base64-encoded BVN photo, used for face-matching against
+        the user's liveness capture.
+      example: "/9j/4AAQSkZJRgABAQEA..."
+
+BvnVerificationResponse:
+  type: object
+  description: Returned by `POST /bvn/verify` on success.
+  required: [description, similarityScore, bvnDetails]
+  properties:
+    description:
+      type: string
+      example: "BVN verified and face matched successfully"
+    similarityScore:
+      type: number
+      format: float
+      description: |
+        AWS Rekognition similarity score (0–100). Service rejects
+        values below the 80% threshold.
+      example: 92.45
+    bvnDetails:
+      $ref: "#/BvnDetails"

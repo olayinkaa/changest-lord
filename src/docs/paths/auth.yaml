@@ -1,0 +1,46 @@
+# Auth module path entries. Referenced from openapi.yaml as
+# `$ref: ./paths/auth.yaml#/<key>`.
+
+login:
+  post:
+    tags: [Auth]
+    summary: Phone + PIN login
+    description: |
+      Authenticates a user by phone + 4-digit PIN and returns a
+      fresh access/refresh token pair. Validates the phone against
+      the registered user, compares the PIN against the stored
+      `pinHash` via `AuthUtils.verifyPin`, then issues two JWTs.
+
+      This endpoint is **public** — `security: []` overrides the
+      global `bearerAuth` requirement.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/auth.yaml#/LoginRequest"
+    responses:
+      "200":
+        description: Token pair wrapped in the standard ApiResponse envelope.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../schemas/_shared.yaml#/ApiResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../schemas/auth.yaml#/TokenResponse"
+      "400":
+        description: Validation failure (missing fields, bad phone, PIN not 4 digits, etc.).
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+      "401":
+        description: Phone is unknown, no PIN set, or PIN does not match.
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
