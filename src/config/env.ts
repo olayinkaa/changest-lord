@@ -5,6 +5,7 @@ import { createEnv } from "@/utils/env"
 const envSchema = z
 	.object({
 		// Core service configuration
+		API_URL: z.string().default("https://changest-lord-1.onrender.com"),
 		SERVICE_PORT: z.coerce
 			.number()
 			.int()

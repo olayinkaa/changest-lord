@@ -22,13 +22,15 @@ const theme = new SwaggerTheme()
 const specPromise: Promise<OpenAPI.Document> = SwaggerParser.validate(SPEC_PATH)
 	.then((parsed) => {
 		const api = parsed as OpenAPI.Document
+		const isProd = config.NODE_ENV === "production"
+		const localUrl = `http://localhost:${config.SERVICE_PORT}/api/v1`
 		// Override the static `servers` block with the current runtime port so
 		// the "Try it out" button always points at this process.
 		return {
 			...api,
 			servers: [
 				{
-					url: `http://localhost:${config.SERVICE_PORT}/api/v1`,
+					url: isProd ? config.API_URL : localUrl,
 					description: `${config.NODE_ENV} server`,
 				},
 			],
