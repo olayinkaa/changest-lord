@@ -213,3 +213,11 @@
   - `src/modules/user/user.types.ts` — `createUserProfile` and `updateBusinessProfile` return types narrowed from `Promise<any>` to `Promise<UserWithRelations>`; `findByNin`'s parameter renamed `bvn` → `nin` to match its semantics; Biome formatting.
 - **Rationale:** Returning `userType` from the onboarding step tokens lets the client pick the right next screen without a separate `/me` call, and correcting the "Profile details" copy on the business step removes a UX-level bug where sellers saw the wrong confirmation message. The `Promise<any>` → `Promise<UserWithRelations>` narrowing is a precondition for safely surfacing the new BVN/NIN service lookups from `UserRepository` without leaking `any` into the call sites.
 - **Verified:** Husky pre-commit ran Biome on the two staged files and re-staged them. Commit `1b6b3a6` (amended `a705171`) on `feature/kyc-bvn-nin-modules`.
+
+### Feat: Cloudinary cleanup + expose livenessImagePublicId on user delete
+- **High-level description:** When a user is deleted, also destroy their liveness image from Cloudinary so we don't leave orphaned media in the cloud. Surface `livenessImagePublicId` on the user DTO so the new delete flow can read it.
+- **Files modified:**
+  - `src/modules/user/user.dto.ts` — `livenessImagePublicId` switched from `@Exclude()` to `@Expose()` so it ships on `UserResponseDto`.
+  - `src/modules/user/user.service.ts` — injects `ICloudinaryService`; `deleteUser` now also calls `cloudinaryService.destroy(livenessImagePublicId)` after the Rekognition face delete, with best-effort error logging (failure does not block user deletion); Biome formatting (tabs → spaces, semicolons, multi-line constructor / method signatures).
+- **Rationale:** Closes a leak where deleting a user left the liveness asset behind in Cloudinary and the `faceId` in Rekognition was being cleaned up but the matching image was not. Exposing `livenessImagePublicId` makes the asset removable from the service layer without an extra round-trip. The best-effort error handling matches the existing Rekognition branch — failure is logged, deletion of the user row still proceeds.
+- **Verified:** Husky pre-commit ran Biome on the two staged files and re-staged them. Commit `ad9524a` on `feature/user-deletion-cleanup`.
