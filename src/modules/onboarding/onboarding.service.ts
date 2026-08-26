@@ -197,7 +197,7 @@ export class OnboardingService implements IOnboardingService {
 		let userId5 = user.userId5
 
 		// if (user.userType === UserType.seller && !userId5) {
-		if (user.userType === UserType.seller && !userId5) {
+		if (!userId5) {
 			userId5 = await this.utilityService.generateUniqueUserId5()
 		}
 
