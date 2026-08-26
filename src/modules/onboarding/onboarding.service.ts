@@ -239,6 +239,7 @@ export class OnboardingService implements IOnboardingService {
 		const existingUser = await this.userRepo.findByEmail(email)
 		if (existingUser) {
 			throw new BadRequestException("Email already exists", {
+				exist: true,
 				email: "Email already exists",
 			})
 		}
