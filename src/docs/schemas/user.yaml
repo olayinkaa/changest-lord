@@ -4,7 +4,7 @@ UserType:
   type: string
   description: Role of the user within the myChange ecosystem.
   enum: [customer, merchant, agent]
-  example: customer
+  example: ""
 
 KycSummary:
   type: object
