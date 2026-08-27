@@ -34,6 +34,15 @@ export interface IAwsSesEmailValidationResponse {
 	}
 }
 
+export interface ISendEmailOptions {
+	to: string
+	subject: string
+	htmlBody?: string
+	textBody?: string
+	fromEmail?: string // Optional override if you have multiple senders
+}
+
 export interface IAwsSesService {
 	checkEmailInsights(emailAddress: string): Promise<IAwsSesEmailValidationResponse>
+	sendEmail(options: ISendEmailOptions): Promise<SendEmailCommandOutput>
 }

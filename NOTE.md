@@ -21,3 +21,13 @@ swagger-ui-express
 ```
 # Render build command
 pnpm install && pnpm run build && pnpm prisma generate
+
+
+## BRAILS
+```ts
+// dynamic VA
+https://docs.brails.com/docs/collections/nigeria-collections
+
+// Static VA
+https://sandboxapi.onbrails.com/api/v1/virtual-accounts
+```

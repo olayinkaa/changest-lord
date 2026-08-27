@@ -43,6 +43,8 @@ const envSchema = z
 		DOJAH_APP_ID: z.string().optional(),
 		DOJAH_API_KEY: z.string().optional(),
 		// Other configuration
+		BRAILS_API_BASE_URL: z.string(),
+		BRAILS_API_KEY: z.string(),
 	})
 	.superRefine((data, ctx) => {
 		// -----------------------------------------------------------------
