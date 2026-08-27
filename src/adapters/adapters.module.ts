@@ -18,7 +18,7 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService).to(
 		AwsRekognitionService,
 	)
-	bind<IAwsSesService>(ADAPTER_TYPES.AmazonSesService).to(AwsSesService)
+	bind<IAwsSesService>(ADAPTER_TYPES.AwsSesService).to(AwsSesService)
 	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)

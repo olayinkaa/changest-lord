@@ -32,7 +32,7 @@ export class OnboardingService implements IOnboardingService {
 		@inject(AUTH_TYPES.AuthUtils) private readonly authUtils: IAuthUtils,
 		@inject(UTILITY_TYPES.Service)
 		private readonly utilityService: IUtilityService,
-		@inject(ADAPTER_TYPES.AmazonSesService)
+		@inject(ADAPTER_TYPES.AwsSesService)
 		private readonly awsSesService: IAwsSesService,
 	) {}
 
