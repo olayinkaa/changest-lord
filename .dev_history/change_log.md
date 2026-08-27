@@ -1,5 +1,27 @@
 # Change Log
 
+## 2026-08-27
+
+### Feat: Brails payment adapter scaffold + adapter/env refresh
+- **High-level description:** Introduce a Brails payment-provider adapter under `src/adapters/payment/brails/`, reserve an `anchor` sibling directory for upcoming payment work, and refresh the aws-ses / cloudinary / google-map adapter contracts and the env/adapters config to align with the new payment surface.
+- **Files modified:**
+  - `NOTE.md` — document the Brails dynamic + static virtual-account endpoints.
+  - `src/adapters/aws-ses/aws-ses.service.ts` — refresh implementation against the current types contract.
+  - `src/adapters/aws-ses/aws-ses.types.ts` — refresh type surface used by the service.
+  - `src/adapters/cloudinary/cloudinary.service.ts` — align service with updated cloudinary types.
+  - `src/adapters/cloudinary/cloudinary.types.ts` — refresh type surface used by the service.
+  - `src/adapters/cloudinary/multer.ts` — update upload wiring to match the new types.
+  - `src/adapters/google/google-map.service.ts` — align service with updated google-map types.
+  - `src/adapters/google/google-map.type.ts` — refresh type surface used by the service.
+  - `src/config/adapters.config.ts` — register the new payment/Brails adapter entry.
+  - `src/config/env.ts` — add payment/Brails credential env keys and refresh adapter config bindings.
+- **Files added:**
+  - `src/adapters/payment/brails/brails.service.ts` — initial `@injectable()` Brails service scaffold.
+  - `src/adapters/payment/brails/brails.type.ts` — DI tokens / type contracts for the Brails adapter.
+  - `src/adapters/payment/anchor/` — reserved empty directory for the upcoming Anchor payment adapter.
+- **Rationale:** Brails is the new virtual-account provider; laying down the adapter shape, DI tokens, and env keys now keeps the consumer modules free of churn when the first controller binding lands. The aws-ses / cloudinary / google-map touches are contract refreshes — the husky/lint-staged biome auto-fix on commit trimmed the staged set down to the files that actually changed semantically.
+- **Verified:** Committed on new branch `feature/payment-brails-adapter` (off `pre-development`) as `d801ffc`. Lint-staged ran `biome check --write` on the staged files; commit succeeded with no remaining working-tree changes.
+
 ## 2026-07-31
 
 ### Feat: Implement User PIN Creation and Phone/PIN Login
