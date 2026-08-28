@@ -10,6 +10,8 @@ import { CloudinaryService } from "./cloudinary/cloudinary.service"
 import type { ICloudinaryService } from "./cloudinary/cloudinary.types"
 import { GoogleMapsService } from "./google/google-map.service"
 import type { IGoogleMapsService } from "./google/google-map.type"
+import { RedisService } from "./redis/redis.service"
+import { type IRedisService, REDIS_TYPES } from "./redis/redis.types"
 import { VerificationFactory } from "./verification/verification.factory"
 import type { IVerificationService } from "./verification/verification.types"
 
@@ -20,6 +22,7 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	)
 	bind<IAwsSesService>(ADAPTER_TYPES.AmazonSesService).to(AwsSesService)
 	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
+	bind<IRedisService>(REDIS_TYPES.Service).to(RedisService)
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)
 	})

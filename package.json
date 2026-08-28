@@ -10,6 +10,10 @@
 		"dev:local": "dotenv -e .env.local -- tsx watch src/index.ts",
 		"dev:staging": "dotenv -e .env.staging -- tsx watch src/index.ts",
 		"dev:clean": "rm -rf dist",
+		"worker:start": "node dist/worker.js",
+		"worker:dev": "dotenv -e .env -- tsx watch src/worker.ts",
+		"worker:dev:local": "dotenv -e .env.local -- tsx watch src/worker.ts",
+		"worker:dev:staging": "dotenv -e .env.staging -- tsx watch src/worker.ts",
 		"lint:check:fix": "biome check --write ./src",
 		"docs:check": "tsx scripts/docs-check.ts",
 		"prepare": "husky"
@@ -26,6 +30,7 @@
 		"@prisma/client": "^7.9.1",
 		"axios": "^1.18.1",
 		"bcryptjs": "^3.0.3",
+		"bullmq": "^5.34.0",
 		"class-transformer": "^0.5.1",
 		"class-validator": "^0.15.1",
 		"cloudinary": "^2.10.0",
