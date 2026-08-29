@@ -39,6 +39,12 @@ users:
           default: 20
         description: Page size (max 100).
       - in: query
+        name: searchLike
+        required: false
+        schema:
+          type: string
+        description: Case-insensitive substring match against `firstName`,`lastName`,`businessName`.
+      - in: query
         name: emailLike
         required: false
         schema:
