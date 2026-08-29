@@ -13,6 +13,10 @@ import { KycResponseDto } from "../kyc/kyc.dto"
 export class UserQueryDto extends PaginationQueryDto {
 	@IsOptional()
 	@IsString()
+	searchLike?: string
+
+	@IsOptional()
+	@IsString()
 	emailLike?: string
 
 	@IsOptional()

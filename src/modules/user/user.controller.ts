@@ -80,13 +80,14 @@ export class UserController extends BaseHttpController {
 	public async sendEmail(@next() nxt: NextFunction) {
 		try {
 			const result = await this.awsSesService.sendEmail({
-				fromEmail: "MyChange@gmail.com",
+				fromEmail: "olayinka@borgestech.co",
 				to: "ibrahimolayinkaa@gmail.com",
 				subject: "Testing for real subject",
 				textBody: "This is a test email sent from AWS SES.",
 				htmlBody:
 					"<h1>Test Email</h1><p>If you see this, your AWS SES setup is working!</p>",
 			})
+			return result
 		} catch (error) {
 			nxt(error)
 		}

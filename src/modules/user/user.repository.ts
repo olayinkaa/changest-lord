@@ -13,9 +13,18 @@ export class UserRepository implements IUserRepository {
 	 * @returns
 	 */
 	async findAll(query: UserQueryDto): Promise<PaginatedResult<User>> {
-		const { page, size, emailLike, userType, businessNameLike } = query
+		const { page, size, emailLike, userType, businessNameLike, searchLike } = query
 
 		const where: any = {}
+
+		if (searchLike) {
+			where.OR = [
+				{ firstName: { contains: searchLike, mode: "insensitive" } },
+				{ lastName: { contains: searchLike, mode: "insensitive" } },
+				{ businessName: { contains: searchLike, mode: "insensitive" } },
+			]
+		}
+
 		if (businessNameLike) {
 			where.branchName = { contains: businessNameLike, mode: "insensitive" }
 		}
