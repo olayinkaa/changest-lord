@@ -98,7 +98,7 @@ usersMe:
     parameters:
       - in: header
         name: Authorization
-        required: true
+        required: false
         schema:
           type: string
           example: Bearer eyJhbGciOi...
