@@ -6,6 +6,8 @@ import type { IAwsRekognitionService } from "./aws-rekognition/aws-rekogniction.
 import { AwsRekognitionService } from "./aws-rekognition/aws-rekognition.service"
 import { AwsSesService } from "./aws-ses/aws-ses.service"
 import type { IAwsSesService } from "./aws-ses/aws-ses.types"
+import { BullMQQueueService } from "./bullmq/queue.service"
+import { BULLMQ_TYPES, type IBullMQQueueService } from "./bullmq/types"
 import { CloudinaryService } from "./cloudinary/cloudinary.service"
 import type { ICloudinaryService } from "./cloudinary/cloudinary.types"
 import { GoogleMapsService } from "./google/google-map.service"
@@ -23,6 +25,7 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IAwsSesService>(ADAPTER_TYPES.AmazonSesService).to(AwsSesService)
 	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
 	bind<IRedisService>(REDIS_TYPES.Service).to(RedisService)
+	bind<IBullMQQueueService>(BULLMQ_TYPES.QueueService).to(BullMQQueueService)
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)
 	})

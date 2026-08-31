@@ -1,8 +1,10 @@
 import type { Job } from "bullmq"
 import { inject, injectable } from "inversify"
 import { config } from "@/config/env"
+import { pinoLogger } from "@/config/pino-logger"
 import { BaseProcessor } from "@/core/queue/base.processor"
-import { type EmailJobPayload, QUEUE_NAMES } from "@/core/queue/queue.types"
+import type { EmailJobPayload } from "@/core/queue/payloads"
+import { QUEUE_NAMES } from "@/core/queue/queue-name"
 import { EMAIL_TYPES, type IEmailSender } from "./email.types"
 
 @injectable()
@@ -20,8 +22,18 @@ export class EmailProcessor extends BaseProcessor<typeof QUEUE_NAMES.Email> {
 
 	protected async handle(
 		data: EmailJobPayload,
-		_job: Job<EmailJobPayload>,
+		job: Job<EmailJobPayload>,
 	): Promise<void> {
+		pinoLogger.info(
+			{
+				jobId: job.id,
+				to: data.to,
+				attempt: job.attemptsMade + 1,
+			},
+			"Processing email delivery",
+		)
+		// pinoLogger.info({ jobId: job.id }, "Processing email job...");
+
 		await this.sender.send({
 			to: data.to,
 			subject: data.subject,

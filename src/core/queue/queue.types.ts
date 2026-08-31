@@ -1,22 +1,13 @@
 import type { Job, JobsOptions, QueueOptions, WorkerOptions } from "bullmq"
 import type { Redis } from "ioredis"
-
-export const QUEUE_NAMES = {
-	Email: "email",
-} as const
+import type { CloudinaryJobPayload, EmailJobPayload } from "./payloads"
+import { QUEUE_NAMES } from "./queue-name"
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES]
 
-export type EmailJobPayload = {
-	to: string
-	subject: string
-	htmlBody?: string
-	textBody?: string
-	fromEmail?: string
-}
-
 export type QueuePayloadMap = {
 	[QUEUE_NAMES.Email]: EmailJobPayload
+	[QUEUE_NAMES.Cloudinary]: CloudinaryJobPayload
 }
 
 export interface IQueueService {

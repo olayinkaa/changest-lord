@@ -5,7 +5,7 @@ import { type IUtilityService, UTILITY_TYPES } from "@/common/utility/utility.ty
 import { config } from "@/config/env"
 import { OnboardingScopes } from "@/constants"
 import { BadRequestException, ConflictException } from "@/core/errors/exceptions"
-import { OnboardingStep, UserType } from "@/generated/prisma/enums"
+import { OnboardingStep } from "@/generated/prisma/enums"
 import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
 import { ErrorType } from "@/types/enum"
@@ -15,6 +15,7 @@ import {
 	type IBusinessTypeService,
 } from "../business-type/business-type.types"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
+import { EMAIL_TYPES, type IEmailProducer } from "../workers/email/email.types"
 import type {
 	OnboardingBusinessProfileRequest,
 	OnboardingProfileRequest,
@@ -34,6 +35,8 @@ export class OnboardingService implements IOnboardingService {
 		private readonly utilityService: IUtilityService,
 		@inject(ADAPTER_TYPES.AmazonSesService)
 		private readonly awsSesService: IAwsSesService,
+		@inject(EMAIL_TYPES.Producer)
+		private readonly emailProducer: IEmailProducer,
 	) {}
 
 	/**
@@ -113,6 +116,10 @@ export class OnboardingService implements IOnboardingService {
 		// 1. Process profile registration database logic
 		const updatedUser = await this.userRepo.createUserProfile(onboardingUser, data)
 
+		if (!updatedUser.email) {
+			throw new Error("User email is required to send onboarding notification.")
+		}
+
 		// 2. Compute the correct next progressive security access scope
 		const nextScope = mapStepToNextScope(
 			updatedUser.onboardingStep,
@@ -126,6 +133,20 @@ export class OnboardingService implements IOnboardingService {
 			userType: updatedUser.userType,
 			scope: nextScope,
 		}
+
+		// 2. Trigger the onboarding welcome email background task
+		const htmlBody = this.utilityService.renderEmailTemplate("welcome-email.html", {
+			name: updatedUser.firstName ?? "there",
+			email: updatedUser.email,
+		})
+
+		// 5. Trigger the onboarding welcome email background task
+		await this.emailProducer.sendEmail({
+			to: updatedUser.email,
+			subject: "Welcome to MyChange. 👋",
+			htmlBody: htmlBody,
+			fromEmail: "olayinka@borgestech.co",
+		})
 
 		// 4. Generate the continuous sequential temporary transaction token
 		const stepToken = this.authUtils.generateToken(

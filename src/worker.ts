@@ -26,6 +26,7 @@ class WorkerApp extends Application {
 		const bootstrap = new WorkerBootstrap(this.container, redis, {
 			processorTag: WORKER_PROCESSOR_TAG,
 		})
+
 		await bootstrap.start()
 
 		const shutdown = async (signal: string) => {

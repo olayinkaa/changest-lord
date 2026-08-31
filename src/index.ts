@@ -1,5 +1,6 @@
 import "reflect-metadata"
 import "dotenv/config"
+import { createQueueDashExpressMiddleware } from "@queuedash/api"
 import express from "express"
 import helmet from "helmet"
 import type { Container } from "inversify"
@@ -10,6 +11,8 @@ import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import { isSwaggerEnabled, swaggerSpecPromise, swaggerUiOptions } from "@/config/swagger"
 import { errorHandler } from "@/core/errors/error-handler"
+import type { QueueService } from "@/core/queue/queue.service"
+import { TYPES as QUEUE_TYPES } from "@/core/queue/queue.types"
 import { Application } from "@/utils/application"
 import { ADAPTER_TYPES } from "./adapters/adapters.types"
 import type { IAwsRekognitionService } from "./adapters/aws-rekognition/aws-rekogniction.type"
@@ -70,9 +73,27 @@ export class App extends Application {
 				app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions))
 				app.get("/docs.json", (_req, res) => res.json(swaggerSpec))
 			}
-			//   app.use((req, res, next) => {
-			//     RequestLogger.handler(req, res, next);
-			//   });
+
+			// QueueDash Monitoring
+			const queueService = this.container.get<QueueService>(QUEUE_TYPES.QueueService)
+
+			app.use(
+				"/admin/queues",
+				createQueueDashExpressMiddleware({
+					ctx: {
+						queues: queueService.getQueues().map((q) => ({
+							queue: q,
+							displayName: q.name,
+							type: "bullmq" as const,
+						})),
+					},
+					auth: {
+						username: process.env.QUEUE_DASHBOARD_USER || "admin",
+						password: process.env.QUEUE_DASHBOARD_PASS || "supersecret",
+					},
+				}),
+			)
+
 			app.use(pinoHttp({ logger: pinoLogger }))
 		})
 

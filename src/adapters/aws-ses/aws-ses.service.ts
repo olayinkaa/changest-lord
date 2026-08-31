@@ -3,10 +3,15 @@ import {
 	SESv2Client,
 	SendEmailCommand,
 	type SendEmailCommandInput,
+	type SendEmailCommandOutput,
 } from "@aws-sdk/client-sesv2"
 import { injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
-import type { IAwsSesEmailValidationResponse, IAwsSesService } from "./aws-ses.types"
+import type {
+	IAwsSesEmailValidationResponse,
+	IAwsSesService,
+	ISendEmailOptions,
+} from "./aws-ses.types"
 
 @injectable()
 export class AwsSesService implements IAwsSesService {

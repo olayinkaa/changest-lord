@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: "Ubuntu", sans-serif;
+            background-color: #f4f4f7; 
+            margin: 10px 0 0 0; 
+            padding: 0; 
+        }
+        .wrapper { 
+            max-width: 450px; 
+            margin: 0 auto; 
+            background-color: #ffffff; 
+        }
+        .top-logo-container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 20px 0 10px 0;
+        }
+        .top-logo {
+            height: 34px;
+            width: 139px;
+            display: inline-block;
+        }
+        .header { 
+            background-color: #0066CC; 
+            color: #ffffff; 
+            text-align: center; 
+            /* Generous top padding pushes the content down toward the bottom of the 245px height */
+            padding: 50px 30px 30px 30px;
+            height: 165px; /* 165px height + 50px top padding + 30px bottom padding = 245px total */
+         }
+        .welcome-banner {
+            width: 100%;
+            max-width: 320px;
+            height: 100px;
+            margin-bottom: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px;
+            line-height: 1.4;
+            font-weight: 500;
+         }
+        .content { 
+            padding: 30px; 
+            color: #333333;
+            line-height: 1.5; 
+        }
+        .content p {
+            font-weight: 400;
+            font-style: normal;
+            font-size: 17px;
+            color: #3C3C3C;
+        }
+        .content h3 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .feature-box { 
+            background-color: #F5F5F5; 
+            border-radius: 12px; 
+            border: 0.5px solid #D9D9D9;
+            padding: 20px;
+            margin: 20px 0;
+         }
+        .feature-item { 
+            display: table;
+            width: 100%;
+            margin-bottom: 15px; 
+        }
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        .feature-icon-cell {
+            display: table-cell;
+            width: 40px;
+            vertical-align: top;
+            padding-right: 12px;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            margin-top: 2px;
+        }
+        .feature-text-cell {
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 16px;
+            font-weight: normal;
+        }
+        .btn { 
+            display: inline-block; 
+            background-color: #0066cc; 
+            color: #ffffff; 
+            padding: 12px 25px; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            font-weight: normal; 
+            margin-top: 20px; 
+            font-size: 14px;
+        }
+        .footer { 
+            text-align: center; 
+            padding: 20px; 
+            font-size: 12px; 
+            color: #777777; 
+            background-color: #f8f9fa; 
+        }
+        .footer-logo {
+            height: 27px;
+            width: 109px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Top Logo Header -->
+        <div class="top-logo-container">
+            <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788111229/Full_Logo_1_llbcw6.png" class="top-logo" alt="MyChange Logo"/>
+        </div>
+
+        <!-- Main Blue Header with Banner -->
+        <div class="header">
+            <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788163929/Welcome_1_onwu4t.gif" alt="Welcome" class="welcome-banner" />
+            <h1>Welcome to MyChange. Say goodbye to lost change. 👋</h1>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content">
+            <h3>Hi {name},</h3>
+            <p>We're excited to have you on board. 😊</p>
+            <p>MyChange helps you collect every Naira you're owed, no matter how small. Simply shop with a MyChange seller, and your change goes straight to your MyChange Wallet—no more leaving money behind or buying something you don't need.</p>
+            
+            <h3>What else can you do with MyChange?</h3>
+            
+            <div class="feature-box">
+                <div class="feature-item">
+                    <div class="feature-icon-cell">
+                        <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788126269/cash-01_mpsqsb.png" alt="Icon" class="feature-icon" />
+                    </div>
+                    <div class="feature-text-cell">
+                        <strong>Keep Change:</strong> Automatically move your change into a Keep Plan and earn up to 45% increment.
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon-cell">
+                        <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788126269/cash-01_mpsqsb.png" alt="Icon" class="feature-icon" />
+                    </div>
+                    <div class="feature-text-cell">
+                        <strong>Pay Bills:</strong> Pay airtime, data, electricity, TV, and other bills quickly with MyChange.
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon-cell">
+                        <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788126269/cash-01_mpsqsb.png" alt="Icon" class="feature-icon" />
+                    </div>
+                    <div class="feature-text-cell">
+                        <strong>Make Transfers:</strong> Send money instantly to banks and other MyChange users.
+                    </div>
+                </div>
+            </div>
+
+            <a href="https://mychange.app/explore" class="btn">Explore Mychange</a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <img src="https://res.cloudinary.com/dppbiasse/image/upload/v1788111229/Full_Logo_1_llbcw6.png" class="footer-logo" alt="MyChange Logo"/>
+            <p>This email was sent to {email}</p>
+            <p>Copyright © {year} Borges Technologies Ltd. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

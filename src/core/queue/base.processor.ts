@@ -21,7 +21,7 @@ export abstract class BaseProcessor<K extends QueueName = QueueName>
 			this.queueName,
 			async (job) => this.handle(job.data, job),
 			{
-				connection: redis,
+				connection: redis as any,
 				concurrency: this.concurrency,
 				...(this.rateLimit && { limiter: this.rateLimit }),
 			},

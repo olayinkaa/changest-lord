@@ -1,3 +1,5 @@
+import type { SendEmailCommandOutput } from "@aws-sdk/client-sesv2"
+
 export type ConfidenceVerdictType = "HIGH" | "MEDIUM" | "LOW" | "NONE" | string
 
 export interface IAwsSesEmailValidationResponse {

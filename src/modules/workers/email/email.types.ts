@@ -11,5 +11,5 @@ export interface IEmailSender {
 }
 
 export interface IEmailProducer {
-	sendTransactional(opts: ISendEmailOptions): Promise<{ jobId: string | undefined }>
+	sendEmail(opts: ISendEmailOptions): Promise<{ jobId: string | undefined }>
 }

@@ -1,7 +1,7 @@
 import { ContainerModule } from "inversify"
 import { AdaptersModule } from "@/adapters/adapters.module"
-import { EmailModule } from "@/modules/email/email.module"
-import { EmailProcessor } from "@/modules/email/email.processor"
+import { EmailModule } from "@/modules/workers/email/email.module"
+import { EmailProcessor } from "@/modules/workers/email/email.processor"
 import { WORKER_PROCESSOR_TAG } from "./worker.bootstrap"
 
 // Each processor binds itself under the shared multi-inject tag so
