@@ -113,6 +113,14 @@ export class OnboardingService implements IOnboardingService {
 		onboardingUser: IOnboardingUser,
 		data: OnboardingProfileRequest,
 	) {
+		if (data.email) {
+			const existingEmailUser = await this.userRepo.findByEmail(data.email)
+			if (existingEmailUser) {
+				throw new ConflictException("This email address is already registered", {
+					email: "This email address is already in use by another account",
+				})
+			}
+		}
 		// 1. Process profile registration database logic
 		const updatedUser = await this.userRepo.createUserProfile(onboardingUser, data)
 
