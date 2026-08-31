@@ -31,7 +31,18 @@ const envSchema = z
 		JWT_REFRESH_TOKEN_EXPIRES_IN: z.string().default(constants.REFRESH_TOKEN_EXPIRES_IN),
 		// Google configuration
 		GOOGLE_MAPS_API_KEY: z.string(),
-		// Redis configuration
+		// Redis configuration (BullMQ)
+		REDIS_HOST: z.string().default("127.0.0.1"),
+		REDIS_PORT: z.coerce.number().int().min(1).max(65535).default(6379),
+		REDIS_USERNAME: z.string().optional(),
+		REDIS_PASSWORD: z.string().optional(),
+		REDIS_DB: z.coerce.number().int().min(0).max(15).default(0),
+		// Queue configuration
+		QUEUE_EMAIL_CONCURRENCY: z.coerce.number().int().min(1).default(5),
+		QUEUE_EMAIL_RATE_MAX: z.coerce.number().int().min(1).default(20),
+		QUEUE_EMAIL_RATE_DURATION_MS: z.coerce.number().int().min(100).default(1000),
+		QUEUE_EMAIL_MAX_RETRIES: z.coerce.number().int().min(1).default(3),
+		QUEUE_EMAIL_RETRY_BACKOFF_MS: z.coerce.number().int().min(1000).default(30_000),
 		// Aws configuration
 		AWS_ACCESS_KEY_ID: z.string(),
 		AWS_SECRET_ACCESS_KEY: z.string(),

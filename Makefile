@@ -5,7 +5,7 @@ secret:
 	openssl rand -base64 32
 dev:
 	@echo "start local server [.env]..."
-	pnpm run dev
+	pnpm run dev && pnpm run worker:dev
 migrate:
 	@read -p "Enter migration name: " name; \
 	pnpm prisma migrate dev --name "$$name"
