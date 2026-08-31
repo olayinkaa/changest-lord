@@ -12,6 +12,8 @@ export const configureCors = () => {
 				"http://127.0.0.1:5173",
 				"http://localhost:6001",
 				"https://changest-lord-1.onrender.com",
+				// web
+				"https://mychange-mini-admin.vercel.app",
 			]
 
 			if (!origin || allowedOrigins.indexOf(origin) !== -1) {
