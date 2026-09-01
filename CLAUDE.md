@@ -16,7 +16,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Validation**: Zod (env) + class-validator / class-transformer (DTOs)
 - **Logging**: Pino (with `pino-http`, `pino-pretty` in dev)
 - **Auth**: passport, passport-jwt, jsonwebtoken, bcryptjs
-- **Other**: helmet, cors, multer, cloudinary, axios
+- **Infrastructure**: Redis, BullMQ (async task processing)
+- **Documentation**: OpenAPI 3.0 (`openapi.yaml`), swagger-ui-express
+- **Other**: helmet, cors, multer, cloudinary, axios, aws-sdk (@aws-sdk/client-sesv2, @aws-sdk/client-rekognition)
 - **Linter/Formatter**: Biome 2.5.5 (tabs, double quotes, semicolons as needed)
 
 ## Common Commands
@@ -25,22 +27,26 @@ All commands run from the repo root. The Makefile wraps the most common ones.
 
 ### Development
 ```sh
-pnpm run dev:local       # watch mode with .env.local (most common)
-pnpm run dev:staging     # watch mode with .env.staging
+pnpm run dev:local       # watch mode with .env.local (API only)
+pnpm run dev:staging     # watch mode with .env.staging (API only)
+pnpm run worker:dev:local # watch mode with .env.local (Worker only)
+pnpm run dev:all         # concurrently run API and Worker in dev mode
 make dev                 # alias for pnpm run dev (uses .env)
 make secret              # generate a JWT secret: openssl rand -base64 32
 ```
 
 ### Build & Run
 ```sh
-pnpm run build           # tsc + tsc-alias → dist/
-pnpm run start           # node dist/index.js
+pnpm run build           # prisma generate + tsc + tsc-alias → dist/
+pnpm run start           # node dist/index.js (API)
+pnpm run worker:start    # node dist/worker.js (Worker)
 pnpm run dev:clean       # rm -rf dist
 ```
 
-### Lint / Format
+### Lint / Format / Docs
 ```sh
 pnpm run lint:check:fix  # biome check --write ./src (also runs via husky pre-commit on staged files)
+pnpm run docs:check      # verify OpenAPI spec consistency via scripts/docs-check.ts
 ```
 
 ### Tests
@@ -54,7 +60,7 @@ make drop-db             # prisma migrate reset --force
 pnpm exec prisma generate   # regenerate client (output: src/generated/prisma)
 ```
 
-The Prisma schema entrypoint is `prisma/schema.prisma`, which should compose models from `prisma/models/*.prisma` (e.g. `user.prisma`, `enum.prisma`). Generated client lives at `src/generated/prisma` — it is committed-friendly code but should be regenerated after schema changes. Currently `prisma/schema.prisma` only declares `datasource db` and `generator client` — the per-model files in `prisma/models/` exist but are not yet composed into the schema.
+The Prisma schema entrypoint is `prisma/schema.prisma`, which should compose models from `prisma/models/*.prisma` (e.g., `user.prisma`, `enum.prisma`). Generated client lives at `src/generated/prisma`.
 
 ### Hooks
 Husky pre-commit hook runs via `lint-staged` (see `lint-staged.config.js`). `pnpm install` triggers `prepare` automatically.
@@ -78,7 +84,7 @@ Env is validated at boot via Zod (`src/config/env.ts` + `src/utils/env.ts`). The
 ### Bootstrap flow (`src/index.ts`)
 1. Import `reflect-metadata` (required for Inversify decorators).
 2. `Application` abstract class (`src/utils/application.ts`) creates an Inversify `Container` (default scope: `Singleton`) and calls abstract `configureService()` and `setup()`.
-3. `App.configureService` loads all `AppModules` from `src/app.module.ts` (currently `UserModule`, `LoggerModule`, `AdaptersModule`, `AddressModule`, `BusinessTypeModule`, `LivenessModule`) into the container.
+3. `App.configureService` loads all `AppModules` from `src/app.module.ts` into the container.
 4. `App.setup`:
    - Connects Prisma (`prisma.$connect`); exits on failure.
    - Builds an `InversifyExpressServer` rooted at `/api/v1`.
@@ -93,53 +99,57 @@ Each domain under `src/modules/<name>/` follows the same shape:
 - `<name>.service.ts` — `@injectable()`; depends on repository.
 - `<name>.repository.ts` — `@injectable()`; wraps Prisma access.
 - `<name>.dto.ts` — `class-validator` DTOs validated via `@validateSchema(DtoClass)`.
-- `<name>.types.ts` — `Symbol.for(...)` DI tokens used in `@inject(TYPES.X)` and service/repository interfaces. (Naming convention migrated from the older `*.tokens.ts` + `*.contracts.ts` split.)
+- `<name>.types.ts` — `Symbol.for(...)` DI tokens used in `@inject(TYPES.X)` and service/repository interfaces.
 - `<name>.interfaces.ts` (optional) — additional contracts split out from `types.ts` when the file grows.
 
-Currently wired domains: `user/`, `auth/`, `address/`, `business-type/`, `liveness/`. The `address` module is an example of the newer slice — it owns `address.module.ts`, `address.controller.ts`, `address.service.ts`, and `address.type.ts`, with no repository layer (it composes `GoogleMapsService` from the adapters layer).
+Wired domains: `user/`, `auth/`, `address/`, `business-type/`, `liveness/`, `kyc/`, `bvn/`, `nin/`, `onboarding/`, `file/`.
+
+### Asynchronous Processing (Queue/Worker)
+The system uses a separate worker process for long-running or background tasks:
+- **Entry point**: `src/worker.ts` initializes a separate Inversify container and starts BullMQ workers.
+- **Core Queue Logic**: `src/core/queue` provides base queue classes and types.
+- **Adapters**: `src/adapters/bullmq` and `src/adapters/redis` implement the queue backend.
+- **Job Handlers**: Located in `src/modules/workers/`, these contain the business logic for specific background jobs.
 
 ### Cross-cutting concerns
 - **DI tokens**: `src/types/di-types.ts` holds global `TYPES` (currently just `Logger`). Per-module tokens go in `<module>.types.ts`. Adapter-layer tokens are unified in `src/adapters/adapters.types.ts` (`ADAPTER_TYPES`).
-- **Logger**: `src/config/pino-logger.ts` exports `pinoLogger` (singleton) and a `LoggerModule` that binds `TYPES.Logger` to a request-scoped child logger (each request gets a `requestId`). Inject as `private logger: pino.Logger` in controllers. The `logService` decorator (`src/common/injectable/service.ts`) is provided for use on services/properties.
-- **Validation**: `validateSchema(DtoClass)` (`src/core/middleware/validate-schema.ts`) is applied as `withMiddleware(...)` to controller methods. It uses `class-transformer` + `class-validator` with `whitelist` + `forbidNonWhitelisted`. The validated DTO instance replaces `req.body`.
-- **Errors**: throw `HttpException` subclasses from `src/core/errors/exceptions.ts` (`BadRequestException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ConflictException`). The global handler in `error-handler.ts` serializes them as `{ code, status: "error", message, data? }`. Unknown errors become 500.
-- **API responses**: standardize on `ApiResponse<T>` from `src/utils/http-response.ts` (`ApiResponse.success(...)` / `ApiResponse.error(...)`). Controllers should wrap outgoing payloads in this shape rather than returning raw values.
-- **CORS**: `src/config/cors.ts` whitelists localhost ports 3000/5005/5173/4006 with credentials.
-- **Prisma client**: `src/core/database/db.ts` exports a shared `prisma` instance (driver-adapter for Postgres) that hot-reloads in dev via `globalThis`.
+- **Logger**: `src/config/pino-logger.ts` exports `pinoLogger` (singleton) and a `LoggerModule` that binds `TYPES.Logger` to a request-scoped child logger. Inject as `private logger: pino.Logger` in controllers.
+- **Validation**: `validateSchema(DtoClass)` (`src/core/middleware/validate-schema.ts`) is applied as `withMiddleware(...)` to controller methods.
+- **Errors**: throw `HttpException` subclasses from `src/core/errors/exceptions.ts`. Global handler in `error-handler.ts` serializes them as `{ code, status: "error", message, data? }`.
+- **API responses**: standardize on `ApiResponse<T>` from `src/utils/http-response.ts`.
+- **API Documentation**: `src/docs/openapi.yaml` is the source of truth. Served via Swagger UI (`src/config/swagger.ts`).
 
 ### Adapter modules (`src/adapters/`)
 Wired via `AdaptersModule` (see `src/adapters/adapters.module.ts`) and exported from `src/app.module.ts`.
-- `anchor-api-sdk/` — Anchor API client (banks, virtual accounts, transfers, airtime, data) with ambient types in `src/types/global.d.ts` (`AnchorBank`, `AnchorVirtualAccount`, etc.).
+- `anchor-api-sdk/` — Anchor API client (banks, virtual accounts, transfers, airtime, data).
 - `cloudinary/` — image upload service + interface.
-- `google/` — Google Maps Places autocomplete. `GoogleMapsService.getPlacePredictions(input)` returns `{ predictions }`; downstream code (e.g. `AddressService`) flattens to `{ placeId, description, mainText, secondaryText }`.
-- `aws-rekognition/` — `@aws-sdk/client-rekognition` wrapper (`AwsRekognition` injectable). `compareFaces()` is currently a stub — binding in `adapters.module.ts` still to be added when the first caller is in place.
-
-### Skills
-`skills-lock.json` pins Prisma-related skills (CLI, client API, compute, database setup, driver adapter, MongoDB/Postgres upgrades). Use `context7` for ad-hoc library docs and the `prisma-*` skills for any Prisma operation.
-
-### Path alias
-`@/*` maps to `./src/*` (see `tsconfig.json`). Use it for cross-folder imports, e.g. `import { config } from "@/config/env"`.
+- `google/` — Google Maps Places autocomplete.
+- `aws-rekognition/` — AWS Rekognition wrapper for face comparison.
+- `aws-ses/` — AWS SES for transactional emails.
+- `redis/` & `bullmq/` — Redis client and BullMQ queue implementation.
+- `payment/` & `verification/` — Wrappers for payment and identity verification providers.
 
 ## Code Conventions
 
-- Biome enforces tabs, double quotes, 90-char line width, no semicolons where optional. Organize imports is on (see `biome.json`). `unsafeParameterDecoratorsEnabled` is enabled so Inversify parameter decorators work.
+- Biome enforces tabs, double quotes, 90-char line width, no semicolons where optional. Organize imports is on.
 - Controllers are thin; put business logic in `*.service.ts`.
 - Always throw `HttpException` subclasses (not raw `Error`) so the error handler renders them correctly.
 - New domain code goes in `src/modules/<name>/` with the standard files; bind via a `ContainerModule` and add it to `src/app.module.ts`.
-- Per-module DI tokens and interfaces live in `*.types.ts` (migrated from the older `*.tokens.ts` + `*.contracts.ts` split; prefer `*.types.ts` for new modules).
+- Per-module DI tokens and interfaces live in `*.types.ts`.
 - Use `validateSchema(DtoClass)` decorator on any controller method that accepts a body.
-- Wrap response payloads in `ApiResponse.success(...)` from `src/utils/http-response.ts` so every endpoint returns a consistent envelope.
-- For Prisma schema additions, add a new file under `prisma/models/` and ensure it's referenced from `prisma/schema.prisma` (currently the schema is minimal — only `datasource db` and `generator client` — so new models need to be wired in).
-- Logs: `pinoLogger` already redacts `req.headers.authorization`, `password`, and `pin` — keep secrets out of other log fields.
+- Wrap response payloads in `ApiResponse.success(...)` from `src/utils/http-response.ts`.
+- For Prisma schema additions, add a new file under `prisma/models/` and ensure it's referenced from `prisma/schema.prisma`.
+- Logs: `pinoLogger` already redacts `req.headers.authorization`, `password`, and `pin`.
 
 ## API Surface
 
-Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users` (from `@controller("/users")` + `rootPath: "/api/v1"`). Currently exposed slices: `users`, `auth`, `address`, `business-type`, `liveness` (the `address` autocomplete endpoint is `/api/v1/address/autocomplete`).
+Base path: `/api/v1`. Example: `UserController` mounts at `/api/v1/users`.
+Currently exposed slices: `users`, `auth`, `address`, `business-type`, `liveness`, `kyc`, `bvn`, `nin`, `onboarding`.
 
 ## Current State (snapshot)
 
-- Working: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `UserController`, `AuthController`, `AddressController` (autocomplete + geometry via Google Maps), `BusinessTypeController`, `LivenessController`, `AdaptersModule` (Anchor / Cloudinary / Google Maps / AWS Rekognition skeleton), `ApiResponse` envelope.
-- Stubs / to be implemented: Prisma schema is not yet composed (per-model files exist in `prisma/models/` but `schema.prisma` doesn't reference them); `user.service.ts` / `user.repository.ts` / `auth.repository.ts` are skeleton files; Passport JWT strategy not yet wired; Swagger URL is referenced in the README but not yet wired in code.
+- **Working**: bootstrap, DI container, Prisma connection, request logger, error handler, CORS, validation, `ApiResponse` envelope, BullMQ/Redis integration, Swagger documentation, most domain controllers/services.
+- **Stubs / to be implemented**: Prisma schema is not yet composed (per-model files exist in `prisma/models/` but `schema.prisma` doesn't reference them); some repository layers for newer modules might be skeleton files.
 
 ### Documentation & Planning
 - All technical plan or plans must be stored in the `_plans/` directory.
