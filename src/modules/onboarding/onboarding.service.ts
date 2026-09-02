@@ -142,20 +142,6 @@ export class OnboardingService implements IOnboardingService {
 			scope: nextScope,
 		}
 
-		// 2. Trigger the onboarding welcome email background task
-		const htmlBody = this.utilityService.renderEmailTemplate("welcome-email.html", {
-			name: updatedUser.firstName ?? "there",
-			email: updatedUser.email,
-		})
-
-		// 5. Trigger the onboarding welcome email background task
-		await this.emailProducer.sendEmail({
-			to: updatedUser.email,
-			subject: "Welcome to MyChange. 👋",
-			htmlBody: htmlBody,
-			fromEmail: "olayinka@borgestech.co",
-		})
-
 		// 4. Generate the continuous sequential temporary transaction token
 		const stepToken = this.authUtils.generateToken(
 			payload,
@@ -255,6 +241,21 @@ export class OnboardingService implements IOnboardingService {
 			config.JWT_REFRESH_TOKEN_SECRET,
 			config.JWT_REFRESH_TOKEN_EXPIRES_IN,
 		)
+
+		if (!updatedUser.email) {
+			throw new Error("User email is required to send welcome notification.")
+		}
+
+		// 5. Trigger the onboarding welcome email background task
+		await this.emailProducer.sendEmail({
+			to: updatedUser.email,
+			subject: "Welcome to MyChange. 👋",
+			htmlBody: this.utilityService.renderEmailTemplate("welcome-email.html", {
+				name: updatedUser.firstName ?? "there",
+				email: updatedUser.email,
+			}),
+			fromEmail: "olayinka@borgestech.co",
+		})
 
 		return {
 			description: "PIN created successfully.",
