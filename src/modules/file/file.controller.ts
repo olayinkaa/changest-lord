@@ -34,7 +34,7 @@ export class FileController extends BaseHttpController {
 	}
 
 	@httpDelete("/:id")
-	public async deleteImage(@requestParam("id") id: number, @next() nxt: NextFunction) {
+	public async deleteImage(@requestParam("id") id: string, @next() nxt: NextFunction) {
 		try {
 			await this.fileService.deleteImage(id)
 			return this.json(

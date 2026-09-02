@@ -40,7 +40,7 @@ export class FileService implements IFileService {
 		return this.fileRepository.getAllImageFiles()
 	}
 
-	async deleteImage(id: number): Promise<void> {
+	async deleteImage(id: string): Promise<void> {
 		const image = await this.fileRepository.getImageById(id)
 		if (!image) {
 			throw new Error("Image not found")
