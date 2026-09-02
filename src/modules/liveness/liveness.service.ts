@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify"
 import { ADAPTER_TYPES } from "@/adapters/adapters.types"
-import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekogniction.type"
+import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekognition.type"
 import type { ICloudinaryService } from "@/adapters/cloudinary/cloudinary.types"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
