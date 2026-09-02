@@ -20,7 +20,7 @@ Key Features of MyChange
 - [Express.js](https://expressjs.com/en/5x/starter/installing/)
 - [Inversify](https://inversify.io/docs/introduction/getting-started/)
 - [Inversify Express Utils](https://github.com/inversify/inversify-express-utils#readme)
-- [BullMQ]()
+- [BullMQ](https://bullmq.io/)
 
 ## ⚙️ Prerequisites
 - [Node.js](https://nodejs.org/) (v22.22.3)
@@ -39,13 +39,19 @@ git switch development
 pnpm install
 ```
 
+- Generate Prisma Client
+```sh
+pnpm prisma generate
+```
+
 - Create a new branch
 ```sh
 git switch -c <branch-name>
 ```
 
 - Environment Variables <br/>
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory and copy everything in `.env.example` into it.
+Replace it with appropriate value
 ```sh
 NODE_ENV=development
 LOG_LEVEL="debug"
