@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # API Server
+  api:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "6001:6001"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+  # Background Worker
+  worker:
+    build:
+      context: .
+      target: runner
+    command: node dist/worker.js
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+  # Database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-mychange_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # Cache & Queue Store
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+volumes:
+  postgres_data:
