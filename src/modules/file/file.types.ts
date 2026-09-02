@@ -8,12 +8,12 @@ export const FILE_TYPES = {
 export interface IFileService {
 	uploadImage(file: Express.Multer.File): Promise<any>
 	getAllImages(): Promise<Image[]>
-	deleteImage(id: number): Promise<void>
+	deleteImage(id: string): Promise<void>
 }
 
 export interface IFileRepository {
 	getAllImageFiles(): Promise<Image[]>
-	getImageById(id: number): Promise<Image | null>
+	getImageById(id: string): Promise<Image | null>
 	createImage(data: {
 		publicId: string
 		url: string
@@ -22,5 +22,5 @@ export interface IFileRepository {
 		bytes: number
 		folder: string
 	}): Promise<any>
-	deleteImage(id: number): Promise<void>
+	deleteImage(id: string): Promise<void>
 }

@@ -12,7 +12,7 @@ export class FileRepository implements IFileRepository {
 		})
 	}
 
-	async getImageById(id: number) {
+	async getImageById(id: string) {
 		return prisma.image.findUnique({
 			where: { id },
 		})
@@ -38,7 +38,7 @@ export class FileRepository implements IFileRepository {
 		})
 	}
 
-	async deleteImage(id: number) {
+	async deleteImage(id: string) {
 		await prisma.image.delete({
 			where: { id },
 		})
