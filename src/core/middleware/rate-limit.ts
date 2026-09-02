@@ -7,12 +7,9 @@ import { ApiResponse } from "@/utils/http-response"
 
 const redisClient = new Redis(config.REDIS_URL)
 
-export function loginRateLimit() {
-	const limiter = rateLimit({
-		windowMs: 15 * 60 * 1000, // 15 minutes
-		limit: 5, // Limit each IP to 5 login requests per windowMs
-		standardHeaders: "draft-7",
-		legacyHeaders: false,
+function createLimiter(options: any) {
+	return rateLimit({
+		...options,
 		store: new RedisStore({
 			sendCommand: async (...args: string[]) =>
 				(await redisClient.call(...(args as [string, ...string[]]))) as any,
@@ -21,6 +18,30 @@ export function loginRateLimit() {
 			res
 				.status(options.statusCode)
 				.json(ApiResponse.error(null, options.message, options.statusCode))
+		},
+	})
+}
+
+export function loginRateLimit() {
+	const limiter = createLimiter({
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		limit: 5, // Limit each IP to 5 login requests per windowMs
+		standardHeaders: "draft-7",
+		legacyHeaders: false,
+	})
+
+	return withMiddleware(limiter)
+}
+
+export function userRateLimit(limit: number = 100, windowMs: number = 60 * 1000) {
+	const limiter = createLimiter({
+		windowMs,
+		limit,
+		standardHeaders: "draft-7",
+		legacyHeaders: false,
+		keyGenerator: (req: any) => {
+			// Prioritize User ID if available (from auth middleware), fallback to IP
+			return req.user?.id || req.ip
 		},
 	})
 

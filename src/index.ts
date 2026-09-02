@@ -59,6 +59,7 @@ export class App extends Application {
 		)
 
 		server.setConfig((app) => {
+			app.set("trust proxy", 1)
 			app.use(express.json())
 			app.use(configureCors())
 			app.use(
