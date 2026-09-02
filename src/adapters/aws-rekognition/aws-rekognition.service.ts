@@ -16,7 +16,7 @@ import {
 import { injectable } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
-import type { IAwsRekognitionService } from "./aws-rekogniction.type"
+import type { IAwsRekognitionService } from "./aws-rekognition.type"
 
 @injectable()
 export class AwsRekognitionService implements IAwsRekognitionService {
