@@ -34,6 +34,7 @@ const envSchema = z
 		// Redis configuration (BullMQ)
 
 		REDIS_URL: z.string(),
+		RUN_WORKER: z.preprocess((val) => val === "true", z.boolean()).default(false),
 
 		// Queue configuration
 		QUEUE_EMAIL_CONCURRENCY: z.coerce.number().int().min(1).default(5),

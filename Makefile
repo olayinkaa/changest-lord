@@ -3,9 +3,12 @@
 secret: 
 	@echo "generating secret key..."
 	openssl rand -base64 32
-dev:
+dev-all:
 	@echo "start local server [.env]..."
 	pnpm run dev:all
+dev:
+	@echo "start local server [.env]..."
+	pnpm run dev
 migrate:
 	@read -p "Enter migration name: " name; \
 	pnpm prisma migrate dev --name "$$name"

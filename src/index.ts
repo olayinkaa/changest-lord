@@ -13,9 +13,11 @@ import { isSwaggerEnabled, swaggerSpecPromise, swaggerUiOptions } from "@/config
 import { errorHandler } from "@/core/errors/error-handler"
 import type { QueueService } from "@/core/queue/queue.service"
 import { TYPES as QUEUE_TYPES } from "@/core/queue/queue.types"
+import { WorkerBindings } from "@/core/queue/worker.module"
+import { WorkerManager } from "@/core/queue/worker-manager"
 import { Application } from "@/utils/application"
 import { ADAPTER_TYPES } from "./adapters/adapters.types"
-import type { IAwsRekognitionService } from "./adapters/aws-rekognition/aws-rekogniction.type"
+import type { IAwsRekognitionService } from "./adapters/aws-rekognition/aws-rekognition.type"
 import AppModules from "./app.module"
 import { configureCors } from "./config/cors"
 import { AwsCollectionId } from "./constants"
@@ -25,9 +27,14 @@ import { AuthProvider } from "./providers/auth-provider"
 export class App extends Application {
 	configureService(container: Container): void {
 		container.load(...AppModules)
+
+		if (config.RUN_WORKER) {
+			container.load(WorkerBindings)
+		}
 	}
 
 	async setup() {
+		const workerManager = new WorkerManager()
 		try {
 			await prisma.$connect()
 			pinoLogger.info("✅ Database connected")
@@ -43,6 +50,10 @@ export class App extends Application {
 			await awsRekognitionService.ensureCollectionExists(AwsCollectionId.USERS)
 		} catch (error) {
 			pinoLogger.error({ error }, "❌ Failed to initialize AWS Rekognition collection:")
+		}
+
+		if (config.RUN_WORKER) {
+			await workerManager.start(this.container)
 		}
 
 		// Load and dereference the OpenAPI spec once before the server builds,
@@ -115,6 +126,9 @@ export class App extends Application {
 		const handleShutdown = async (signal: string) => {
 			pinoLogger.info(`${signal} received, shutting down gracefully...`)
 
+			if (config.RUN_WORKER) {
+				await workerManager.stop()
+			}
 			serverInstance.close(() => process.exit(0))
 		}
 

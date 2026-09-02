@@ -281,3 +281,16 @@
   - `src/modules/auth/auth.controller.ts` — applied the `@loginRateLimit()` decorator to the login method.
 - **Rationale:** Login endpoints are high-risk targets for brute-force and credential-stuffing attacks. Implementing a distributed rate limit using Redis prevents these attacks while maintaining scalability in a clustered environment.
 - **Verified:** Middleware is correctly wired using `inversify-express-utils`' `withMiddleware` wrapper, ensuring it integrates seamlessly with the decorator-based controller architecture.
+## 2026-09-02: Combined App and Worker Process
+
+Implemented the ability to run the BullMQ worker within the same process as the Express application, with a seamless switch via environment variables.
+
+- **Modified `src/config/env.ts`**: Added `RUN_WORKER` flag to control worker execution mode.
+- **Created `src/core/queue/worker-manager.ts`**: Encapsulated worker startup and shutdown logic into a reusable manager.
+- **Modified `src/index.ts`**:
+    - Conditional loading of `WorkerContainerModules` based on `RUN_WORKER`.
+    - Integration of `WorkerManager` in `setup()` for combined execution mode.
+    - Integrated worker shutdown into the application's graceful shutdown sequence.
+- **Modified `src/worker.ts`**: Refactored to use `WorkerManager`, maintaining the separate worker process capability.
+
+**Rationale:** This allows for simpler deployment in smaller environments (single process) while maintaining the ability to scale the worker independently as the application grows.

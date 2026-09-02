@@ -6,7 +6,7 @@ import { WORKER_PROCESSOR_TAG } from "./worker.bootstrap"
 
 // Each processor binds itself under the shared multi-inject tag so
 // WorkerBootstrap.start() can resolveAll and start them all.
-const WorkerBindings = new ContainerModule((bind) => {
+export const WorkerBindings = new ContainerModule((bind) => {
 	bind(WORKER_PROCESSOR_TAG).to(EmailProcessor)
 })
 
