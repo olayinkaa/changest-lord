@@ -18,7 +18,7 @@ export class AddressService implements IAddressService {
 		const result = await this.googleMapsService.getPlacePredictions(search)
 		return result?.predictions.map((item) => ({
 			placeId: item.place_id,
-			description: item.description,
+			displayName: item.description,
 			mainText: item.structured_formatting?.main_text,
 			secondaryText: item.structured_formatting?.secondary_text,
 		}))

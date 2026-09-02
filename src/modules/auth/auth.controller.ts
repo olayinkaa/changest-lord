@@ -7,6 +7,7 @@ import {
 	next,
 	requestBody,
 } from "inversify-express-utils"
+import { loginRateLimit } from "@/core/middleware/rate-limit"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
 import { LoginRequest } from "./auth.dto"
@@ -23,6 +24,7 @@ export class AuthController extends BaseHttpController {
 	}
 
 	@httpPost("/login")
+	@loginRateLimit()
 	@validateSchema(LoginRequest)
 	public async login(
 		@requestBody() body: LoginRequest,

@@ -1,0 +1,13 @@
+model Image {
+  id          String   @id @default(uuid()) // Or @default(auto()) @map("_id") @db.ObjectId if using MongoDB
+  publicId    String   @unique // Cloudinary's public ID (needed for deletions/transformations)
+  url         String   // Secure URL to access the image
+  secureUrl   String   // HTTPS version of the URL
+  format      String   // e.g., "jpg", "png", "webp"
+  bytes       Int      // File size in bytes
+  folder      String   // e.g., "general"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("images")
+}

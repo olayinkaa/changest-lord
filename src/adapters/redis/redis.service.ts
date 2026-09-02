@@ -11,22 +11,14 @@ export class RedisService implements IRedisService {
 	constructor() {
 		// BullMQ requires maxRetriesPerRequest=null on connections that drive
 		// blocking commands. See https://docs.bullmq.io/guide/connections
-		this.client = new Redis({
-			host: config.REDIS_HOST,
-			port: config.REDIS_PORT,
-			username: config.REDIS_USERNAME,
-			password: config.REDIS_PASSWORD,
-			db: config.REDIS_DB,
+		this.client = new Redis(config.REDIS_URL, {
 			maxRetriesPerRequest: null,
 			enableReadyCheck: true,
 			lazyConnect: false,
 		})
 		this.client.on("error", (err) => pinoLogger.error({ err }, "Redis client error"))
 		this.client.on("connect", () =>
-			pinoLogger.info(
-				{ host: config.REDIS_HOST, port: config.REDIS_PORT },
-				"✅ Redis connected",
-			),
+			pinoLogger.info({ url: config.REDIS_URL }, "✅ Redis connected"),
 		)
 	}
 

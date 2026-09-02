@@ -8,18 +8,19 @@
 - [X] helmet
 - [X] cors
 - [ ] Rate limiting
-- [ ] Bullmq
-- [ ] Redis
-- [ ] Email factory / Email template
-- [ ] Cloudinary
-- [ ] SwaggerUI documentation
+- [X] Bullmq
+- [X] Redis
+- [X] Email / Email template
+- [X] Cloudinary
+- [X] SwaggerUI documentation
 
 
-## Endpoints
-- 
-
-
-## Questions ?
-- is the user email unique, can a user re-registered with the same email
-  
-
+# Aug 31st, 2026
+- [X] Resolve issue connecting to cloudinary account
+- [X] Create an upload image endpoints (cloudinary)
+- [ ] Create a fetch image endpoints
+- [ ] Create a delete image endpoints
+- [ ] Resolve issue with google map api key
+- [ ] Resolve issue connecting to production AWS SES
+- [ ] Resolve issue deploying to render running app and worker together
+- [ ] 

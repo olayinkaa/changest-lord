@@ -32,11 +32,9 @@ const envSchema = z
 		// Google configuration
 		GOOGLE_MAPS_API_KEY: z.string(),
 		// Redis configuration (BullMQ)
-		REDIS_HOST: z.string().default("127.0.0.1"),
-		REDIS_PORT: z.coerce.number().int().min(1).max(65535).default(6379),
-		REDIS_USERNAME: z.string().optional(),
-		REDIS_PASSWORD: z.string().optional(),
-		REDIS_DB: z.coerce.number().int().min(0).max(15).default(0),
+
+		REDIS_URL: z.string(),
+
 		// Queue configuration
 		QUEUE_EMAIL_CONCURRENCY: z.coerce.number().int().min(1).default(5),
 		QUEUE_EMAIL_RATE_MAX: z.coerce.number().int().min(1).default(20),

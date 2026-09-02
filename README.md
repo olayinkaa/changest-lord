@@ -20,6 +20,7 @@ Key Features of MyChange
 - [Express.js](https://expressjs.com/en/5x/starter/installing/)
 - [Inversify](https://inversify.io/docs/introduction/getting-started/)
 - [Inversify Express Utils](https://github.com/inversify/inversify-express-utils#readme)
+- [BullMQ]()
 
 ## ⚙️ Prerequisites
 - [Node.js](https://nodejs.org/) (v22.22.3)

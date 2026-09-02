@@ -4,7 +4,7 @@ export const ADDRESS_TYPES = {
 
 export type TGetLocationAddress = {
 	placeId: string
-	description: string
+	displayName: string
 	mainText?: string
 	secondaryText?: string
 }
