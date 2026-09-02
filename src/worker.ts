@@ -31,5 +31,5 @@ class WorkerApp extends Application {
 	}
 }
 
-const app = new WorkerApp({ defaultScope: "Singleton" })
+new WorkerApp({ defaultScope: "Singleton" })
 pinoLogger.info(`⚙️ ${config.SERVICE_NAME} worker started on pid ${process.pid}`)
