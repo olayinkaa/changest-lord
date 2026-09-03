@@ -1,9 +1,10 @@
-# InversifyJS Architecture Guide
+# InversifyJS & Inversify-Express-Utils Guide
 
-This document provides a comprehensive guide to how Dependency Injection (DI) is implemented in the MyChange Backend using InversifyJS.
+This document provides a comprehensive guide to how Dependency Injection (DI) and the Web Framework integration are implemented in the MyChange Backend.
 
-## 1. What is InversifyJS?
+## Part 1: InversifyJS (Core DI)
 
+### 1. What is InversifyJS?
 InversifyJS is a powerful, lightweight **Inversion of Control (IoC)** container for TypeScript and JavaScript. It allows us to decouple the creation of a class from its usage, promoting the **Dependency Inversion Principle** (the 'D' in SOLID).
 
 Instead of a class manually instantiating its dependencies:
@@ -22,90 +23,101 @@ class UserService {
 }
 ```
 
----
+### 2. Core Concepts
 
-## 2. Core Concepts
-
-### `@injectable()`
+#### `@injectable()`
 This decorator marks a class as available to be managed by the Inversify container. Without this, the container cannot instantiate the class or inject dependencies into it.
 
-### `@inject(TOKEN)`
-Since TypeScript interfaces are erased during compilation (they don't exist at runtime), Inversify cannot use the interface type itself as a key to find the implementation. Instead, it uses **Tokens** (usually `Symbols` or strings).
+#### `@inject(TOKEN)`
+Since TypeScript interfaces are erased during compilation, Inversify uses **Tokens** (usually `Symbols` or strings) to identify the dependency at runtime.
 
-### The `Container`
-The `Container` is the brain of the operation. It maintains a map of `Token -> Implementation`. When you request a class from the container, it recursively resolves all its `@inject` dependencies.
+#### The `Container`
+The `Container` maintains a map of `Token -> Implementation`. When you request a class, it recursively resolves all its `@inject` dependencies.
 
----
+### 3. Binding Mechanisms
+Binding is telling the container: *"Whenever someone asks for TOKEN X, give them implementation Y."*
 
-## 3. Binding Mechanisms
-
-Binding is the process of telling the container: *"Whenever someone asks for TOKEN X, give them implementation Y."*
-
-### Common Binding Methods
+#### Common Binding Methods
 - `bind(TOKEN).to(Implementation)`: Binds a token to a class.
-- `bind(TOKEN).toSelf()`: Binds a class to itself (the class acts as its own token).
-- `bind(TOKEN).toConstantValue(value)`: Binds a token to a specific object or value (e.g., a config object).
-- `bind(TOKEN).toDynamicValue((context) => ...)`: Binds a token to a value calculated at runtime.
+- `bind(TOKEN).toSelf()`: Binds a class to itself.
+- `bind(TOKEN).toConstantValue(value)`: Binds a token to a specific object/value.
+- `bind(TOKEN).toDynamicValue((context) => ...)`: Binds a token to a runtime calculated value.
 
-### Scopes (Lifetimes)
-- `inSingletonScope()`: One instance is created and reused for the entire application lifetime. (Default for most services).
-- `inTransientScope()`: A new instance is created every time it is injected.
-- `inRequestScope()`: One instance is created per HTTP request (useful for request-specific logging or auth contexts).
+#### Scopes (Lifetimes)
+- `inSingletonScope()`: One instance reused for the entire app lifetime. (Default).
+- `inTransientScope()`: A new instance created every time it is injected.
+- `inRequestScope()`: One instance created per HTTP request.
 
----
+### 4. ContainerModules
+To avoid a monolithic binding file, we use `ContainerModule` to group related bindings.
+Every domain has its own module: `src/modules/<name>/<name>.module.ts`.
 
-## 4. ContainerModules
-
-As the app grows, putting all bindings in one file becomes unmanageable. `ContainerModule` allows us to group related bindings into a modular unit.
-
-In this project, every domain has its own module:
-`src/modules/user/user.module.ts` $\rightarrow$ `new ContainerModule((bind) => { ... })`
-
-These modules are then loaded into the main app container in `src/app.module.ts`.
-
----
-
-## 5. Binding to Interfaces
-
-This is the most critical pattern in the codebase. We rarely bind a service directly to its class; instead, we bind a **Symbol (Interface Token)** to a **Class (Implementation)**.
-
-### The Workflow:
-1. **Define the Interface**: `IUserService` (Defines the contract).
-2. **Define the Token**: `TYPES.UserService = Symbol.for("UserService")`.
-3. **Implement the Interface**: `UserService implements IUserService`.
-4. **Bind in Module**: `bind(TYPES.UserService).to(UserService)`.
-5. **Inject**: `@inject(TYPES.UserService) private userService: IUserService`.
+### 5. Binding to Interfaces (The Gold Standard)
+We rarely bind services directly to classes. Instead:
+1. **Define Interface**: `IUserService`
+2. **Define Token**: `TYPES.UserService = Symbol.for("UserService")`
+3. **Implement**: `UserService implements IUserService`
+4. **Bind**: `bind(TYPES.UserService).to(UserService)`
+5. **Inject**: `@inject(TYPES.UserService) private userService: IUserService`
 
 ---
 
-## 6. Benefits of Binding to Interfaces
+## Part 2: Inversify-Express-Utils (Web Integration)
 
-### A. Decoupling (The Dependency Inversion Principle)
-The high-level business logic (Service) does not depend on the low-level implementation (Repository). Both depend on an abstraction (Interface).
+`inversify-express-utils` allows us to use Inversify decorators to define Express controllers, making the routing declarative and the controllers injectable.
 
-### B. Seamless Mocking for Testing
-You can swap a real database repository for a mock repository in your tests without changing a single line of code in your service.
+### 1. Controller Definition
+Controllers must be decorated with `@controller` and extend `BaseHttpController`.
+
 ```typescript
-// In production: 
-container.bind(TYPES.UserRepository).to(UserRepository);
-
-// In tests:
-container.bind(TYPES.UserRepository).to(MockUserRepository);
+@controller("/onboarding")
+export class OnboardingController extends BaseHttpController {
+  constructor(
+    @inject(ONBOARDING_TYPES.Service) private onboardingService: IOnboardingService
+  ) {
+    super();
+  }
+}
 ```
 
-### C. Interchangeable Implementations
-If the business decides to move from Cloudinary to AWS S3 for file storage:
-1. Create `S3StorageService` that implements `IStorageService`.
-2. Change **one line** in `adapters.module.ts`:
-   `bind(TYPES.IStorageService).to(S3StorageService);`
-3. Every service using `IStorageService` is automatically updated.
+### 2. Routing Decorators
+Instead of `router.get(...)`, we use method decorators:
+- `@httpGet(path)`: Handles GET requests.
+- `@httpPost(path)`: Handles POST requests.
+- `@httpPut(path)`: Handles PUT requests.
+- `@httpDelete(path)`: Handles DELETE requests.
+- `@httpPatch(path)`: Handles PATCH requests.
 
----
+```typescript
+@httpPost("/validate-phone")
+public async validatePhone(...) { ... }
+```
 
-## 7. Project Summary: The Dependency Chain
+### 3. Parameter Injection
+We can inject Express request data directly into method parameters using decorators:
 
-In MyChange Backend, the flow typically looks like this:
+| Decorator | Description | Example |
+| :--- | :--- | :--- |
+| `@requestBody()` | Injects the parsed `req.body` | `@requestBody() body: CreateUserDto` |
+| `@requestParam(name)` | Injects a URL parameter (`:name`) | `@requestParam("id") id: string` |
+| `@queryParam(name)` | Injects a query string parameter | `@queryParam("email") email: string` |
+| `@request()` | Injects the full Express `Request` object | `@request() req: Request` |
+| `@next()` | Injects the Express `NextFunction` | `@next() nxt: NextFunction` |
 
-**`Controller`** $\xrightarrow{\text{@inject(TYPES.Service)}}$ **`Service`** $\xrightarrow{\text{@inject(TYPES.Repository)}}$ **`Repository`** $\xrightarrow{\text{Prisma}}$ **`Database`**
+### 4. Response Handling
+Since controllers extend `BaseHttpController`, they have access to helper methods for sending responses:
 
-Each layer is bound to an interface token, ensuring that the application remains flexible, testable, and maintainable.
+- `this.json(payload, status)`: Sends a JSON response.
+- `this.send(payload, status)`: Sends a plain text or HTML response.
+- `this.status(status)`: Sends only the HTTP status code.
+
+```typescript
+return this.json(ApiResponse.success(data), 200);
+```
+
+### 5. The Dependency Chain in MyChange
+The full flow of a request in this project:
+
+**`Request`** $\rightarrow$ **`Inversify-Express-Utils Router`** $\rightarrow$ **`Controller`** $\xrightarrow{\text{@inject}}$ **`Service`** $\xrightarrow{\text{@inject}}$ **`Repository`** $\rightarrow$ **`Prisma`** $\rightarrow$ **`DB`**
+
+This architecture ensures that every layer is decoupled and can be independently tested or replaced.

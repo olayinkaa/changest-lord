@@ -21,6 +21,9 @@ Key Features of MyChange
 - [Inversify](https://inversify.io/docs/introduction/getting-started/)
 - [Inversify Express Utils](https://github.com/inversify/inversify-express-utils#readme)
 - [BullMQ](https://bullmq.io/)
+- [Class Validator](https://class-validator.sonicar.tech/)
+- [Class Transformer](https://github.com/typestack/class-transformer)
+- [Prisma](https://www.prisma.io/docs/orm)
 
 ## ⚙️ Prerequisites
 - [Node.js](https://nodejs.org/) (v22.22.3)
@@ -61,7 +64,6 @@ DATABASE_URL=
 GOOGLE_MAPS_API_KEY=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-# AWS_REKOGNITION_REGION=
 ```
 
 - Generate Secret
@@ -84,12 +86,10 @@ pnpm run dev
 
 ## API Reference
 - Swagger Documentation URL
-
-<!-- http://172.17.10.79:9000/swagger-ui/index.html#/ -->
+  - Dev: <http://localhost:6001/docs>
 
 ## GITLAB Repo
-<!-- https://git.etranzactng.net/user-interfaces/nrs-merchant-ui -->
-
+<https://github.com/Face-mychange/myChangeBE.git>
 
 # 🌐 Live Environments
 - Development: <>
