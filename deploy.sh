@@ -2,7 +2,7 @@
 
 # Define branches
 SOURCE="pre-development"
-TARGETS=("development" "staging")
+TARGETS=("main" "staging" "development")
 
 # 1. Check if we are on the source branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
