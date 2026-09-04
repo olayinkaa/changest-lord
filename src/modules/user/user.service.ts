@@ -22,11 +22,18 @@ export class UserService implements IUserService {
 		private cloudinaryService: ICloudinaryService,
 	) {}
 
+	private mapToResponseDto(user: any): UserResponseDto {
+		return plainToInstance(UserResponseDto, user, {
+			excludeExtraneousValues: true,
+		})
+	}
+
 	async getAllUsers(query: UserQueryDto): Promise<PaginatedResponse<UserResponseDto>> {
 		const { content, total } = await this.userRepository.findAll(query)
 		const sanitizedResult = plainToInstance(UserResponseDto, content, {
 			excludeExtraneousValues: true,
 		})
+
 		return {
 			content: sanitizedResult,
 			page: query.page,
@@ -38,10 +45,10 @@ export class UserService implements IUserService {
 
 	async getUser(id: string) {
 		const result = await this.userRepository.findUser(id)
-		const sanitizedResult = plainToInstance(UserResponseDto, result, {
-			excludeExtraneousValues: true,
-		})
-		return sanitizedResult
+		if (!result) {
+			throw new NotFoundException("User not found")
+		}
+		return this.mapToResponseDto(result)
 	}
 
 	async deleteUser(id: string) {

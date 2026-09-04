@@ -75,7 +75,7 @@ export class UserController extends BaseHttpController {
 			nxt(error)
 		}
 	}
-	//
+	//TODO: remove below method after testing
 	@httpPost("/email")
 	public async sendEmail(@next() nxt: NextFunction) {
 		try {
