@@ -281,16 +281,19 @@
   - `src/modules/auth/auth.controller.ts` — applied the `@loginRateLimit()` decorator to the login method.
 - **Rationale:** Login endpoints are high-risk targets for brute-force and credential-stuffing attacks. Implementing a distributed rate limit using Redis prevents these attacks while maintaining scalability in a clustered environment.
 - **Verified:** Middleware is correctly wired using `inversify-express-utils`' `withMiddleware` wrapper, ensuring it integrates seamlessly with the decorator-based controller architecture.
-## 2026-09-02: Combined App and Worker Process
+## 2026-09-05
 
-Implemented the ability to run the BullMQ worker within the same process as the Express application, with a seamless switch via environment variables.
-
-- **Modified `src/config/env.ts`**: Added `RUN_WORKER` flag to control worker execution mode.
-- **Created `src/core/queue/worker-manager.ts`**: Encapsulated worker startup and shutdown logic into a reusable manager.
-- **Modified `src/index.ts`**:
-    - Conditional loading of `WorkerContainerModules` based on `RUN_WORKER`.
-    - Integration of `WorkerManager` in `setup()` for combined execution mode.
-    - Integrated worker shutdown into the application's graceful shutdown sequence.
-- **Modified `src/worker.ts`**: Refactored to use `WorkerManager`, maintaining the separate worker process capability.
-
-**Rationale:** This allows for simpler deployment in smaller environments (single process) while maintaining the ability to scale the worker independently as the application grows.
+### Feat: Implement Server-Sent Events (SSE) with Redis Pub/Sub
+- **High-level description:** Introduced a scalable real-time notification system using `better-sse` for stream management and Redis Pub/Sub for cross-instance event broadcasting.
+- **Files modified:**
+  - `src/adapters/redis/redis.types.ts` — added `publish`, `subscribe`, and `unsubscribe` to `IRedisService`.
+  - `src/adapters/redis/redis.service.ts` — split Redis clients into `pubClient` and `subClient` to support Pub/Sub without blocking.
+  - `src/app.module.ts` — registered `SseModule` in the global container.
+  - `src/modules/workers/email/email.processor.ts` — added example integration to trigger SSE events after email delivery.
+- **Files added:**
+  - `src/modules/sse/sse.types.ts` — defined DI tokens and `ISseService` interface.
+  - `src/modules/sse/sse.service.ts` — implemented session tracking and Redis-to-SSE bridging using `better-sse`.
+  - `src/modules/sse/sse.controller.ts` — created a protected `GET /api/v1/sse/events` endpoint.
+  - `src/modules/sse/sse.module.ts` — Inversify module binding for the SSE slice.
+- **Rationale:** Enables real-time user notifications (e.g. "Email Sent", "Job Finished") that work across multiple server pods. Using `better-sse` reduces the boilerplate for HTTP keep-alives and connection cleanup.
+- **Verified:** Plan validated and implemented according to the architectural blueprint.

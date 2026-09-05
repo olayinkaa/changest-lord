@@ -11,6 +11,7 @@ import { KycModule } from "./modules/kyc/kyc.module"
 import { LivenessModule } from "./modules/liveness/liveness.module"
 import { NinModule } from "./modules/nin/nin.module"
 import { OnboardingModule } from "./modules/onboarding/onboarding.module"
+import { SseModule } from "./modules/sse/sse.module"
 import { TestModule } from "./modules/test/test.module"
 import { UserModule } from "./modules/user/user.module"
 import { EmailModule } from "./modules/workers/email/email.module"
@@ -22,6 +23,7 @@ const AppModules = [
 	AdaptersModule,
 	QueueModule,
 	EmailModule,
+	SseModule,
 	AddressModule,
 	BusinessTypeModule,
 	LivenessModule,

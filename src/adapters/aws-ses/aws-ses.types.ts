@@ -42,6 +42,7 @@ export interface ISendEmailOptions {
 	htmlBody?: string
 	textBody?: string
 	fromEmail?: string // Optional override if you have multiple senders
+	userId: string // For SSE notification
 }
 
 export interface IAwsSesService {

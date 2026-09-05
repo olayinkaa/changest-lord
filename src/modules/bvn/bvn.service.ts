@@ -39,7 +39,7 @@ export class BvnService implements IBvnService {
 	//
 	async validateBvn(userId: string, bvn: string): Promise<any> {
 		try {
-			// 1. Fetch user & check liveness image
+			// Fetch user & check liveness image
 			const user = await this.userRepo.findUser(userId)
 			if (!user) {
 				throw new NotFoundException("User not found")
@@ -52,7 +52,7 @@ export class BvnService implements IBvnService {
 				)
 			}
 
-			// 2. Check if BVN belongs to another existing user
+			// Check if BVN belongs to another existing user
 			const existingUser = await this.userRepo.findByBvn(bvn)
 			if (existingUser) {
 				throw new BadRequestException(
@@ -63,11 +63,11 @@ export class BvnService implements IBvnService {
 				)
 			}
 
-			// 3. Check if BVN is saved locally
+			// Check if BVN is saved locally
 			let bvnData = await this.bvnRepo.findBvnRecordLocally(bvn)
 
 			if (!bvnData) {
-				// 4. Call Dojah to validate (External network call)
+				// Call Dojah to validate (External network call)
 				const result = await this.verificationService.verifyBVN(bvn)
 				let firstName: string
 				let lastName: string
@@ -87,7 +87,7 @@ export class BvnService implements IBvnService {
 						`Unsupported verification provider response structure: ${(result as any).provider}`,
 					)
 				}
-				// 5. Save information locally
+				// Save information locally
 				bvnData = await this.bvnRepo.saveBvnRecordLocally({
 					bvn,
 					firstName,
@@ -104,14 +104,14 @@ export class BvnService implements IBvnService {
 				)
 			}
 
-			// 6. Convert BVN Image Buffer
+			// Convert BVN Image Buffer
 			const bvnImageBuffer = this.utilityService.convertBase64ToBuffer(bvnData.image)
 
-			// 7. Fetch Cloudinary image as Buffer (External network call)
+			// Fetch Cloudinary image as Buffer (External network call)
 			const cloudinaryImageBuffer =
 				await this.utilityService.fetchImageBufferFromUrl(cloudinaryImageUrl)
 
-			// 8. Perform Face Comparison via AWS Rekognition (External service call)
+			// Perform Face Comparison via AWS Rekognition (External service call)
 			const similarityScore = await this.awsRekognitionService.compareFaces(
 				bvnImageBuffer,
 				cloudinaryImageBuffer,
@@ -121,6 +121,7 @@ export class BvnService implements IBvnService {
 			pinoLogger.info({ similarityScore }, "Similarity search")
 
 			const isFaceMatched = similarityScore >= 80
+
 			if (!isFaceMatched) {
 				throw new BadRequestException(
 					`The BVN entered doesn’t match your account details. Please enter the correct BVN.`,
@@ -131,7 +132,7 @@ export class BvnService implements IBvnService {
 				)
 			}
 
-			// 9. Update user table and KYC flags
+			// Update user table and KYC flags
 			await this.userRepo.updateBvnVerification(userId, bvn)
 
 			return {

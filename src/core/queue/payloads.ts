@@ -9,6 +9,7 @@ export type EmailJobPayload = {
 	htmlBody?: string
 	textBody?: string
 	fromEmail?: string
+	userId: string
 }
 
 export type CloudinaryJobPayload = {

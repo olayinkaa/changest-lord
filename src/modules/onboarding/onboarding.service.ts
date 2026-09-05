@@ -255,6 +255,7 @@ export class OnboardingService implements IOnboardingService {
 				email: updatedUser.email,
 			}),
 			fromEmail: "olayinka@borgestech.co",
+			userId: updatedUser.id,
 		})
 
 		return {

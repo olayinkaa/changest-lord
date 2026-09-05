@@ -15,6 +15,7 @@ export class EmailProducer implements IEmailProducer {
 			htmlBody: opts.htmlBody,
 			textBody: opts.textBody,
 			fromEmail: opts.fromEmail,
+			userId: opts.userId,
 		})
 		return { jobId: job.id }
 	}

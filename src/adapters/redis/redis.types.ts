@@ -37,4 +37,10 @@ export interface IRedisService {
 			right: (key: string) => Promise<string | null>
 		}
 	}
+	publish: (channel: string, message: string) => Promise<void>
+	subscribe: (
+		channel: string,
+		callback: (channel: string, message: string) => void,
+	) => Promise<void>
+	unsubscribe: (channel: string) => Promise<void>
 }
