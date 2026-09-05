@@ -32,6 +32,9 @@ importers:
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
+      better-sse:
+        specifier: ^0.16.1
+        version: 0.16.1
       bullmq:
         specifier: ^5.34.0
         version: 5.81.4
@@ -1262,6 +1265,10 @@ packages:
 
   better-result@2.10.0:
     resolution: {integrity: sha512-oQhh0y1qo2/ZKdAAEvHZAqKKiHOFU5k/bW96fE2ScgQOVkJRiHwB+nOS1SgFsYqRlxMDWvefXi9Q3px7QvgNDw==}
+
+  better-sse@0.16.1:
+    resolution: {integrity: sha512-1gc5LUmdMX49Whq/XWOfNKBmMpZCaFLWk0Pt4A5p41T/6/sK1cV7Px/3ep84gwZs6Vz6V/tgozz6EscTT0lLoA==}
+    engines: {node: '>=20', pnpm: '>=10'}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -3844,6 +3851,8 @@ snapshots:
   bcryptjs@3.0.3: {}
 
   better-result@2.10.0: {}
+
+  better-sse@0.16.1: {}
 
   binary-extensions@2.3.0: {}
 
