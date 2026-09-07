@@ -17,7 +17,7 @@
 		"removeComments": true,
 		"incremental": false,
 		"isolatedModules": true,
-		"rootDir": "src",
+		"rootDir": "./",
 		"outDir": "dist",
 		"paths": {
 			"@/*": ["./src/*"]
@@ -29,6 +29,6 @@
 		"declarationMap": false,
 		"types": ["node", "swagger-ui-express"]
 	},
-	"include": ["src/**/*", "env.d.ts"],
+	"include": ["src/**/*", "scripts/**/*", "env.d.ts"],
 	"exclude": ["node_modules", "dist", "trash/"]
 }
