@@ -24,6 +24,7 @@ Key Features of MyChange
 - [Class Validator](https://class-validator.sonicar.tech/)
 - [Class Transformer](https://github.com/typestack/class-transformer)
 - [Prisma](https://www.prisma.io/docs/orm)
+- [Better SSE](https://matthewwid.github.io/better-sse/guides/getting-started/)
 
 ## ⚙️ Prerequisites
 - [Node.js](https://nodejs.org/) (v22.22.3)
