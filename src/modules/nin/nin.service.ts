@@ -47,20 +47,15 @@ export class NinService implements INinService {
 
 			const cloudinaryImageUrl = user.livenessImageUrl
 			if (!cloudinaryImageUrl) {
-				throw new BadRequestException(
-					"Please do a liveness capture before validating your NIN.",
-				)
+				throw new BadRequestException("Please do a liveness capture before validating your NIN.")
 			}
 
 			// Check if NIN belongs to another existing user
 			const existingUser = await this.userRepo.findByNin(nin)
 			if (existingUser) {
-				throw new BadRequestException(
-					"This NIN belongs to existing user. Please enter a new NIN",
-					{
-						errorType: ErrorType.NIN_ALREADY_EXIST,
-					},
-				)
+				throw new BadRequestException("This NIN belongs to existing user. Please enter a new NIN", {
+					errorType: ErrorType.NIN_ALREADY_EXIST,
+				})
 			}
 
 			// Check if NIN is saved locally
@@ -82,9 +77,7 @@ export class NinService implements INinService {
 					phone = result.entity.phone_number
 					image = result.entity.photo
 				} else {
-					throw new InternalServerErrorException(
-						"Unsupported verification provider response structure.",
-					)
+					throw new InternalServerErrorException("Unsupported verification provider response structure.")
 				}
 
 				ninData = await this.NINRepo.saveNinRecordLocally({
@@ -98,24 +91,17 @@ export class NinService implements INinService {
 			}
 
 			if (!ninData.image) {
-				throw new BadRequestException(
-					"BVN record does not contain an image for face verification.",
-				)
+				throw new BadRequestException("BVN record does not contain an image for face verification.")
 			}
 
 			// Convert BVN Image Buffer
 			const ninImageBuffer = this.utilityService.convertBase64ToBuffer(ninData.image)
 
 			// Fetch Cloudinary image as Buffer (External network call)
-			const cloudinaryImageBuffer =
-				await this.utilityService.fetchImageBufferFromUrl(cloudinaryImageUrl)
+			const cloudinaryImageBuffer = await this.utilityService.fetchImageBufferFromUrl(cloudinaryImageUrl)
 
 			// Perform Face Comparison via AWS Rekognition (External service call)
-			const similarityScore = await this.awsRekognitionService.compareFaces(
-				ninImageBuffer,
-				cloudinaryImageBuffer,
-				80,
-			)
+			const similarityScore = await this.awsRekognitionService.compareFaces(ninImageBuffer, cloudinaryImageBuffer, 80)
 
 			pinoLogger.info({ similarityScore }, "Similarity search")
 
@@ -155,9 +141,7 @@ export class NinService implements INinService {
 			pinoLogger.error({ err: error, userId, nin }, "Error during NIN validation process")
 
 			// Wrap unexpected errors into a generic internal or bad gateway exception
-			throw new InternalServerErrorException(
-				"An error occurred while validating your NIN. Please try again later.",
-			)
+			throw new InternalServerErrorException("An error occurred while validating your NIN. Please try again later.")
 		}
 	}
 

@@ -51,10 +51,7 @@ export class BusinessTypeController extends BaseHttpController {
 
 	@httpPut("/:id")
 	@validateSchema(UpdateBusinessTypeDto)
-	async update(
-		@requestBody() body: UpdateBusinessTypeDto,
-		@requestParam("id") id: string,
-	) {
+	async update(@requestBody() body: UpdateBusinessTypeDto, @requestParam("id") id: string) {
 		const result = await this.businessService.updateBusinessType(id, body)
 		return this.json(ApiResponse.success(result))
 	}

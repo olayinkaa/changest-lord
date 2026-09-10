@@ -29,10 +29,7 @@ export class KycController extends BaseHttpController {
 	@httpPost("/validate-bvn")
 	@validateSchema(VerifyBvnDto)
 	@AuthGuard()
-	public async validateBvn(
-		@requestBody() body: VerifyBvnDto,
-		@principal() authUser: UserPrincipal,
-	) {
+	public async validateBvn(@requestBody() body: VerifyBvnDto, @principal() authUser: UserPrincipal) {
 		const result = await this.bvnService.validateBvn(authUser.details.id, body.bvn)
 		return this.json(ApiResponse.success(result), 200)
 	}
@@ -41,29 +38,20 @@ export class KycController extends BaseHttpController {
 	@httpGet("/bvn/cache")
 	public async getCachedBvns() {
 		const cachedBvns = await this.bvnService.getAllCachedBvns()
-		return this.json(
-			ApiResponse.success(cachedBvns, "Cached BVNs retrieved successfully"),
-			200,
-		)
+		return this.json(ApiResponse.success(cachedBvns, "Cached BVNs retrieved successfully"), 200)
 	}
 
 	@httpGet("/bvn/cache/:id")
 	public async getCachedBvn(@requestParam("id") id: string) {
 		const cachedBvns = await this.bvnService.getCachedBvnByID(id)
-		return this.json(
-			ApiResponse.success(cachedBvns, "Cached BVN retrieved successfully"),
-			200,
-		)
+		return this.json(ApiResponse.success(cachedBvns, "Cached BVN retrieved successfully"), 200)
 	}
 
 	// NIN
 	@httpPost("/validate-nin")
 	@validateSchema(VerifyNinDto)
 	@AuthGuard()
-	public async validateNin(
-		@requestBody() body: VerifyNinDto,
-		@principal() authUser: UserPrincipal,
-	) {
+	public async validateNin(@requestBody() body: VerifyNinDto, @principal() authUser: UserPrincipal) {
 		const result = await this.ninService.validateNin(authUser.details.id, body.nin)
 		return this.json(ApiResponse.success(result), 200)
 	}
@@ -72,19 +60,13 @@ export class KycController extends BaseHttpController {
 	@httpGet("/nin/cache")
 	public async getCachedNins() {
 		const cachedBvns = await this.ninService.getAllCachedNins()
-		return this.json(
-			ApiResponse.success(cachedBvns, "Cached NINs retrieved successfully"),
-			200,
-		)
+		return this.json(ApiResponse.success(cachedBvns, "Cached NINs retrieved successfully"), 200)
 	}
 
 	@httpGet("/nin/cache/:id")
 	public async getCachedNin(@requestParam("id") id: string) {
 		const cachedBvns = await this.ninService.getCachedNinByID(id)
-		return this.json(
-			ApiResponse.success(cachedBvns, "Cached NIN retrieved successfully"),
-			200,
-		)
+		return this.json(ApiResponse.success(cachedBvns, "Cached NIN retrieved successfully"), 200)
 	}
 	//
 }

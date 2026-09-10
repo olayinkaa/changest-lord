@@ -7,11 +7,7 @@ import {
 } from "@aws-sdk/client-sesv2"
 import { injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
-import type {
-	IAwsSesEmailValidationResponse,
-	IAwsSesService,
-	ISendEmailOptions,
-} from "./aws-ses.types"
+import type { IAwsSesEmailValidationResponse, IAwsSesService, ISendEmailOptions } from "./aws-ses.types"
 
 @injectable()
 export class AwsSesService implements IAwsSesService {
@@ -21,9 +17,7 @@ export class AwsSesService implements IAwsSesService {
 			region: process.env.AWS_REGION,
 		})
 	}
-	async checkEmailInsights(
-		emailAddress: string,
-	): Promise<IAwsSesEmailValidationResponse> {
+	async checkEmailInsights(emailAddress: string): Promise<IAwsSesEmailValidationResponse> {
 		try {
 			const input = {
 				EmailAddress: emailAddress,
@@ -71,10 +65,7 @@ export class AwsSesService implements IAwsSesService {
 			const command = new SendEmailCommand(input)
 			const response = await this.sesClient.send(command)
 
-			pinoLogger.info(
-				{ messageId: response.MessageId, to: options.to },
-				"Email sent successfully via SESv2",
-			)
+			pinoLogger.info({ messageId: response.MessageId, to: options.to }, "Email sent successfully via SESv2")
 			return response
 		} catch (error) {
 			pinoLogger.error({ error, to: options.to }, "Error sending email via SESv2")

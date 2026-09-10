@@ -51,9 +51,7 @@ export interface BuyInternetDataParams {
 
 export interface IAnchorApiSdk {
 	listBanks(): Promise<{ data: AnchorBank[] }>
-	generateVirtualAccount(
-		params: GenerateVirtualAccountParams,
-	): Promise<GenerateVirtualAccountResult>
+	generateVirtualAccount(params: GenerateVirtualAccountParams): Promise<GenerateVirtualAccountResult>
 	getBankAccountName(params: GetBankAccountNameParams): Promise<AnchorAccountName>
 	createCounterParty(params: CreateCounterPartyParams): Promise<AnchorCounterParty>
 	createBankTransfer(params: CreateBankTransferParams): Promise<CreateBankTransferResult>

@@ -40,10 +40,7 @@ export class OnboardingController extends BaseHttpController {
 
 	@httpPost("/validate-phone")
 	@validateSchema(ValidatePhoneRequest)
-	public async validatePhone(
-		@requestBody() body: ValidatePhoneRequest,
-		@next() nxt: NextFunction,
-	) {
+	public async validatePhone(@requestBody() body: ValidatePhoneRequest, @next() nxt: NextFunction) {
 		try {
 			const data = await this.onboardingService.validatePhone(body.phone)
 			return this.json(ApiResponse.success(data, "Phone number is available"), 200)
@@ -63,9 +60,7 @@ export class OnboardingController extends BaseHttpController {
 		try {
 			const onboardingUser = req.onboardingUser
 			if (!onboardingUser) {
-				return nxt(
-					new UnauthorizedException("Onboarding user is missing from the request."),
-				)
+				return nxt(new UnauthorizedException("Onboarding user is missing from the request."))
 			}
 			const data = await this.onboardingService.onboardUserProfile(onboardingUser, body)
 			return this.json(ApiResponse.success(data, "User onboarded successfully"), 201)
@@ -85,18 +80,10 @@ export class OnboardingController extends BaseHttpController {
 		try {
 			const onboardingUser = req.onboardingUser
 			if (!onboardingUser) {
-				return nxt(
-					new UnauthorizedException("Onboarding user session is invalid or expired."),
-				)
+				return nxt(new UnauthorizedException("Onboarding user session is invalid or expired."))
 			}
-			const data = await this.onboardingService.onboardBusinessProfile(
-				onboardingUser,
-				body,
-			)
-			return this.json(
-				ApiResponse.success(data, "Business information submitted successfully"),
-				201,
-			)
+			const data = await this.onboardingService.onboardBusinessProfile(onboardingUser, body)
+			return this.json(ApiResponse.success(data, "Business information submitted successfully"), 201)
 		} catch (error) {
 			nxt(error)
 		}
@@ -107,9 +94,7 @@ export class OnboardingController extends BaseHttpController {
 	public async startLivenessSession(@next() nxt: NextFunction, @request() req: Request) {
 		const userId = req.onboardingUser?.id
 		if (!userId) {
-			return nxt(
-				new UnauthorizedException("Onboarding user session is invalid or expired."),
-			)
+			return nxt(new UnauthorizedException("Onboarding user session is invalid or expired."))
 		}
 		try {
 			const result = await this.livenessService.initiateLivenessSession(userId)
@@ -128,9 +113,7 @@ export class OnboardingController extends BaseHttpController {
 	) {
 		const user = req.onboardingUser
 		if (!user) {
-			return nxt(
-				new UnauthorizedException("Onboarding user session is invalid or expired."),
-			)
+			return nxt(new UnauthorizedException("Onboarding user session is invalid or expired."))
 		}
 		try {
 			const result = await this.livenessService.getLivenessSessionResult(user, sessionId)
@@ -149,9 +132,7 @@ export class OnboardingController extends BaseHttpController {
 	) {
 		const user = req.onboardingUser
 		if (!user) {
-			return nxt(
-				new UnauthorizedException("Onboarding user session is invalid or expired."),
-			)
+			return nxt(new UnauthorizedException("Onboarding user session is invalid or expired."))
 		}
 		try {
 			const result = await this.livenessService.submitLivenessSessionCapture(user, body)
@@ -164,17 +145,11 @@ export class OnboardingController extends BaseHttpController {
 	@httpPost("/create-pin")
 	@validateSchema(CreatePinRequest)
 	@enforceOnboardingScope(OnboardingScopes.PIN)
-	public async createPin(
-		@requestBody() body: CreatePinRequest,
-		@next() nxt: NextFunction,
-		@request() req: Request,
-	) {
+	public async createPin(@requestBody() body: CreatePinRequest, @next() nxt: NextFunction, @request() req: Request) {
 		try {
 			const userId = req.onboardingUser?.id
 			if (!userId) {
-				return nxt(
-					new UnauthorizedException("Onboarding user session is invalid or expired."),
-				)
+				return nxt(new UnauthorizedException("Onboarding user session is invalid or expired."))
 			}
 			const data = await this.onboardingService.createPin(userId, body.pin)
 			return this.json(ApiResponse.success(data, "Profile Completed"), 200)

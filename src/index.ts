@@ -44,9 +44,7 @@ export class App extends Application {
 		}
 
 		try {
-			const awsRekognitionService = this.container.get<IAwsRekognitionService>(
-				ADAPTER_TYPES.AwsRekognitionService,
-			)
+			const awsRekognitionService = this.container.get<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService)
 			await awsRekognitionService.ensureCollectionExists(AwsCollectionId.USERS)
 		} catch (error) {
 			pinoLogger.error({ error }, "❌ Failed to initialize AWS Rekognition collection:")
@@ -116,9 +114,7 @@ export class App extends Application {
 		const app = server.build()
 
 		const serverInstance = app.listen(config.SERVICE_PORT, () => {
-			pinoLogger.info(
-				`🛜 ${config.SERVICE_NAME} is running on http://localhost:${config.SERVICE_PORT}`,
-			)
+			pinoLogger.info(`🛜 ${config.SERVICE_NAME} is running on http://localhost:${config.SERVICE_PORT}`)
 		})
 
 		serverInstance.timeout = 0

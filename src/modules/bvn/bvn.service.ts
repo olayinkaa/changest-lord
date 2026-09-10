@@ -47,20 +47,15 @@ export class BvnService implements IBvnService {
 
 			const cloudinaryImageUrl = user.livenessImageUrl
 			if (!cloudinaryImageUrl) {
-				throw new BadRequestException(
-					"Please do a liveness capture before validating your BVN.",
-				)
+				throw new BadRequestException("Please do a liveness capture before validating your BVN.")
 			}
 
 			// Check if BVN belongs to another existing user
 			const existingUser = await this.userRepo.findByBvn(bvn)
 			if (existingUser) {
-				throw new BadRequestException(
-					"This BVN belongs to existing user. Please enter a new BVN",
-					{
-						errorType: ErrorType.BVN_ALREADY_EXIST,
-					},
-				)
+				throw new BadRequestException("This BVN belongs to existing user. Please enter a new BVN", {
+					errorType: ErrorType.BVN_ALREADY_EXIST,
+				})
 			}
 
 			// Check if BVN is saved locally
@@ -99,24 +94,17 @@ export class BvnService implements IBvnService {
 			}
 
 			if (!bvnData.image) {
-				throw new BadRequestException(
-					"BVN record does not contain an image for face verification.",
-				)
+				throw new BadRequestException("BVN record does not contain an image for face verification.")
 			}
 
 			// Convert BVN Image Buffer
 			const bvnImageBuffer = this.utilityService.convertBase64ToBuffer(bvnData.image)
 
 			// Fetch Cloudinary image as Buffer (External network call)
-			const cloudinaryImageBuffer =
-				await this.utilityService.fetchImageBufferFromUrl(cloudinaryImageUrl)
+			const cloudinaryImageBuffer = await this.utilityService.fetchImageBufferFromUrl(cloudinaryImageUrl)
 
 			// Perform Face Comparison via AWS Rekognition (External service call)
-			const similarityScore = await this.awsRekognitionService.compareFaces(
-				bvnImageBuffer,
-				cloudinaryImageBuffer,
-				80,
-			)
+			const similarityScore = await this.awsRekognitionService.compareFaces(bvnImageBuffer, cloudinaryImageBuffer, 80)
 
 			pinoLogger.info({ similarityScore }, "Similarity search")
 
@@ -157,9 +145,7 @@ export class BvnService implements IBvnService {
 			pinoLogger.error({ err: error, userId, bvn }, "Error during BVN validation process")
 
 			// Wrap unexpected errors into a generic internal or bad gateway exception
-			throw new InternalServerErrorException(
-				"An error occurred while validating your BVN. Please try again later.",
-			)
+			throw new InternalServerErrorException("An error occurred while validating your BVN. Please try again later.")
 		}
 	}
 

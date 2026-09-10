@@ -27,9 +27,7 @@ export function IsNigeriaPhone(validationOptions?: ValidationOptions) {
 						// Passing 'NG' sets Nigeria as the default country for validation
 						const phoneNumber = parsePhoneNumberFromString(value, "NG")
 						// Ensures the parsed number is valid AND strictly belongs to Nigeria
-						return phoneNumber
-							? phoneNumber.isValid() && phoneNumber.country === "NG"
-							: false
+						return phoneNumber ? phoneNumber.isValid() && phoneNumber.country === "NG" : false
 						// biome-ignore lint/correctness/noUnusedVariables: caught error is intentionally unused
 					} catch (e) {
 						return false

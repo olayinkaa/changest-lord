@@ -25,10 +25,7 @@ export class EmailProcessor extends BaseProcessor<typeof QUEUE_NAMES.Email> {
 		super()
 	}
 
-	protected async handle(
-		data: EmailJobPayload,
-		job: Job<EmailJobPayload>,
-	): Promise<void> {
+	protected async handle(data: EmailJobPayload, job: Job<EmailJobPayload>): Promise<void> {
 		pinoLogger.info(
 			{
 				jobId: job.id,

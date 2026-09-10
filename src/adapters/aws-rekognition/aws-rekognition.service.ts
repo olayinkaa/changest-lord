@@ -40,17 +40,13 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 	public async ensureCollectionExists(collectionId: string): Promise<void> {
 		const resolvedName = this.resolveCollectionName(collectionId)
 		try {
-			await this.rekognitionClient.send(
-				new DescribeCollectionCommand({ CollectionId: resolvedName }),
-			)
+			await this.rekognitionClient.send(new DescribeCollectionCommand({ CollectionId: resolvedName }))
 			pinoLogger.info(`AWS Rekognition collection '${resolvedName}' exists.`)
 		} catch (error: any) {
 			if (error.name === "ResourceNotFoundException") {
 				pinoLogger.info(`Collection '${resolvedName}' not found. Creating it now...`)
 				await this.createCollection(collectionId)
-				pinoLogger.info(
-					`✅ Successfully created AWS Rekognition collection: '${resolvedName}'`,
-				)
+				pinoLogger.info(`✅ Successfully created AWS Rekognition collection: '${resolvedName}'`)
 			} else {
 				pinoLogger.error(error, `Error checking/creating collection: ${resolvedName}`)
 				throw error
@@ -128,11 +124,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 	 * @param identifier
 	 * @returns
 	 */
-	async addFaceToCollection(
-		collectionId: string,
-		imageBuffer: Buffer,
-		identifier: string,
-	) {
+	async addFaceToCollection(collectionId: string, imageBuffer: Buffer, identifier: string) {
 		try {
 			const command = new IndexFacesCommand({
 				CollectionId: this.resolveCollectionName(collectionId),
@@ -149,10 +141,7 @@ export class AwsRekognitionService implements IAwsRekognitionService {
 	}
 	//
 	// 2. Added implementation for deleting face vectors from collection
-	async deleteFacesFromCollection(
-		collectionId: string,
-		faceIds: string[],
-	): Promise<string[]> {
+	async deleteFacesFromCollection(collectionId: string, faceIds: string[]): Promise<string[]> {
 		try {
 			const command = new DeleteFacesCommand({
 				CollectionId: this.resolveCollectionName(collectionId),

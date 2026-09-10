@@ -9,9 +9,5 @@ export interface IAwsRekognitionService {
 	listCollections(): Promise<string[]>
 	describeCollectionDetails(collectionId: string): any
 	listFacesInCollection(collectionId: string): any
-	compareFaces(
-		sourceImageBuffer: Buffer,
-		targetImageBuffer: Buffer,
-		similarityThreshold: number,
-	): Promise<number>
+	compareFaces(sourceImageBuffer: Buffer, targetImageBuffer: Buffer, similarityThreshold: number): Promise<number>
 }

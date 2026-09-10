@@ -13,11 +13,7 @@ export class SseService implements ISseService {
 
 	constructor(@inject(REDIS_TYPES.Service) private readonly redis: IRedisService) {}
 
-	public async handleConnection(
-		req: Request,
-		res: Response,
-		userId: string,
-	): Promise<void> {
+	public async handleConnection(req: Request, res: Response, userId: string): Promise<void> {
 		try {
 			const session = await createSession(req, res, {
 				keepAlive: 15000, // Heartbeat every 15s

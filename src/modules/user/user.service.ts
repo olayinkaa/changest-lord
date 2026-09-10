@@ -58,18 +58,13 @@ export class UserService implements IUserService {
 		}
 		if (user.kyc?.faceId) {
 			try {
-				await this.awsRekognitionService.deleteFacesFromCollection(
-					AwsCollectionId.USERS,
-					[user.kyc.faceId],
-				)
+				await this.awsRekognitionService.deleteFacesFromCollection(AwsCollectionId.USERS, [user.kyc.faceId])
 			} catch (awsError) {
 				pinoLogger.error(
 					{ awsError, userId: id, faceId: user.kyc.faceId },
 					"Failed to delete face from AWS Rekognition during user deletion",
 				)
-				throw new UnprocessableEntityException(
-					"Failed to clean up biometric data from cloud provider.",
-				)
+				throw new UnprocessableEntityException("Failed to clean up biometric data from cloud provider.")
 			}
 		}
 		// 2. Delete liveness image from Cloudinary if publicId exists

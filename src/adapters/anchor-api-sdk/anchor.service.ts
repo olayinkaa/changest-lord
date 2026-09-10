@@ -2,18 +2,12 @@ import { injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
 
 export interface IAnchorApiSdk {
-	createVirtualAccount(
-		phone: string,
-		email: string,
-	): Promise<{ accountNumber: string; accountName: string }>
+	createVirtualAccount(phone: string, email: string): Promise<{ accountNumber: string; accountName: string }>
 }
 
 @injectable()
 export class AnchorApiSdkService implements IAnchorApiSdk {
-	async createVirtualAccount(
-		phone: string,
-		email: string,
-	): Promise<{ accountNumber: string; accountName: string }> {
+	async createVirtualAccount(phone: string, email: string): Promise<{ accountNumber: string; accountName: string }> {
 		pinoLogger.info({ phone, email }, "Creating virtual account via Anchor API")
 		// Integration with Anchor API would go here
 		return {

@@ -1,13 +1,6 @@
 import type { Request, Response } from "express"
 import { inject } from "inversify"
-import {
-	BaseHttpController,
-	controller,
-	httpGet,
-	principal,
-	request,
-	response,
-} from "inversify-express-utils"
+import { BaseHttpController, controller, httpGet, principal, request, response } from "inversify-express-utils"
 import { AuthGuard } from "@/core/guards/auth.guard"
 import type { UserPrincipal } from "@/providers/user-principal"
 import type { ISseService } from "./sse.types"

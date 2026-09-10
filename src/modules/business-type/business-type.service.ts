@@ -2,11 +2,7 @@ import { inject, injectable } from "inversify"
 import { BadRequestException, NotFoundException } from "@/core/errors/exceptions"
 import type { BusinessType } from "@/generated/prisma/client"
 import type { CreateBusinessTypeDto, UpdateBusinessTypeDto } from "./business-type.dto"
-import {
-	BUSINESS_TYPES,
-	type IBusinessTypeRepository,
-	type IBusinessTypeService,
-} from "./business-type.types"
+import { BUSINESS_TYPES, type IBusinessTypeRepository, type IBusinessTypeService } from "./business-type.types"
 
 @injectable()
 export class BusinessTypeService implements IBusinessTypeService {
@@ -35,10 +31,7 @@ export class BusinessTypeService implements IBusinessTypeService {
 		return this.repository.create(data)
 	}
 
-	async updateBusinessType(
-		id: string,
-		data: UpdateBusinessTypeDto,
-	): Promise<BusinessType> {
+	async updateBusinessType(id: string, data: UpdateBusinessTypeDto): Promise<BusinessType> {
 		await this.getBusinessTypeById(id)
 		return this.repository.update(id, data)
 	}

@@ -37,10 +37,7 @@ export class FileController extends BaseHttpController {
 	public async deleteImage(@requestParam("id") id: string, @next() nxt: NextFunction) {
 		try {
 			await this.fileService.deleteImage(id)
-			return this.json(
-				ApiResponse.success({ message: "Image deleted successfully" }),
-				200,
-			)
+			return this.json(ApiResponse.success({ message: "Image deleted successfully" }), 200)
 		} catch (error) {
 			nxt(error)
 		}

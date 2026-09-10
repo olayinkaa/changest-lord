@@ -5,9 +5,7 @@ import type { IEmailSender } from "./email.types"
 
 @injectable()
 export class SesEmailSender implements IEmailSender {
-	constructor(
-		@inject(ADAPTER_TYPES.AwsSesService) private readonly ses: IAwsSesService,
-	) {}
+	constructor(@inject(ADAPTER_TYPES.AwsSesService) private readonly ses: IAwsSesService) {}
 
 	send(options: ISendEmailOptions) {
 		return this.ses.sendEmail(options)

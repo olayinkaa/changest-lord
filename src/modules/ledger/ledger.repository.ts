@@ -4,11 +4,7 @@ import type { ILedgerRepository } from "./ledger.types"
 
 @injectable()
 export class LedgerRepository implements ILedgerRepository {
-	public async createTransaction(data: {
-		reference: string
-		transactionType: any
-		description: string
-	}) {
+	public async createTransaction(data: { reference: string; transactionType: any; description: string }) {
 		return prisma.ledgerTransaction.create({
 			data,
 		})

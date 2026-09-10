@@ -103,11 +103,7 @@ declare global {
 				category: string
 				commissionAmount: number
 				status: "COMPLETED" | "FAILED"
-				failureReason:
-					| "INSUFFICIENT_BALANCE"
-					| "INVALID_PHONE_NUMBER"
-					| "INVALID_PROVIDER"
-					| "INVALID_PRODUCT"
+				failureReason: "INSUFFICIENT_BALANCE" | "INVALID_PHONE_NUMBER" | "INVALID_PROVIDER" | "INVALID_PRODUCT"
 				updatedAt: string
 			}
 			relationships: {

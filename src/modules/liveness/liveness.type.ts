@@ -35,12 +35,6 @@ export interface ILivenessResultResponse {
 
 export interface ILiveness {
 	initiateLivenessSession(userId: string): Promise<any>
-	getLivenessSessionResult(
-		user: { id: string; phone: string },
-		sessionId: string,
-	): Promise<any>
-	submitLivenessSessionCapture(
-		user: { id: string; phone: string },
-		data: { image: string },
-	): Promise<any>
+	getLivenessSessionResult(user: { id: string; phone: string }, sessionId: string): Promise<any>
+	submitLivenessSessionCapture(user: { id: string; phone: string }, data: { image: string }): Promise<any>
 }

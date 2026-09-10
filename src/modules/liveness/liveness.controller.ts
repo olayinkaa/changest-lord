@@ -1,12 +1,5 @@
 import { inject } from "inversify"
-import {
-	BaseHttpController,
-	controller,
-	httpDelete,
-	httpGet,
-	queryParam,
-	requestBody,
-} from "inversify-express-utils"
+import { BaseHttpController, controller, httpDelete, httpGet, queryParam, requestBody } from "inversify-express-utils"
 import { ADAPTER_TYPES } from "@/adapters/adapters.types"
 import type { IAwsRekognitionService } from "@/adapters/aws-rekognition/aws-rekognition.type"
 import { pinoLogger } from "@/config/pino-logger"
@@ -39,8 +32,7 @@ export class LivenessController extends BaseHttpController {
 	public async getCollectionDetails() {
 		try {
 			const collectionId = AwsCollectionId.USERS
-			const details =
-				await this.awsRekognitionService.describeCollectionDetails(collectionId)
+			const details = await this.awsRekognitionService.describeCollectionDetails(collectionId)
 			const faces = await this.awsRekognitionService.listFacesInCollection(collectionId)
 			return this.json({
 				success: true,
@@ -54,9 +46,7 @@ export class LivenessController extends BaseHttpController {
 	}
 	//
 	@httpGet("/rekognition/collection/delete")
-	public async deleteCollectionRekognition(
-		@queryParam("collectionName") collectionName: string,
-	) {
+	public async deleteCollectionRekognition(@queryParam("collectionName") collectionName: string) {
 		try {
 			await this.awsRekognitionService.deleteCollection(collectionName)
 			return this.json({
@@ -87,16 +77,10 @@ export class LivenessController extends BaseHttpController {
 		try {
 			// Default to your standard USERS collection if collectionId query param isn't provided
 			const targetCollectionId = collectionId || AwsCollectionId.USERS
-			const deletedFaces = await this.awsRekognitionService.deleteFacesFromCollection(
-				targetCollectionId,
-				body.faceIds,
-			)
+			const deletedFaces = await this.awsRekognitionService.deleteFacesFromCollection(targetCollectionId, body.faceIds)
 
 			return this.json(
-				ApiResponse.success(
-					{ deletedFaces },
-					`Successfully deleted ${deletedFaces.length} face(s) from collection`,
-				),
+				ApiResponse.success({ deletedFaces }, `Successfully deleted ${deletedFaces.length} face(s) from collection`),
 				200,
 			)
 		} catch (error: any) {

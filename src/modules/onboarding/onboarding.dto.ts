@@ -1,11 +1,4 @@
-import {
-	IsEmail,
-	IsEnum,
-	IsNotEmpty,
-	IsOptional,
-	IsString,
-	Matches,
-} from "class-validator"
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator"
 import { UserType } from "@/generated/prisma/enums"
 import { TransformNigeriaPhone } from "@/utils/custom-transformer"
 import { IsNigeriaPhone } from "@/utils/custom-validator"

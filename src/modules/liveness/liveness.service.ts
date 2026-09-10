@@ -5,10 +5,7 @@ import type { ICloudinaryService } from "@/adapters/cloudinary/cloudinary.types"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import { AwsCollectionId, constants, OnboardingScopes } from "@/constants"
-import {
-	BadRequestException,
-	UnprocessableEntityException,
-} from "@/core/errors/exceptions"
+import { BadRequestException, UnprocessableEntityException } from "@/core/errors/exceptions"
 import { ErrorType } from "@/types/enum"
 import { AUTH_TYPES, type IAuthUtils } from "../auth/auth.types"
 import type { SubmitLivenessCaptureRequest } from "../onboarding/onboarding.dto"
@@ -29,14 +26,8 @@ export class LivenessService implements ILiveness {
 		private cloudinaryService: ICloudinaryService,
 	) {}
 
-	private async ensureFaceIsUnique(
-		imageBuffer: Buffer,
-		currentUserId: string,
-	): Promise<void> {
-		const searchResult = await this.awsRekognitionService.searchFaceInCollection(
-			imageBuffer,
-			AwsCollectionId.USERS,
-		)
+	private async ensureFaceIsUnique(imageBuffer: Buffer, currentUserId: string): Promise<void> {
+		const searchResult = await this.awsRekognitionService.searchFaceInCollection(imageBuffer, AwsCollectionId.USERS)
 
 		if (searchResult.FaceMatches && searchResult.FaceMatches.length > 0) {
 			const match = searchResult.FaceMatches[0]
@@ -54,19 +45,13 @@ export class LivenessService implements ILiveness {
 			// clean up their old face record from the collection to avoid accumulation bloat.
 			if (matchedUserId === currentUserId && match.Face?.FaceId) {
 				try {
-					await this.awsRekognitionService.deleteFacesFromCollection(
-						AwsCollectionId.USERS,
-						[match.Face.FaceId],
-					)
+					await this.awsRekognitionService.deleteFacesFromCollection(AwsCollectionId.USERS, [match.Face.FaceId])
 					pinoLogger.info(
 						{ faceId: match.Face.FaceId, userId: currentUserId },
 						"Deleted old face record for user re-submission",
 					)
 				} catch (deleteError) {
-					pinoLogger.error(
-						{ deleteError },
-						"Failed to delete old face record during update",
-					)
+					pinoLogger.error({ deleteError }, "Failed to delete old face record during update")
 				}
 			}
 		}
@@ -81,8 +66,7 @@ export class LivenessService implements ILiveness {
 		const sessionToken = `${userId}-${uniqueAttemptId}` //
 		const hashedToken = this.authUtils.hashCode(sessionToken) // Hash the token for security
 
-		const sessionId =
-			await this.awsRekognitionService.initiateLivenessSession(hashedToken)
+		const sessionId = await this.awsRekognitionService.initiateLivenessSession(hashedToken)
 		if (!sessionId) {
 			throw new UnprocessableEntityException("Failed to initiate Liveness Session", {
 				errorType: ErrorType.NO_SESSION_ID,
@@ -101,16 +85,11 @@ export class LivenessService implements ILiveness {
 			throw new BadRequestException("sessionId is required")
 		}
 		try {
-			const response: ILivenessResultResponse =
-				await this.awsRekognitionService.getLivenessSessionResult(sessionId)
-			const isLive =
-				response.result.Status === "SUCCEEDED" &&
-				response.result?.Confidence >= this.passedThreshold
+			const response: ILivenessResultResponse = await this.awsRekognitionService.getLivenessSessionResult(sessionId)
+			const isLive = response.result.Status === "SUCCEEDED" && response.result?.Confidence >= this.passedThreshold
 
 			if (!isLive) {
-				throw new UnprocessableEntityException(
-					"Liveness evaluation failed. Please try again.",
-				)
+				throw new UnprocessableEntityException("Liveness evaluation failed. Please try again.")
 			}
 			const bytesNumberArray = response.result?.ReferenceImage.Bytes
 			const rawByteValues = Object.values(bytesNumberArray) as number[]
@@ -124,16 +103,11 @@ export class LivenessService implements ILiveness {
 			}
 		} catch (error: any) {
 			pinoLogger.error({ error }, "Error in getting liveness session result")
-			throw new BadRequestException(
-				error?.message || "Invalid session ID format. It must be a valid UUID string",
-			)
+			throw new BadRequestException(error?.message || "Invalid session ID format. It must be a valid UUID string")
 		}
 	}
 
-	async submitLivenessSessionCapture(
-		user: IOnboardingUser,
-		data: SubmitLivenessCaptureRequest,
-	) {
+	async submitLivenessSessionCapture(user: IOnboardingUser, data: SubmitLivenessCaptureRequest) {
 		try {
 			/**
 			 * do face comparison
@@ -148,10 +122,7 @@ export class LivenessService implements ILiveness {
 			 * save image to cloudinary
 			 * save imageUrl, publicId to user profile in database
 			 */
-			const cloudinaryResponse = await this.cloudinaryService.upload(
-				imageBuffer,
-				"liveness-verifications",
-			)
+			const cloudinaryResponse = await this.cloudinaryService.upload(imageBuffer, "liveness-verifications")
 
 			// Index the face into the AWS Rekognition collection mapped to this user's ID
 			const rekognitionResponse = await this.awsRekognitionService.addFaceToCollection(
@@ -183,11 +154,7 @@ export class LivenessService implements ILiveness {
 			/**
 			 * generate a new token for the user with updated scope
 			 */
-			const pinToken = this.authUtils.generateToken(
-				payload,
-				config.JWT_ONBOARDING_SECRET,
-				"15m",
-			)
+			const pinToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
 
 			return {
 				success: true,
@@ -200,9 +167,7 @@ export class LivenessService implements ILiveness {
 				throw error
 			}
 			// Otherwise, fallback to the generic BadRequestException for unknown errors
-			throw new BadRequestException(
-				error?.message || "Error in submitting liveness result",
-			)
+			throw new BadRequestException(error?.message || "Error in submitting liveness result")
 		}
 	}
 	//
