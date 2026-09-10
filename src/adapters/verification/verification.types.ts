@@ -1,8 +1,5 @@
 import type { IDojahBvnFullResponse, IDojahNinResponse } from "./dojah/dojah.types"
-import type {
-	YouVerifyBvnResponse,
-	YouVerifyNinResponse,
-} from "./you-verify/youverify.type"
+import type { YouVerifyBvnResponse, YouVerifyNinResponse } from "./you-verify/youverify.type"
 
 export type VerificationProviderType = "dojah" | "youverify"
 

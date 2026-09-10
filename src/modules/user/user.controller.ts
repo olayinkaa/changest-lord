@@ -43,10 +43,7 @@ export class UserController extends BaseHttpController {
 
 	@httpGet("/me")
 	@AuthGuard()
-	public async getCurrentUser(
-		@next() nxt: NextFunction,
-		@principal() authUser: UserPrincipal,
-	) {
+	public async getCurrentUser(@next() nxt: NextFunction, @principal() authUser: UserPrincipal) {
 		try {
 			const user = await this.userService.getUser(authUser.details.id)
 			return this.json(ApiResponse.success(user), 200)
@@ -84,9 +81,8 @@ export class UserController extends BaseHttpController {
 				to: "ibrahimolayinkaa@gmail.com",
 				subject: "Testing for real subject",
 				textBody: "This is a test email sent from AWS SES.",
-				htmlBody:
-					"<h1>Test Email</h1><p>If you see this, your AWS SES setup is working!</p>",
-				userId: "test-user-id", // Replace with an actual user ID if needed
+				htmlBody: "<h1>Test Email</h1><p>If you see this, your AWS SES setup is working!</p>",
+				userId: "",
 			})
 			return result
 		} catch (error) {

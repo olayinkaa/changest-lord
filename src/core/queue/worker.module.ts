@@ -1,13 +1,18 @@
 import { ContainerModule } from "inversify"
 import { AdaptersModule } from "@/adapters/adapters.module"
+import { CronModule } from "@/core/cron/cron.module"
 import { EmailModule } from "@/modules/workers/email/email.module"
 import { EmailProcessor } from "@/modules/workers/email/email.processor"
+import { SettlementWorkerContainerModules } from "@/modules/workers/settlement/settlement.worker.module"
+import { BankTransferWorker } from "@/modules/workers/transfer/bank-transfer.worker"
+import { TransferWorkerModule } from "@/modules/workers/transfer/transfer.worker.module"
 import { WORKER_PROCESSOR_TAG } from "./worker.bootstrap"
 
 // Each processor binds itself under the shared multi-inject tag so
 // WorkerBootstrap.start() can resolveAll and start them all.
 export const WorkerBindings = new ContainerModule((bind) => {
 	bind(WORKER_PROCESSOR_TAG).to(EmailProcessor)
+	bind(WORKER_PROCESSOR_TAG).to(BankTransferWorker)
 })
 
 // Worker loads: adapters (Redis + SES), email module (IEmailSender binding),
@@ -16,7 +21,10 @@ export const WorkerBindings = new ContainerModule((bind) => {
 export const WorkerContainerModules = [
 	AdaptersModule,
 	EmailModule,
+	TransferWorkerModule,
 	WorkerBindings,
+	...SettlementWorkerContainerModules,
+	CronModule,
 ] as const
 
 export { WORKER_PROCESSOR_TAG }

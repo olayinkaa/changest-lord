@@ -21,19 +21,11 @@ export class RedisService implements IRedisService {
 		this.pubClient = new Redis(config.REDIS_URL, redisConfig)
 		this.subClient = new Redis(config.REDIS_URL, redisConfig)
 
-		this.pubClient.on("error", (err) =>
-			pinoLogger.error({ err }, "Redis pub client error"),
-		)
-		this.subClient.on("error", (err) =>
-			pinoLogger.error({ err }, "Redis sub client error"),
-		)
+		this.pubClient.on("error", (err) => pinoLogger.error({ err }, "Redis pub client error"))
+		this.subClient.on("error", (err) => pinoLogger.error({ err }, "Redis sub client error"))
 
-		this.pubClient.on("connect", () =>
-			pinoLogger.info({ url: config.REDIS_URL }, "✅ Redis pub connected"),
-		)
-		this.subClient.on("connect", () =>
-			pinoLogger.info({ url: config.REDIS_URL }, "✅ Redis sub connected"),
-		)
+		this.pubClient.on("connect", () => pinoLogger.info({ url: config.REDIS_URL }, "✅ Redis pub connected"))
+		this.subClient.on("connect", () => pinoLogger.info({ url: config.REDIS_URL }, "✅ Redis sub connected"))
 	}
 
 	getClient(): RedisClient {
@@ -58,11 +50,7 @@ export class RedisService implements IRedisService {
 		}
 	}
 
-	async set(
-		key: string,
-		value: any,
-		options: { ttlSeconds?: number } = {},
-	): Promise<void> {
+	async set(key: string, value: any, options: { ttlSeconds?: number } = {}): Promise<void> {
 		const ttl = options.ttlSeconds || 3600
 		await this.pubClient.set(key, JSON.stringify(value), "EX", ttl)
 	}
@@ -105,13 +93,10 @@ export class RedisService implements IRedisService {
 
 	get list() {
 		return {
-			range: (key: string, start: number, end: number) =>
-				this.pubClient.lrange(key, start, end),
-			trim: (key: string, start: number, end: number) =>
-				this.pubClient.ltrim(key, start, end),
+			range: (key: string, start: number, end: number) => this.pubClient.lrange(key, start, end),
+			trim: (key: string, start: number, end: number) => this.pubClient.ltrim(key, start, end),
 			length: (key: string) => this.pubClient.llen(key),
-			remove: (key: string, count: number, value: string) =>
-				this.pubClient.lrem(key, count, value),
+			remove: (key: string, count: number, value: string) => this.pubClient.lrem(key, count, value),
 			push: {
 				left: (key: string, value: string) => this.pubClient.lpush(key, value),
 				right: (key: string, value: string) => this.pubClient.rpush(key, value),
@@ -127,10 +112,7 @@ export class RedisService implements IRedisService {
 		await this.pubClient.publish(channel, message)
 	}
 
-	async subscribe(
-		channel: string,
-		callback: (channel: string, message: string) => void,
-	): Promise<void> {
+	async subscribe(channel: string, callback: (channel: string, message: string) => void): Promise<void> {
 		await this.subClient.subscribe(channel)
 		this.subClient.on("message", (chan, msg) => {
 			if (chan === channel) {

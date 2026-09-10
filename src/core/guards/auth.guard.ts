@@ -4,10 +4,7 @@ import { UnauthorizedException } from "../errors/exceptions"
 export function AuthGuard() {
 	return withMiddleware(async (req, _, next) => {
 		try {
-			const httpContext: interfaces.HttpContext = Reflect.getMetadata(
-				"inversify-express-utils:httpcontext",
-				req,
-			)
+			const httpContext: interfaces.HttpContext = Reflect.getMetadata("inversify-express-utils:httpcontext", req)
 
 			if (!httpContext) {
 				return next(new UnauthorizedException("Authentication is required"))

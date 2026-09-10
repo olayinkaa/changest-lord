@@ -11,13 +11,10 @@ function createLimiter(options: any) {
 	return rateLimit({
 		...options,
 		store: new RedisStore({
-			sendCommand: async (...args: string[]) =>
-				(await redisClient.call(...(args as [string, ...string[]]))) as any,
+			sendCommand: async (...args: string[]) => (await redisClient.call(...(args as [string, ...string[]]))) as any,
 		}),
 		handler: (_req, res, _next, options) => {
-			res
-				.status(options.statusCode)
-				.json(ApiResponse.error(null, options.message, options.statusCode))
+			res.status(options.statusCode).json(ApiResponse.error(null, options.message, options.statusCode))
 		},
 	})
 }

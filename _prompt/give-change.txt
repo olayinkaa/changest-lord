@@ -1,0 +1,17 @@
+I want to implement the following :
+user type on the customer Id or phone number field,
+it search the backend and return the user detail,
+if no record return "No account matches the ID. check the number and try again ".
+if there is record and user click on the record, and amount key pad is display.
+if the amount enter is greater than the user's balance it should 
+throw an error "insufficient balance".
+if the amount is less than the balance, 
+the user is then allow to enter is PIN.
+If the PIN is wrong the system throw 
+"Incorrect PIN. Please try again. After 3 failed attempts, your account will be blocked".
+If the enter PIN is correct, the amount should be move to the recipient UserId or PhoneNumber,
+and the sender user should be debited as well
+
+Design the backend using double ledger,
+Design the schema for wallet etc
+Guid me on the best possible approach

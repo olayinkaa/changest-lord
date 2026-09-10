@@ -12,6 +12,7 @@ import { CloudinaryService } from "./cloudinary/cloudinary.service"
 import type { ICloudinaryService } from "./cloudinary/cloudinary.types"
 import { GoogleMapsService } from "./google/google-map.service"
 import type { IGoogleMapsService } from "./google/google-map.type"
+import { BankAdapter, type IBankAdapter } from "./payment/bank.adapter"
 import { RedisService } from "./redis/redis.service"
 import { type IRedisService, REDIS_TYPES } from "./redis/redis.types"
 import { VerificationFactory } from "./verification/verification.factory"
@@ -19,9 +20,7 @@ import type { IVerificationService } from "./verification/verification.types"
 
 export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IGoogleMapsService>(ADAPTER_TYPES.GoogleMapsService).to(GoogleMapsService)
-	bind<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService).to(
-		AwsRekognitionService,
-	)
+	bind<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService).to(AwsRekognitionService)
 	bind<IAwsSesService>(ADAPTER_TYPES.AwsSesService).to(AwsSesService)
 	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
 	bind<IRedisService>(REDIS_TYPES.Service).to(RedisService)
@@ -29,7 +28,6 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)
 	})
-	bind<IVerificationService>(ADAPTER_TYPES.VerificationService).toDynamicValue(
-		VerificationFactory,
-	)
+	bind<IVerificationService>(ADAPTER_TYPES.VerificationService).toDynamicValue(VerificationFactory)
+	bind<IBankAdapter>(ADAPTER_TYPES.BankAdapter).to(BankAdapter)
 })

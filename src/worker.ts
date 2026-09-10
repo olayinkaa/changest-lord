@@ -3,13 +3,30 @@ import "dotenv/config"
 import type { Container } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
+import { CronService } from "@/core/cron/cron.service"
 import { WorkerContainerModules } from "@/core/queue/worker.module"
 import { WorkerManager } from "@/core/queue/worker-manager"
+import type { ISettlementService } from "@/modules/settlement/settlement.service"
+import { SETTLEMENT_TYPES } from "@/modules/settlement/settlement.types"
 import { Application } from "@/utils/application"
 
 class WorkerApp extends Application {
 	configureService(container: Container): void {
 		container.load(...WorkerContainerModules)
+	}
+
+	private scheduleJobs() {
+		const cronService = this.container.get(CronService)
+		const settlementService = this.container.get<ISettlementService>(SETTLEMENT_TYPES.SettlementService)
+
+		// Sweep system fees daily at midnight
+		cronService.schedule({
+			name: "system-fee-sweep",
+			expression: "0 0 * * *",
+			task: async () => {
+				await settlementService.sweepSystemFees()
+			},
+		})
 	}
 
 	async setup(): Promise<void> {
@@ -20,6 +37,9 @@ class WorkerApp extends Application {
 			pinoLogger.fatal({ err }, "Worker failed to start — exiting")
 			process.exit(1)
 		}
+
+		// Schedule Background Jobs
+		this.scheduleJobs()
 
 		const shutdown = async (signal: string) => {
 			pinoLogger.info({ signal }, "Worker shutting down…")

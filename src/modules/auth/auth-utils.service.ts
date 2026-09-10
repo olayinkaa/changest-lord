@@ -21,10 +21,7 @@ export class AuthUtils implements IAuthUtils {
 	 * @param encryptedPassword - encrypted password
 	 * @returns
 	 */
-	async compareSecret(
-		plainPassword: string,
-		encryptedPassword: string,
-	): Promise<boolean> {
+	async compareSecret(plainPassword: string, encryptedPassword: string): Promise<boolean> {
 		const isMatch = await bcrypt.compare(plainPassword, encryptedPassword)
 		return isMatch
 	}
@@ -87,9 +84,6 @@ export class AuthUtils implements IAuthUtils {
 
 	verifyPin(plainPin: string, hashedPin: string): boolean {
 		const inputHash = this.hashPin(plainPin)
-		return crypto.timingSafeEqual(
-			Buffer.from(inputHash, "utf-8"),
-			Buffer.from(hashedPin, "utf-8"),
-		)
+		return crypto.timingSafeEqual(Buffer.from(inputHash, "utf-8"), Buffer.from(hashedPin, "utf-8"))
 	}
 }

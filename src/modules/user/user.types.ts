@@ -23,10 +23,7 @@ export interface IUserRepository {
 		kyc: { completedProfile: boolean } | null
 	} | null>
 	findAll(query: UserQueryDto): Promise<PaginatedResult<User>>
-	createUserProfile(
-		onboardingUser: { id: string; phone: string },
-		data: any,
-	): Promise<UserWithRelations>
+	createUserProfile(onboardingUser: { id: string; phone: string }, data: any): Promise<UserWithRelations>
 	updateBusinessProfile(userId: string, data: any): Promise<UserWithRelations>
 	createUserPhoneNumber(phoneNumber: string): Promise<any>
 	findUser(userId: string): Promise<UserWithRelations | null>
@@ -42,19 +39,16 @@ export interface IUserRepository {
 	findUserByPhone(phone: string): Promise<User | null>
 	findByEmail(email: string): Promise<any | null>
 	findByUserId5(userId5: string): Promise<User | null>
-	findByBusinessName(
-		businessName: string,
-	): Promise<{ id: string; businessName: string | null } | null>
-	updateUserPinAndUserId5(
-		userId: string,
-		pinHash: string,
-		userId5?: string | null,
-	): Promise<User>
+	findByBusinessName(businessName: string): Promise<{ id: string; businessName: string | null } | null>
+	updateUserPinAndUserId5(userId: string, pinHash: string, userId5?: string | null): Promise<User>
 	findByBvn(bvn: string): Promise<User | null>
 	findByNin(bvn: string): Promise<User | null>
 	updateBvnVerification(userId: string, bvn: string): Promise<any>
 	updateNinVerification(userId: string, nin: string): Promise<any>
 	deleteUser(userId: string): Promise<User>
+	updatePinAttempts(userId: string, reset: boolean): Promise<User>
+	blockUser(userId: string): Promise<User>
+	findPendingTransitCredits(phone: string): Promise<any[]>
 }
 
 export interface IUserService {

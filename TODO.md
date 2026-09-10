@@ -20,7 +20,12 @@
 - [X] Create an upload image endpoints (cloudinary)
 - [ ] Create a fetch image endpoints
 - [ ] Create a delete image endpoints
-- [ ] Resolve issue with google map api key
+- [X] Resolve issue with google map api key
 - [ ] Resolve issue connecting to production AWS SES
-- [ ] Resolve issue deploying to render running app and worker together
-- [ ] 
+- [X] Resolve issue deploying to render running app and worker together
+  
+
+# Sep 9th, 10th
+- [ ] create endpoints to simulate wallet topup
+- [ ] Endpoints to get wallet balance
+- [ ] Endpoint to search recipient

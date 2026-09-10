@@ -39,11 +39,7 @@ export class AuthService implements IAuthService {
 			userType: user.userType,
 		}
 
-		const accessToken = this.authUtils.generateToken(
-			payload,
-			config.JWT_TOKEN_SECRET,
-			config.JWT_TOKEN_EXPIRES_IN,
-		)
+		const accessToken = this.authUtils.generateToken(payload, config.JWT_TOKEN_SECRET, config.JWT_TOKEN_EXPIRES_IN)
 
 		// For refresh token, typically we'd use a longer expiry and store it in DB
 		// Since we don't have a specific refresh token logic yet, we'll generate one with a longer expiry

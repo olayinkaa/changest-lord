@@ -7,3 +7,14 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+generator markdown {
+  provider = "prisma-markdown"
+  output   = "../ERD.md"
+  title    = "My Change DB schema"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg" 
+}

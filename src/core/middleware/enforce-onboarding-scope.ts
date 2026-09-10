@@ -18,17 +18,12 @@ export const enforceOnboardingScope = (requiredScope: OnboardingScope) => {
 		const authHeader = req.headers.authorization
 
 		if (!authHeader?.startsWith("Bearer ")) {
-			return next(
-				new UnauthorizedException("Access denied. Secure onboarding token is missing."),
-			)
+			return next(new UnauthorizedException("Access denied. Secure onboarding token is missing."))
 		}
 
 		const token = authHeader.split(" ")[1]
 		try {
-			const decoded = jwt.verify(
-				token,
-				config.JWT_ONBOARDING_SECRET,
-			) as OnboardingTokenPayload
+			const decoded = jwt.verify(token, config.JWT_ONBOARDING_SECRET) as OnboardingTokenPayload
 
 			if (decoded.scope !== requiredScope) {
 				return next(

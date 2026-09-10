@@ -1,12 +1,6 @@
 import type { NextFunction } from "express"
 import { inject } from "inversify"
-import {
-	BaseHttpController,
-	controller,
-	httpPost,
-	next,
-	requestBody,
-} from "inversify-express-utils"
+import { BaseHttpController, controller, httpPost, next, requestBody } from "inversify-express-utils"
 import { loginRateLimit } from "@/core/middleware/rate-limit"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
@@ -26,10 +20,7 @@ export class AuthController extends BaseHttpController {
 	@httpPost("/login")
 	@loginRateLimit()
 	@validateSchema(LoginRequest)
-	public async login(
-		@requestBody() body: LoginRequest,
-		@next() nxt: NextFunction,
-	): Promise<unknown> {
+	public async login(@requestBody() body: LoginRequest, @next() nxt: NextFunction): Promise<unknown> {
 		try {
 			const data = await this.authService.login(body)
 			return this.json(ApiResponse.success(data, "Login successful"), 200)
