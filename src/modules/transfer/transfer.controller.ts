@@ -44,7 +44,8 @@ export class TransferController {
 	@httpPost("/execute")
 	@validateSchema(ExecuteTransferRequest)
 	public async execute(@requestBody() body: ExecuteTransferRequest, @principal() authUser: UserPrincipal) {
-		const result = await this.transferService.executeTransfer(authUser.details.id, body)
+		const userId = authUser?.details?.id
+		const result = await this.transferService.executeTransfer(userId, body)
 		return ApiResponse.success(result)
 	}
 }

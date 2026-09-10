@@ -20,8 +20,12 @@ class WorkerApp extends Application {
 		const settlementService = this.container.get<ISettlementService>(SETTLEMENT_TYPES.SettlementService)
 
 		// Sweep system fees daily at midnight
-		cronService.schedule("system-fee-sweep", "0 0 * * *", async () => {
-			await settlementService.sweepSystemFees()
+		cronService.schedule({
+			name: "system-fee-sweep",
+			expression: "0 0 * * *",
+			task: async () => {
+				await settlementService.sweepSystemFees()
+			},
 		})
 	}
 

@@ -1,6 +1,6 @@
 import type { User } from "@/generated/prisma/client"
 import type { TransactionType } from "@/generated/prisma/enums"
-import type { Decimal } from "@/types/base"
+import type { Decimal } from "@/types/prisma"
 
 export interface UserResponseDto {
 	id: string
@@ -12,6 +12,7 @@ export interface UserResponseDto {
 
 export interface ValidateAmountResponseDto {
 	fee: Decimal
+	amount: Decimal
 	totalDebit: Decimal
 	reference: string
 	message: string
@@ -35,13 +36,15 @@ export interface ITransferRepository {
 	updateUserSecurity(userId: string, data: { pinAttempts: number; isBlocked: boolean }): Promise<User>
 	executeDoubleEntryTransfer(
 		userId: string,
-		recipientId: string | null,
+		recipientUserId: string | null,
 		amount: Decimal,
 		fee: Decimal,
 		reference: string,
 		transactionType: TransactionType,
+		recipientAccount?: string,
 	): Promise<string>
 	executeSettlementSweep(amount: Decimal, reference: string): Promise<string>
+	updateTransactionStatus(reference: string, status: TransactionStatus): Promise<void>
 }
 
 export const TRANSFER_TYPES = {
@@ -52,7 +55,7 @@ export const TRANSFER_TYPES = {
 
 export interface ValidateAmountDto {
 	transactionType: TransactionType
-	recipientId?: string
+	recipientAccount?: string
 	amount: Decimal
 	bankDetails?: {
 		accountNumber: string
@@ -62,7 +65,7 @@ export interface ValidateAmountDto {
 
 export interface ExecuteTransferDto {
 	transactionType: TransactionType
-	recipientId?: string
+	recipientAccount?: string
 	amount: Decimal
 	pin: string
 	reference: string

@@ -9,6 +9,12 @@ export type QueuePayloadMap = {
 	[QUEUE_NAMES.Email]: EmailJobPayload
 	[QUEUE_NAMES.Cloudinary]: CloudinaryJobPayload
 	[QUEUE_NAMES.Settlement]: any
+	[QUEUE_NAMES.BankTransfer]: {
+		reference: string
+		accountNumber: string
+		bankCode: string
+		amount: string
+	}
 }
 
 export interface IQueueService {

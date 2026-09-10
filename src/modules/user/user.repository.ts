@@ -346,6 +346,21 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 
+	async findPendingTransitCredits(phone: string): Promise<any[]> {
+		return prisma.ledger.findMany({
+			where: {
+				type: "CREDIT",
+				wallet: {
+					type: "TRANSIT",
+				},
+				description: {
+					contains: phone,
+					mode: "insensitive",
+				},
+			},
+		})
+	}
+
 	/**
 	 * @param userId
 	 * @param data

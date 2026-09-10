@@ -17,6 +17,7 @@
 		"dev:all": "concurrently --kill-others -n \"API,WORKER\" -c \"cyan,magenta\" \"pnpm run dev\" \"pnpm run worker:dev\"",
 		"lint:check:fix": "biome check --write ./src",
 		"docs:check": "tsx scripts/docs-check.ts",
+		"seed:system": "dotenv -e .env -- tsx prisma/seeds/run-system.ts",
 		"prepare": "husky"
 	},
 	"keywords": [],

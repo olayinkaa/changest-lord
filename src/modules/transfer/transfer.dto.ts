@@ -1,12 +1,5 @@
 import { Type } from "class-transformer"
-import {
-	IsEnum,
-	IsNotEmpty,
-	IsNumber,
-	IsOptional,
-	IsString,
-	ValidateNested,
-} from "class-validator"
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import type { Prisma } from "@/generated/prisma/client"
 import { TransactionType } from "@/generated/prisma/enums"
 
@@ -29,7 +22,7 @@ export class ValidateAmountDto {
 
 	@IsString()
 	@IsOptional()
-	recipientId?: string
+	recipientAccount?: string
 
 	@IsNumber()
 	@IsNotEmpty()
@@ -48,7 +41,7 @@ export class ExecuteTransferDto {
 
 	@IsString()
 	@IsOptional()
-	recipientId?: string
+	recipientAccount?: string
 
 	@IsNumber()
 	@IsNotEmpty()

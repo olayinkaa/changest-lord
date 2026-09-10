@@ -1,5 +1,6 @@
 import { injectable } from "inversify"
-import { ChargeType, Prisma, TransactionType } from "@/generated/prisma/client"
+import { ChargeType, TransactionType } from "@/generated/prisma/client"
+import { Prisma } from "@/types/prisma"
 import type { IChargeConfigService } from "./charge.type"
 
 @injectable()

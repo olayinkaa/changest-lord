@@ -2,6 +2,7 @@ model LedgerTransaction {
     id              String   @id @default(uuid())
     reference       String   @unique
     transactionType TransactionType
+    status          TransactionStatus @default(PENDING)
     description     String
     createdAt       DateTime @default(now())
     ledgers         Ledger[]

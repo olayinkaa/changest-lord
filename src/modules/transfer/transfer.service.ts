@@ -1,12 +1,13 @@
-import bcrypt from "bcryptjs"
 import { inject, injectable } from "inversify"
-import { ADAPTER_TYPES } from "@/adapters/adapters.types"
-import type { IBankAdapter } from "@/adapters/payment/bank.adapter"
 import { CHARGE_TYPES, type IChargeConfigService } from "@/common/charge/charge.type"
 import { pinoLogger } from "@/config/pino-logger"
 import { BadRequestException, HttpException, NotFoundException, UnauthorizedException } from "@/core/errors/exceptions"
-import { Prisma, TransactionType } from "@/generated/prisma/client"
+import { type IQueueService, TYPES as QUEUE_TYPES } from "@/core/queue/queue.types"
+import { QUEUE_NAMES } from "@/core/queue/queue-name"
+import { TransactionStatus, TransactionType } from "@/generated/prisma/enums"
+import { Prisma } from "@/types/prisma"
 import { generateTransactionReference } from "@/utils/reference-generator"
+import { AUTH_TYPES, type IAuthUtils } from "../auth/auth.types"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
 import { type IWalletRepository, WALLET_TYPES } from "../wallet/wallet.types"
 import {
@@ -21,7 +22,7 @@ import {
 } from "./transfer.types"
 
 @injectable()
-export class TransferServiceImpl implements ITransferService {
+export class TransferService implements ITransferService {
 	constructor(
 		@inject(TRANSFER_TYPES.TransferRepository)
 		private transferRepo: ITransferRepository,
@@ -31,13 +32,15 @@ export class TransferServiceImpl implements ITransferService {
 		private chargeConfig: IChargeConfigService,
 		@inject(USER_TYPES.Repository)
 		private userRepo: IUserRepository,
-		@inject(ADAPTER_TYPES.BankAdapter)
-		private bankAdapter: IBankAdapter,
+		@inject(AUTH_TYPES.AuthUtils)
+		private authUtils: IAuthUtils,
+		@inject(QUEUE_TYPES.QueueService)
+		private queueService: IQueueService,
 	) {}
 
 	public async searchRecipients(query: string): Promise<UserResponseDto> {
 		if (!query) {
-			throw new BadRequestException("Query parameter 'phoneOrUseId' is required")
+			throw new BadRequestException("Query parameter 'phoneOrUserId' is required")
 		}
 
 		const user = await this.transferRepo.searchRecipients(query)
@@ -70,15 +73,16 @@ export class TransferServiceImpl implements ITransferService {
 		}
 
 		return {
+			message: "Amount validated successfully",
+			amount: decimalAmount,
 			fee,
 			totalDebit,
 			reference: generateTransactionReference(transactionType),
-			message: "Amount validated successfully",
 		}
 	}
 
 	public async executeTransfer(userId: string, dto: ExecuteTransferDto): Promise<TransferResponseDto> {
-		const { transactionType, recipientId, amount: rawAmount, pin, reference, bankDetails } = dto
+		const { transactionType, recipientAccount, amount: rawAmount, pin, reference } = dto
 		const amount = new Prisma.Decimal(rawAmount)
 
 		// 1. Security: Check for blocked account
@@ -87,12 +91,18 @@ export class TransferServiceImpl implements ITransferService {
 		if (user.isBlocked) throw new UnauthorizedException("Your account is blocked. Please contact support.")
 
 		// 2. PIN Verification
-		const isPinCorrect = await this.verifyPin(user, pin)
+		if (!user.pinHash) {
+			throw new UnauthorizedException("Invalid phone number or PIN")
+		}
+		const isPinCorrect = this.authUtils.verifyPin(pin, user.pinHash)
 		if (!isPinCorrect) {
 			await this.userRepo.updatePinAttempts(userId, false)
 			const updatedUser = await this.userRepo.findUser(userId)
 			if (updatedUser && updatedUser.pinAttempts >= 3) {
 				await this.userRepo.blockUser(userId)
+				throw new UnauthorizedException(
+					"Incorrect PIN. Too many failed attempts. Your account has been blocked. Please contact support.",
+				)
 			}
 
 			throw new UnauthorizedException(
@@ -106,16 +116,34 @@ export class TransferServiceImpl implements ITransferService {
 		// 3. Fee Calculation
 		const { fee } = await this.chargeConfig.calculateFee(transactionType, amount)
 
-		// 4. Atomic Double-Entry Transaction
+		// 4. Resolve Recipient to User ID
+		let recipientUserId: string | null = recipientAccount ?? null
+		if (recipientAccount && transactionType !== TransactionType.TRANSFER_BANK) {
+			const recipient = await this.transferRepo.searchRecipients(recipientAccount)
+			if (!recipient) {
+				// Allow unregistered recipients only for GIVE_CHANGE
+				if (transactionType === TransactionType.GIVE_CHANGE) {
+					pinoLogger.info({ recipientAccount }, "Recipient unregistered; funds will be held in Transit wallet")
+					recipientUserId = null // Repository will handle as Transit
+				} else {
+					throw new NotFoundException("Recipient account not found. Please check the phone number or User ID.")
+				}
+			} else {
+				recipientUserId = recipient.id
+			}
+		}
+
+		// 5. Atomic Double-Entry Transaction
 		let transactionReference: string
 		try {
 			transactionReference = await this.transferRepo.executeDoubleEntryTransfer(
 				userId,
-				recipientId || null,
+				recipientUserId || null,
 				amount,
 				fee,
 				reference,
 				transactionType,
+				recipientAccount,
 			)
 		} catch (error: any) {
 			if (error instanceof BadRequestException) throw error
@@ -125,35 +153,31 @@ export class TransferServiceImpl implements ITransferService {
 			throw new HttpException(500, `Transfer failed: ${error.message}`)
 		}
 
-		// 5. Outbound Bank Trigger
-		if (transactionType === TransactionType.TRANSFER_BANK && bankDetails) {
-			const bankResult = await this.bankAdapter.transferFunds(
-				bankDetails.accountNumber,
-				bankDetails.bankCode,
-				amount,
-				reference,
-			)
-			if (bankResult.status === "FAILED") {
-				pinoLogger.error(
-					{
-						reference: transactionReference,
-						errorMessage: bankResult.errorMessage,
-					},
-					"Bank transfer trigger failed. Transaction is recorded in ledger but outbound funds failed.",
-				)
-				// In a real system, we might trigger a reconciliation job or automatic refund here.
+		// 6. External Bank Trigger (Async via Queue)
+		if (transactionType === "TRANSFER_BANK" && dto.bankDetails) {
+			const { accountNumber, bankCode } = dto.bankDetails
+
+			await this.queueService.publish(QUEUE_NAMES.BankTransfer, {
+				reference: transactionReference,
+				accountNumber,
+				bankCode,
+				amount: amount.toString(),
+			})
+
+			return {
+				reference: transactionReference,
+				status: "PROCESSING",
+				message: "Transfer is being processed and will be completed shortly",
 			}
 		}
+
+		// Finalize as SUCCESS for internal transfers
+		await this.transferRepo.updateTransactionStatus(transactionReference, TransactionStatus.SUCCESS)
 
 		return {
 			reference: transactionReference,
 			status: "SUCCESS",
 			message: "Transfer completed successfully",
 		}
-	}
-
-	private async verifyPin(user: any, pin: string): Promise<boolean> {
-		if (!user.pinHash) return false
-		return bcrypt.compare(pin, user.pinHash)
 	}
 }

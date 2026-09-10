@@ -1,6 +1,6 @@
 import { injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
-import type { Decimal } from "@/types/base"
+import type { Decimal } from "@/types/prisma"
 
 export interface IBankAdapter {
 	transferFunds(

@@ -10,6 +10,7 @@ export interface IWalletRepository {
 	findById(walletId: string): Promise<any | null>
 	findByType(type: WalletType): Promise<any | null>
 	topUp(userId: string, amount: Decimal): Promise<any>
+	executeTransitClaim(phone: string, userId: string, amount: Decimal): Promise<any>
 }
 
 export interface IWalletService {

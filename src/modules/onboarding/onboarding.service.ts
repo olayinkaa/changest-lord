@@ -10,16 +10,11 @@ import type { IAuthUtils } from "@/modules/auth/auth.types"
 import { AUTH_TYPES } from "@/modules/auth/auth.types"
 import { ErrorType } from "@/types/enum"
 import { mapStepToNextScope } from "@/utils/helper"
-import {
-	BUSINESS_TYPES,
-	type IBusinessTypeService,
-} from "../business-type/business-type.types"
+import { BUSINESS_TYPES, type IBusinessTypeService } from "../business-type/business-type.types"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
+import { type IWalletRepository, WALLET_TYPES } from "../wallet/wallet.types"
 import { EMAIL_TYPES, type IEmailProducer } from "../workers/email/email.types"
-import type {
-	OnboardingBusinessProfileRequest,
-	OnboardingProfileRequest,
-} from "./onboarding.dto"
+import type { OnboardingBusinessProfileRequest, OnboardingProfileRequest } from "./onboarding.dto"
 import type { IOnboardingService } from "./onboarding.type"
 
 @injectable()
@@ -37,6 +32,8 @@ export class OnboardingService implements IOnboardingService {
 		private readonly awsSesService: IAwsSesService,
 		@inject(EMAIL_TYPES.Producer)
 		private readonly emailProducer: IEmailProducer,
+		@inject(WALLET_TYPES.Repository)
+		private readonly walletRepo: IWalletRepository,
 	) {}
 
 	/**
@@ -51,8 +48,7 @@ export class OnboardingService implements IOnboardingService {
 			// User exists AND has completed onboarding → block the new sign-up.
 			if (existing?.kyc?.completedProfile) {
 				throw new ConflictException("This phone number is already registered", {
-					phoneNumber:
-						"This phone number is already registered and has completed onboarding",
+					phoneNumber: "This phone number is already registered and has completed onboarding",
 				})
 			}
 
@@ -67,11 +63,7 @@ export class OnboardingService implements IOnboardingService {
 				scope: nextScope,
 			}
 
-			const resumptionToken = this.authUtils.generateToken(
-				payload,
-				config.JWT_ONBOARDING_SECRET,
-				"15m",
-			)
+			const resumptionToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
 
 			return {
 				description: "Resuming incomplete registration",
@@ -90,11 +82,7 @@ export class OnboardingService implements IOnboardingService {
 			scope: OnboardingScopes.PROFILE,
 		}
 
-		const onboardingProfileToken = this.authUtils.generateToken(
-			newPayload,
-			config.JWT_ONBOARDING_SECRET,
-			"15m",
-		)
+		const onboardingProfileToken = this.authUtils.generateToken(newPayload, config.JWT_ONBOARDING_SECRET, "15m")
 
 		return {
 			description: "Phone number validated successfully.",
@@ -109,10 +97,7 @@ export class OnboardingService implements IOnboardingService {
 	 * @param data
 	 * @returns
 	 */
-	async onboardUserProfile(
-		onboardingUser: IOnboardingUser,
-		data: OnboardingProfileRequest,
-	) {
+	async onboardUserProfile(onboardingUser: IOnboardingUser, data: OnboardingProfileRequest) {
 		if (data.email) {
 			const existingEmailUser = await this.userRepo.findByEmail(data.email)
 			if (existingEmailUser) {
@@ -129,10 +114,7 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		// 2. Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(
-			updatedUser.onboardingStep,
-			updatedUser.userType ?? undefined,
-		)
+		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType ?? undefined)
 
 		// 3. Assemble structural JWT target payload parameters
 		const payload = {
@@ -143,11 +125,7 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		// 4. Generate the continuous sequential temporary transaction token
-		const stepToken = this.authUtils.generateToken(
-			payload,
-			config.JWT_ONBOARDING_SECRET,
-			"15m",
-		)
+		const stepToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
 
 		return {
 			description: "Profile details registered successfully.",
@@ -163,21 +141,15 @@ export class OnboardingService implements IOnboardingService {
 	 * @param data
 	 * @returns
 	 */
-	async onboardBusinessProfile(
-		onboardingUser: IOnboardingUser,
-		data: OnboardingBusinessProfileRequest,
-	) {
+	async onboardBusinessProfile(onboardingUser: IOnboardingUser, data: OnboardingBusinessProfileRequest) {
 		await this.businessTypeService.getBusinessTypeById(data.businessTypeId)
-		// 1. Process profile registration database logic
+		// Process profile registration database logic
 		const updatedUser = await this.userRepo.updateBusinessProfile(onboardingUser.id, data)
 
-		// 2. Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(
-			updatedUser.onboardingStep,
-			updatedUser.userType ?? undefined,
-		)
+		// Compute the correct next progressive security access scope
+		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType ?? undefined)
 
-		// 3. Assemble structural JWT target payload parameters
+		// Assemble structural JWT target payload parameters
 		const payload = {
 			userId: updatedUser.id,
 			phone: updatedUser.phone,
@@ -185,12 +157,8 @@ export class OnboardingService implements IOnboardingService {
 			scope: nextScope,
 		}
 
-		// 4. Generate the continuous sequential temporary transaction token
-		const stepToken = this.authUtils.generateToken(
-			payload,
-			config.JWT_ONBOARDING_SECRET,
-			"15m",
-		)
+		// Generate the continuous sequential temporary transaction token
+		const stepToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
 
 		return {
 			description: "Business details registered successfully.",
@@ -217,11 +185,20 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		// 3. Update pin and userId5 together
-		const updatedUser = await this.userRepo.updateUserPinAndUserId5(
-			userId,
-			pinHash,
-			userId5,
-		)
+		const updatedUser = await this.userRepo.updateUserPinAndUserId5(userId, pinHash, userId5)
+
+		// Automatically create the user wallet upon PIN completion
+		// We check for an existing wallet first to avoid duplicate errors
+		const existingWallet = await this.walletRepo.findByUserId(userId)
+		if (!existingWallet) {
+			await this.walletRepo.createWallet(userId)
+		}
+
+		// Claim any pending transit funds sent to this phone number during onboarding
+		const pendingCredits = await this.userRepo.findPendingTransitCredits(updatedUser.phone)
+		for (const credit of pendingCredits) {
+			await this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount)
+		}
 
 		// Generate an access token for automatic login/dashboard access
 		const payload = {
@@ -230,11 +207,7 @@ export class OnboardingService implements IOnboardingService {
 			userType: updatedUser.userType,
 		}
 
-		const accessToken = this.authUtils.generateToken(
-			payload,
-			config.JWT_TOKEN_SECRET,
-			config.JWT_TOKEN_EXPIRES_IN,
-		)
+		const accessToken = this.authUtils.generateToken(payload, config.JWT_TOKEN_SECRET, config.JWT_TOKEN_EXPIRES_IN)
 
 		const refreshToken = this.authUtils.generateToken(
 			payload,
@@ -246,7 +219,7 @@ export class OnboardingService implements IOnboardingService {
 			throw new Error("User email is required to send welcome notification.")
 		}
 
-		// 5. Trigger the onboarding welcome email background task
+		// Trigger the onboarding welcome email background task
 		await this.emailProducer.sendEmail({
 			to: updatedUser.email,
 			subject: "Welcome to MyChange. 👋",
@@ -285,21 +258,15 @@ export class OnboardingService implements IOnboardingService {
 		const isDisposable = mailboxValidation?.Evaluations?.IsDisposable?.ConfidenceVerdict
 
 		if (isDisposable === "HIGH") {
-			throw new BadRequestException(
-				"Disposable or temporary email addresses are not allowed",
-				{
-					email: "Please use a permanent, valid email address",
-				},
-			)
+			throw new BadRequestException("Disposable or temporary email addresses are not allowed", {
+				email: "Please use a permanent, valid email address",
+			})
 		}
 
 		if (confidenceVerdict === "LOW" || confidenceVerdict === "NONE") {
-			throw new BadRequestException(
-				"The provided email address appears to be invalid or undeliverable",
-				{
-					email: "Invalid email address format or mailbox",
-				},
-			)
+			throw new BadRequestException("The provided email address appears to be invalid or undeliverable", {
+				email: "Invalid email address format or mailbox",
+			})
 		}
 
 		return {

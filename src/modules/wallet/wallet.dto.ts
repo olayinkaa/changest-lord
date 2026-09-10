@@ -4,7 +4,7 @@ import type { Decimal } from "./wallet.types"
 export class TopUpWalletDto {
 	@IsString()
 	@IsNotEmpty()
-	userId: string
+	identifier: string
 
 	@IsNumber()
 	@IsNotEmpty()

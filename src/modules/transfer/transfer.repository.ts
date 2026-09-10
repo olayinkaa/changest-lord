@@ -28,11 +28,12 @@ export class TransferRepository implements ITransferRepository {
 
 	public async executeDoubleEntryTransfer(
 		userId: string,
-		recipientId: string | null,
+		recipientUserId: string | null,
 		amount: Prisma.Decimal,
 		fee: Prisma.Decimal,
 		reference: string,
 		transactionType: TransactionType,
+		recipientAccount?: string,
 	): Promise<string> {
 		const totalDebit = amount.add(fee)
 
@@ -42,7 +43,7 @@ export class TransferRepository implements ITransferRepository {
 				data: {
 					reference,
 					transactionType,
-					description: `Transfer ${transactionType} from ${userId} to ${recipientId || "Bank"}`,
+					description: `Transfer ${transactionType} from ${userId} to ${recipientUserId || recipientAccount || "Bank"}`,
 				},
 			})
 
@@ -52,6 +53,9 @@ export class TransferRepository implements ITransferRepository {
 			})
 
 			if (!senderWallet) throw new Error("Sender wallet not found")
+			if (senderWallet.balance.lt(totalDebit)) {
+				throw new Error("Insufficient funds to complete the transfer")
+			}
 
 			await tx.wallet.update({
 				where: { id: senderWallet.id },
@@ -70,18 +74,24 @@ export class TransferRepository implements ITransferRepository {
 
 			// 3. Credit Recipient (or Transit Wallet)
 			let recipientWalletId: string
-			if (transactionType === TransactionType.TRANSFER_BANK) {
+			let userWallet = null
+
+			if (recipientUserId) {
+				userWallet = await tx.wallet.findFirst({
+					where: { userId: recipientUserId },
+				})
+			}
+
+			if (userWallet) {
+				recipientWalletId = userWallet.id
+			} else if (transactionType === TransactionType.TRANSFER_BANK || transactionType === TransactionType.GIVE_CHANGE) {
 				const transitWallet = await tx.wallet.findFirst({
 					where: { userId: null, type: "TRANSIT", currency: "NGN" },
 				})
 				if (!transitWallet) throw new Error("Transit wallet not configured")
 				recipientWalletId = transitWallet.id
 			} else {
-				const recWallet = await tx.wallet.findFirst({
-					where: { userId: recipientId },
-				})
-				if (!recWallet) throw new Error("Recipient wallet not found")
-				recipientWalletId = recWallet.id
+				throw new Error("Recipient wallet not found")
 			}
 
 			await tx.wallet.update({
@@ -94,7 +104,7 @@ export class TransferRepository implements ITransferRepository {
 					walletId: recipientWalletId,
 					amount: amount,
 					type: "CREDIT",
-					description: `Credit for ${transactionType} - ${reference}`,
+					description: `Credit for ${transactionType} - ${reference}${!recipientUserId ? ` (Pending Claim for ${recipientAccount || "Unknown"})` : ""}`,
 				},
 			})
 
@@ -176,6 +186,13 @@ export class TransferRepository implements ITransferRepository {
 			})
 
 			return ledgerTx.reference
+		})
+	}
+
+	public async updateTransactionStatus(reference: string, status: any) {
+		await prisma.ledgerTransaction.update({
+			where: { reference },
+			data: { status },
 		})
 	}
 }

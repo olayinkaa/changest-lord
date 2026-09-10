@@ -60,3 +60,11 @@ enum WalletType {
   TRANSIT
   SETTLEMENT
 }
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  PARTIAL_SUCCESS
+  REVERSED
+}

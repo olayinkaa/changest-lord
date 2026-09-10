@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
-import { Prisma } from "@/generated/prisma/client"
+import { Prisma } from "@/types/prisma"
 import { generateTransactionReference } from "@/utils/reference-generator"
 import { type ITransferRepository, TRANSFER_TYPES } from "../transfer/transfer.types"
 import { type IWalletRepository, WALLET_TYPES } from "../wallet/wallet.types"
