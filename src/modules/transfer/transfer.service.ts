@@ -1,11 +1,10 @@
 import bcrypt from "bcryptjs"
 import { inject, injectable } from "inversify"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
+import type { IBankAdapter } from "@/adapters/payment/bank.adapter"
 import { CHARGE_TYPES, type IChargeConfigService } from "@/common/charge/charge.type"
-import {
-	BadRequestException,
-	HttpException,
-	UnauthorizedException,
-} from "@/core/errors/exceptions"
+import { pinoLogger } from "@/config/pino-logger"
+import { BadRequestException, HttpException, NotFoundException, UnauthorizedException } from "@/core/errors/exceptions"
 import { Prisma, TransactionType } from "@/generated/prisma/client"
 import { generateTransactionReference } from "@/utils/reference-generator"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
@@ -32,16 +31,19 @@ export class TransferServiceImpl implements ITransferService {
 		private chargeConfig: IChargeConfigService,
 		@inject(USER_TYPES.Repository)
 		private userRepo: IUserRepository,
+		@inject(ADAPTER_TYPES.BankAdapter)
+		private bankAdapter: IBankAdapter,
 	) {}
 
 	public async searchRecipients(query: string): Promise<UserResponseDto> {
+		if (!query) {
+			throw new BadRequestException("Query parameter 'phoneOrUseId' is required")
+		}
+
 		const user = await this.transferRepo.searchRecipients(query)
 
 		if (!user) {
-			throw new HttpException(
-				404,
-				"No account matches the ID. check the number and try again",
-			)
+			throw new NotFoundException("No account matches the ID. check the number and try again")
 		}
 
 		return {
@@ -49,19 +51,18 @@ export class TransferServiceImpl implements ITransferService {
 			firstName: user.firstName || "",
 			lastName: user.lastName || "",
 			phone: user.phone,
-			virtualAccountNo: user.virtualAccountNo || "",
+			virtualAccountNo: user.userId5 || "",
 		}
 	}
 
-	public async validateAmount(
-		userId: string,
-		dto: ValidateAmountDto,
-	): Promise<ValidateAmountResponseDto> {
+	public async validateAmount(userId: string, dto: ValidateAmountDto): Promise<ValidateAmountResponseDto> {
 		const { transactionType, amount } = dto
 		const decimalAmount = new Prisma.Decimal(amount)
 
 		const { fee } = await this.chargeConfig.calculateFee(transactionType, decimalAmount)
 		const totalDebit = decimalAmount.add(fee)
+
+		pinoLogger.info({ decimalAmount, fee, totalDebit })
 
 		const wallet = await this.walletRepo.findByUserId(userId)
 		if (!wallet || wallet.balance.lt(totalDebit)) {
@@ -76,25 +77,14 @@ export class TransferServiceImpl implements ITransferService {
 		}
 	}
 
-	public async executeTransfer(
-		userId: string,
-		dto: ExecuteTransferDto,
-	): Promise<TransferResponseDto> {
-		const {
-			transactionType,
-			recipientId,
-			amount: rawAmount,
-			pin,
-			reference,
-			bankDetails,
-		} = dto
+	public async executeTransfer(userId: string, dto: ExecuteTransferDto): Promise<TransferResponseDto> {
+		const { transactionType, recipientId, amount: rawAmount, pin, reference, bankDetails } = dto
 		const amount = new Prisma.Decimal(rawAmount)
 
 		// 1. Security: Check for blocked account
 		const user = await this.userRepo.findUser(userId)
 		if (!user) throw new UnauthorizedException("User not found")
-		if (user.isBlocked)
-			throw new UnauthorizedException("Your account is blocked. Please contact support.")
+		if (user.isBlocked) throw new UnauthorizedException("Your account is blocked. Please contact support.")
 
 		// 2. PIN Verification
 		const isPinCorrect = await this.verifyPin(user, pin)
@@ -137,12 +127,22 @@ export class TransferServiceImpl implements ITransferService {
 
 		// 5. Outbound Bank Trigger
 		if (transactionType === TransactionType.TRANSFER_BANK && bankDetails) {
-			// await this.bankAdapter.transferFunds(
-			//   bankDetails.accountNumber,
-			//   bankDetails.bankCode,
-			//   amount,
-			//   reference,
-			// );
+			const bankResult = await this.bankAdapter.transferFunds(
+				bankDetails.accountNumber,
+				bankDetails.bankCode,
+				amount,
+				reference,
+			)
+			if (bankResult.status === "FAILED") {
+				pinoLogger.error(
+					{
+						reference: transactionReference,
+						errorMessage: bankResult.errorMessage,
+					},
+					"Bank transfer trigger failed. Transaction is recorded in ledger but outbound funds failed.",
+				)
+				// In a real system, we might trigger a reconciliation job or automatic refund here.
+			}
 		}
 
 		return {

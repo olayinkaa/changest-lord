@@ -19,10 +19,7 @@ export class TransferRepository implements ITransferRepository {
 		})
 	}
 
-	public async updateUserSecurity(
-		userId: string,
-		data: { pinAttempts: number; isBlocked: boolean },
-	) {
+	public async updateUserSecurity(userId: string, data: { pinAttempts: number; isBlocked: boolean }) {
 		return prisma.user.update({
 			where: { id: userId },
 			data,
@@ -122,6 +119,61 @@ export class TransferRepository implements ITransferRepository {
 					},
 				})
 			}
+
+			return ledgerTx.reference
+		})
+	}
+
+	public async executeSettlementSweep(amount: Prisma.Decimal, reference: string): Promise<string> {
+		return prisma.$transaction(async (tx) => {
+			// 1. Header
+			const ledgerTx = await tx.ledgerTransaction.create({
+				data: {
+					reference,
+					transactionType: TransactionType.SETTLEMENT_SWEEP,
+					description: `Settlement sweep of funds from SYSTEM_FEE to SETTLEMENT wallet`,
+				},
+			})
+
+			// 2. Debit SYSTEM_FEE
+			const feeWallet = await tx.wallet.findFirst({
+				where: { userId: null, type: "SYSTEM_FEE", currency: "NGN" },
+			})
+			if (!feeWallet) throw new Error("SYSTEM_FEE wallet not configured")
+
+			await tx.wallet.update({
+				where: { id: feeWallet.id },
+				data: { balance: { decrement: amount } },
+			})
+			await tx.ledger.create({
+				data: {
+					ledgerTransactionId: ledgerTx.id,
+					walletId: feeWallet.id,
+					amount: amount.mul(-1),
+					type: "DEBIT",
+					description: `Sweep debit: ${reference}`,
+				},
+			})
+
+			// 3. Credit SETTLEMENT
+			const settlementWallet = await tx.wallet.findFirst({
+				where: { userId: null, type: "SETTLEMENT", currency: "NGN" },
+			})
+			if (!settlementWallet) throw new Error("SETTLEMENT wallet not configured")
+
+			await tx.wallet.update({
+				where: { id: settlementWallet.id },
+				data: { balance: { increment: amount } },
+			})
+			await tx.ledger.create({
+				data: {
+					ledgerTransactionId: ledgerTx.id,
+					walletId: settlementWallet.id,
+					amount: amount,
+					type: "CREDIT",
+					description: `Sweep credit: ${reference}`,
+				},
+			})
 
 			return ledgerTx.reference
 		})

@@ -1,7 +1,9 @@
 import { ContainerModule } from "inversify"
 import { AdaptersModule } from "@/adapters/adapters.module"
+import { CronModule } from "@/core/cron/cron.module"
 import { EmailModule } from "@/modules/workers/email/email.module"
 import { EmailProcessor } from "@/modules/workers/email/email.processor"
+import { SettlementWorkerContainerModules } from "@/modules/workers/settlement/settlement.worker.module"
 import { WORKER_PROCESSOR_TAG } from "./worker.bootstrap"
 
 // Each processor binds itself under the shared multi-inject tag so
@@ -17,6 +19,8 @@ export const WorkerContainerModules = [
 	AdaptersModule,
 	EmailModule,
 	WorkerBindings,
+	...SettlementWorkerContainerModules,
+	CronModule,
 ] as const
 
 export { WORKER_PROCESSOR_TAG }

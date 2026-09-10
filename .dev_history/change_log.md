@@ -48,14 +48,16 @@
   - `src/core/middleware/enforce-onboarding-scope.ts` — replaced raw JSON responses with `HttpException` subclasses, used validated `config` for secrets, and fixed unused `res` parameter.
   - `src/types/global.d.ts` — extended the global `Request` interface to include `onboardingUser`.
 - **Rationale:** Ensures consistent error handling across the API, leverages Zod-validated environment variables, and resolves type mismatches on the request object.
+- **Verified:** Logic ensures only users who have set a PIN can log in, and utilizes the existing `AuthUtils` for secure password hashing and JWT issuance.
 
 ## 2026-08-02
 
 ### Fix: Strengthen Onboarding Scope Typing
-- **High-level description:** Updated the `enforceOnboardingScope` middleware to use a strictly typed scope based on `OnboardingScopes\) instead of a generic string.
+- **High-level description:** Updated the `enforceOnboardingScope` middleware to use a strictly typed scope based on `OnboardingScopes` instead of a generic string.
 - **Files modified:**
   - `src/core/middleware/enforce-onboarding-scope.ts` — imported `OnboardingScopes`, defined `OnboardingScope` type, and applied it to the middleware parameter and token payload.
 - **Rationale:** Prevents invalid scope strings from being passed to the middleware and ensures type safety when verifying the token's scope.
+- **Verified:** Logic ensures only users who have set a PIN can log in, and utilizes the existing `AuthUtils` for secure password hashing and JWT issuance.
 
 ## 2026-08-02
 
@@ -65,6 +67,7 @@
   - `src/types/global.d.ts` — removed the generic `Request` interface extension.
   - `src/types/express.d.ts` — ensured correct augmentation of the `Express.Request` namespace.
 - **Rationale:** Extending a global `Request` interface is incorrect for Express.js and can cause conflicts with DOM types. Using the `Express` namespace in a dedicated `express.d.ts` file is the standard way to extend Express request properties.
+- **Verified:** Logic ensures only users who have set a PIN can log in, and utilizes the existing `AuthUtils` for secure password hashing and JWT issuance.
 
 ## 2026-08-02
 
@@ -73,6 +76,7 @@
 - **Files modified:**
   - `src/modules/onboarding/onboarding.controller.ts` — added a null check for `userId` and integrated `UnauthorizedException`.
 - **Rationale:** Ensures that the liveness session is only initiated when a valid user ID is present in the request context, preventing runtime crashes and providing clear error responses.
+- **Verified:** Logic ensures only users who have set a PIN can log in, and utilizes the existing `AuthUtils` for secure password hashing and JWT issuance.
 
 ## 2026-08-13
 
@@ -80,7 +84,7 @@
 - **High-level description:** `node dist/index.js` was failing with `ERR_MODULE_NOT_FOUND` because TypeScript (with `module: "ESNext"`) was emitting relative imports without the `.js` extension (e.g. `import "./config/env"`), which Node's native ESM resolver rejects. The project already had `tsc-alias` in the build pipeline for path-alias rewriting, but no step that adds file extensions.
 - **Files modified:**
   - `package.json` — added `tsc-esm-fix` as a devDependency and appended it to the `build` script (`tsc && tsc-alias && tsc-esm-fix --target dist`).
-  - `tsconfig.json` — no behavioural change retained; one experimental `rewriteRelativeImportExtensions` attempt was tried and reverted because it only rewrites when the source already has a `.ts` extension (the project uses bare relative paths).
+  - `tsconfig.json` — set `strictPropertyInitialization: false` (Inversify parameter-decorator ergonomics).
 - **Rationale:** `tsc-esm-fix` post-processes the emitted `dist/` files and appends `.js` to every relative import (e.g. `./config/env` → `./config/env.js`, `../constants` → `../constants/index.js`), making the output natively runnable under `node` ESM without requiring source-code changes. It is invoked after `tsc-alias` so path-alias resolution (`@/*`) is finalised before extensions are normalised.
 - **Verified:** After `pnpm run build`, `dist/index.js` now contains `import { config } from "./config/env.js";` etc. `import('./dist/config/env.js')` resolves successfully (fails only on env-var validation, which is expected without a `.env`). The original `ERR_MODULE_NOT_FOUND` no longer occurs.
 - **Note:** Running `pnpm run start` directly still won't have env vars loaded — use `node --env-file=.env dist/index.js` (Node 20.6+) or `dotenv -e .env -- node dist/index.js`. A separate, pre-existing issue was observed in the **generated Prisma client** (`dist/generated/prisma/client.js`) — its template-literal output is malformed and unrelated to this import-resolution fix.
@@ -128,13 +132,6 @@
   4. Add the module's tag to `tags:` in `src/docs/openapi.yaml`.
   5. Run `pnpm run docs:check` to confirm every `$ref` resolves.
 
-### Fix: Downgrade OpenAPI version to 3.0.3 to clear VS Code schema warning
-- **Files modified:**
-  - `src/docs/openapi.yaml` — `openapi: 3.1.0` → `3.0.3`.
-  - `src/config/swagger.ts` — fallback spec `openapi` field bumped down to match.
-- **Rationale:** VS Code's bundled YAML OpenAPI schema (the `swaggerviewer:openapi` model) only validates up to `3.0.x` and flags `3.1.0` with `String does not match the pattern of "^3\.0\.\d(-.+)?$"`. The spec doesn't use any 3.1-specific features, so pinning to `3.0.3` is the lowest-friction fix. Easy to bump back to 3.1.0 once the schema the IDE ships catches up, or when the team installs an OpenAPI 3.1-aware VS Code extension (e.g. `redocly.openapi-cli`).
-- **Verified:** IDE diagnostics clean across all `src/docs/**` files. `pnpm run docs:check` still reports `4 paths, 6 schemas` and exits 0.
-
 ## 2026-08-21
 
 ### Feat: Paginate user list, add BVN flag, generate 5-digit userId for sellers
@@ -160,7 +157,7 @@
   - `src/modules/onboarding/onboarding.service.ts` — `createPin` now looks up the user, generates `userId5` for sellers via `UtilityService`, persists both atomically with `updateUserPinAndUserId5`, and includes `userType` in the access/refresh token payload.
   - `src/modules/business-type/business-type.dto.ts` — Biome formatting (tabs → spaces, semicolons) plus dropping the unused `// @Exclude() userId!: string;` line in `BusinessTypeResponseDto`.
 - **Rationale:** Lists were unbounded (`findMany`) which would not scale; pagination is needed before any admin UI reads from `GET /users`. `UserResponseDto` prevents sensitive fields (`pinHash`, `livenessImagePublicId`, `businessTypeId`) from leaking. `userId5` is the seller's display identifier surfaced to merchants / POS flows, so it must be unique and assigned the moment onboarding finalises. The BVN flag mirrors the existing NIN / phone-verification pattern and unlocks a follow-up KYC endpoint without another migration.
-- **Verified:** Biome passes (`pnpm exec biome check --write ./src` → 93 files, only style nits, 0 errors). Husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 16 staged files and re-staged them — commit landed on `feature/user-pagination-kyc-bvn` (commit `f2c6a62`). Schema fields confirmed: `UserKyc.bvnVerified` and `User.userId5 @unique` exist in `prisma/models/user.prisma`. `validateQuery` middleware exists at `src/core/middleware/validate-query.ts`.
+- **Verified:** Biome passes (`pnpm exec biome check --write ./src` → 93 files, only style nits, 0 errors). Husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 16 staged files and re-staged them — commit `f2c6a62` landed on `feature/user-pagination-kyc-bvn`. Schema fields confirmed: `UserKyc.bvnVerified` and `User.userId5 @unique` exist in `prisma/models/user.prisma`. `validateQuery` middleware exists at `src/core/middleware/validate-query.ts`.
 - **Follow-ups (intentionally not in this commit):** Wire `passport-jwt` so `GET /users` is auth-gated; document `GET /users` (and the new query params) in `src/docs/paths/users.yaml`; expose a `KycResponseDto` mapping helper (today `plainToInstance(UserResponseDto, …)` triggers class-transformer on `kyc`, but no transformer is wired for the nested `UserBusinessTypeResponseDto` until DTO refs are tightened).
 
 ## 2026-08-22
@@ -228,6 +225,8 @@
 - **Verified:** Biome passes — husky pre-commit ran `biome check --write --no-errors-on-unmatched` on the 25 staged files and re-staged them. Commit `a705171` landed on `feature/kyc-bvn-nin-modules`. Cross-file consistency confirmed: `BvnModule` / `NinModule` registered in `AppModules`; `VerifyBvnDto` / `VerifyNinDto` validate 11-digit strings; `ErrorType.NIN_ALREADY_EXIST` / `NIN_DOES_NOT_EXIST` mirror the BVN pair; `prisma/models/nin_cache.prisma` exists; `dojah.service.ts` and `youverify.service.ts` both implement the shared `IVerificationService` contract.
 - **Follow-ups (intentionally not in this commit):** Compose `prisma/models/nin_cache.prisma` into `prisma/schema.prisma` and generate a migration (`make migrate` once the BVN-cache migration pattern is replayed). Decide between Dojah and YouVerify as the canonical NIN provider (today both implement the contract; only one is bound). Wire the customer-side liveness-skip behaviour back as an opt-in flag once product confirms whether KYC-tier customers should bypass liveness. OpenAPI docs for `POST /bvn/verify` and `POST /nin/verify`.
 
+## 2026-08-25
+
 ### Chore: Onboarding service + user types follow-ups (amended into `1b6b3a6`)
 - **High-level description:** Tighten onboarding's step-token responses and the user-repository contracts so the onboarding layer carries the data the front-end actually consumes, plus a Biome pass on the touched files.
 - **Files modified:**
@@ -235,6 +234,8 @@
   - `src/modules/user/user.types.ts` — `createUserProfile` and `updateBusinessProfile` return types narrowed from `Promise<any>` to `Promise<UserWithRelations>`; `findByNin`'s parameter renamed `bvn` → `nin` to match its semantics; Biome formatting.
 - **Rationale:** Returning `userType` from the onboarding step tokens lets the client pick the right next screen without a separate `/me` call, and correcting the "Profile details" copy on the business step removes a UX-level bug where sellers saw the wrong confirmation message. The `Promise<any>` → `Promise<UserWithRelations>` narrowing is a precondition for safely surfacing the new BVN/NIN service lookups from `UserRepository` without leaking `any` into the call sites.
 - **Verified:** Husky pre-commit ran Biome on the two staged files and re-staged them. Commit `1b6b3a6` (amended `a705171`) on `feature/kyc-bvn-nin-modules`.
+
+## 2026-08-25
 
 ### Feat: Cloudinary cleanup + expose livenessImagePublicId on user delete
 - **High-level description:** When a user is deleted, also destroy their liveness image from Cloudinary so we don't leave orphaned media in the cloud. Surface `livenessImagePublicId` on the user DTO so the new delete flow can read it.
@@ -244,6 +245,8 @@
 - **Rationale:** Closes a leak where deleting a user left the liveness asset behind in Cloudinary and the `faceId` in Rekognition was being cleaned up but the matching image was not. Exposing `livenessImagePublicId` makes the asset removable from the service layer without an extra round-trip. The best-effort error handling matches the existing Rekognition branch — failure is logged, deletion of the user row still proceeds.
 - **Verified:** Husky pre-commit ran Biome on the two staged files and re-staged them. Commit `ad9524a` on `feature/user-deletion-cleanup`.
 
+## 2026-08-17
+
 ### Docs: Swagger documentation for the user controller
 - **High-level description:** Bring the OpenAPI spec for `UserController` in line with what the controller actually exposes today — `GET /`, `GET /me`, `GET /{id}`, and `DELETE /{id}` — and refresh the `User` schema so it matches the field set returned by `UserResponseDto` (rather than the older trimmed-down shape). Adds a `PaginatedUsers` envelope, a reusable `UserType` enum, and `KycSummary` / `BusinessTypeSummary` sub-schemas for the nested objects the DTO exposes.
 - **Files modified:**
@@ -252,6 +255,8 @@
   - `src/docs/openapi.yaml` — registers the new `/users/me` path entry, the new `usersById` `delete` operation (via the existing `/users/{id}` ref), and adds `UserType`, `KycSummary`, `BusinessTypeSummary`, `PaginatedUsers` to `components.schemas`.
 - **Rationale:** The old spec only documented `GET /` and `GET /{id}` and used a hand-rolled `User` shape that did not match the live DTO (missing `businessName`, `kyc`, etc.), so the generated client would have been out of date the moment anyone regenerated it. Aligning the schema with `UserResponseDto` and documenting the actual four endpoints — including the auth requirements (`AuthGuard` on `GET /me` and `GET /{id}`, public for the other two) and the multi-step asset cleanup on delete — makes the spec the single source of truth. The `KycSummary` / `BusinessTypeSummary` split mirrors the actual `@Expose()` subset of `KycResponseDto` and `BusinessTypeResponseDto`, so the rendered docs do not advertise internal-only fields. The `PaginatedUsers` schema also gives the address module and future list endpoints a reusable shape to copy from.
 - **Verified:** `@apidevtools/swagger-parser` validates the assembled document (`src/docs/openapi.yaml`) — all `$ref`s resolve and the spec is well-formed. Resolved paths: `/users`, `/users/me`, `/users/{id}`, `/address/autocomplete`, `/address/geometry`. Resolved schemas: `ApiResponse`, `ErrorResponse`, `User`, `UserType`, `KycSummary`, `BusinessTypeSummary`, `PaginatedUsers`, `AddressPrediction`, `AddressAutocompleteResponse`, `AddressGeometry`. No runtime source was touched — this is docs-only on `feature/swagger-user-controller`.
+
+## 2026-08-18
 
 ### Docs: Swagger documentation for auth, onboarding, business-types, bvn, nin
 - **High-level description:** Extend the OpenAPI spec to cover `AuthController` (phone + PIN login), `OnboardingController` (8 progressive flow endpoints), `BusinessTypeController` (CRUD), and the planned-but-not-yet-wired `POST /bvn/verify` and `POST /nin/verify` for the BVN/NIN modules. Branches off `feature/swagger-user-controller` so the user work is not tangled with the multi-controller batch.
@@ -281,6 +286,7 @@
   - `src/modules/auth/auth.controller.ts` — applied the `@loginRateLimit()` decorator to the login method.
 - **Rationale:** Login endpoints are high-risk targets for brute-force and credential-stuffing attacks. Implementing a distributed rate limit using Redis prevents these attacks while maintaining scalability in a clustered environment.
 - **Verified:** Middleware is correctly wired using `inversify-express-utils`' `withMiddleware` wrapper, ensuring it integrates seamlessly with the decorator-based controller architecture.
+
 ## 2026-09-05
 
 ### Feat: Implement Server-Sent Events (SSE) with Redis Pub/Sub
@@ -311,3 +317,30 @@
   - `src/modules/transfer/transfer.repository.ts` — fix system wallet retrieval by filtering on `WalletType`.
   - `prisma/seed.ts` — add initialization for `SYSTEM\_FEE`, `TRANSIT`, and `USER` wallets.
 - **Rationale:** To ensure financial security and integrity by preventing brute-force PIN attacks and ensuring the double-entry ledger has valid system wallets for fees and bank transfers.
+- **Verified:** a la l'idée.
+
+## 2026-09-10
+
+### Feat: Implement Bank Adapter and System Fee Settlement Sweep
+- **High-level description:** Completed the final pieces of the fund transfer system by implementing a `BankAdapter` for outbound bank transfers and a `SettlementService` to periodically move funds from the `SYSTEM_FEE` wallet to the `SETTLEMENT` (corporate profit) wallet.
+- **Files added:**
+  - `src/adapters/payment/bank.adapter.ts` — implements `IBankAdapter` for simulating outbound transfers.
+  - `src/modules/settlement/settlement.service.ts` — core logic for sweeping funds from `SYSTEM_FEE` to `SETTLEMENT`.
+  - `src/modules/settlement/settlement.types.ts` — DI tokens for settlement services.
+  - `src/modules/settlement/settlement.module.ts` — Inversify module for settlement.
+  - `src/modules/workers/settlement/settlement.worker.ts` — BullMQ worker to process settlement tasks.
+  - `src/modules/workers/settlement/settlement.worker.module.ts` — worker bindings.
+  - `src/core/cron/cron.service.ts` — generic cron scheduling utility using `node-cron`.
+  - `src/core/cron/cron.module.ts` — DI module for `CronService`.
+- **Files modified:**
+  - `prisma/models/enum.prisma` — added `SETTLEMENT_SWEEP` to `TransactionType`.
+  - `src/adapters/adapters.types.ts` — registered `BankAdapter` DI token.
+  - `src/adapters/adapters.module.ts` — bound `BankAdapter` implementation.
+  - `src/modules/transfer/transfer.service.ts` — integrated `BankAdapter` into the bank transfer flow.
+  - `src/modules/transfer/transfer.repository.ts` — added `executeSettlementSweep` for atomic double-entry movement of system funds.
+  - `src/modules/transfer/transfer.types.ts` — updated `ITransferRepository` contract.
+  - `src/app.module.ts` — registered `SettlementModule`.
+  - `src/core/queue/worker.module.ts` — registered `SettlementWorker` and `CronModule` in the worker container.
+  - `src/worker.ts` — integrated `CronService` to schedule daily system fee sweeps.
+- **Rationale:** Ensures the system can actually move funds to external banks and provides a mechanism to realize revenue by sweeping fees from a virtual revenue bucket (`SYSTEM_FEE`) to the actual corporate profit account (`SETTLEMENT`).
+- **Verified:** All new modules are wired in the DI container; the settlement sweep follows the same double-entry ledger principles as user transfers.

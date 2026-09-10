@@ -9,9 +9,7 @@ import type { IUtilityService } from "./utility.type"
 @injectable()
 export class UtilityService implements IUtilityService {
 	private templateCache = new Map<string, string>()
-	constructor(
-		@inject(USER_TYPES.Repository) private readonly userRepo: IUserRepository,
-	) {}
+	constructor(@inject(USER_TYPES.Repository) private readonly userRepo: IUserRepository) {}
 
 	async generateUniqueUserId5(): Promise<string> {
 		let isUnique = false
@@ -38,9 +36,7 @@ export class UtilityService implements IUtilityService {
 		try {
 			const response = await fetch(imageUrl)
 			if (!response.ok) {
-				throw new Error(
-					`Failed to fetch image from URL: ${imageUrl} (Status: ${response.status})`,
-				)
+				throw new Error(`Failed to fetch image from URL: ${imageUrl} (Status: ${response.status})`)
 			}
 			const arrayBuffer = await response.arrayBuffer()
 			return Buffer.from(arrayBuffer)
@@ -61,17 +57,11 @@ export class UtilityService implements IUtilityService {
 	/**
 	 * Loads, caches, replaces variables, and inlines CSS for any HTML email template.
 	 */
-	renderEmailTemplate(
-		templateFileName: string,
-		variables: Record<string, string>,
-	): string {
+	renderEmailTemplate(templateFileName: string, variables: Record<string, string>): string {
 		try {
 			// 1. Read from disk once and store in cache map
 			if (!this.templateCache.has(templateFileName)) {
-				const filePath = path.join(
-					__dirname,
-					`../../../src/templates/${templateFileName}`,
-				)
+				const filePath = path.join(__dirname, `../../../src/templates/${templateFileName}`)
 				const fileContent = fs.readFileSync(filePath, "utf8")
 				this.templateCache.set(templateFileName, fileContent)
 			}

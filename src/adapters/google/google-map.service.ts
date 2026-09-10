@@ -3,11 +3,7 @@ import { injectable } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import type { ApiResponse } from "@/types/base"
-import type {
-	IGoogleMapsService,
-	IPlaceDetails,
-	IPlacePrediction,
-} from "./google-map.type"
+import type { IGoogleMapsService, IPlaceDetails, IPlacePrediction } from "./google-map.type"
 
 const AUTOCOMPLETE_COUNTRY_RESTRICTION = "country:ng"
 
@@ -25,17 +21,14 @@ export class GoogleMapsService implements IGoogleMapsService {
 	//   getPlacePredictions
 	async getPlacePredictions(input: string) {
 		try {
-			const res: ApiResponse<{ predictions: IPlacePrediction[] }> = await this.api.get(
-				"/place/autocomplete/json",
-				{
-					params: {
-						input,
-						key: this.apiKey,
-						// types: "address",
-						components: AUTOCOMPLETE_COUNTRY_RESTRICTION,
-					},
+			const res: ApiResponse<{ predictions: IPlacePrediction[] }> = await this.api.get("/place/autocomplete/json", {
+				params: {
+					input,
+					key: this.apiKey,
+					// types: "address",
+					components: AUTOCOMPLETE_COUNTRY_RESTRICTION,
 				},
-			)
+			})
 			return res?.data
 		} catch (e) {
 			pinoLogger.error({ error: e }, "Error in fetching place predictions")

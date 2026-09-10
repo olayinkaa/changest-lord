@@ -2,12 +2,7 @@ import type { Job, Queue } from "bullmq"
 import { inject, injectable } from "inversify"
 import { BULLMQ_TYPES, type IBullMQQueueService } from "@/adapters/bullmq/types"
 import { pinoLogger } from "@/config/pino-logger"
-import type {
-	IQueueService,
-	JobsOptions,
-	QueueName,
-	QueuePayloadMap,
-} from "./queue.types"
+import type { IQueueService, JobsOptions, QueueName, QueuePayloadMap } from "./queue.types"
 import { TYPES } from "./queue.types" // Make sure QUEUE_NAMES is imported
 import { QUEUE_NAMES } from "./queue-name"
 

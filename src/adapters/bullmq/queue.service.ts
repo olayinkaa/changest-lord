@@ -6,9 +6,7 @@ import type { IBullMQQueueService } from "./types"
 
 @injectable()
 export class BullMQQueueService implements IBullMQQueueService {
-	constructor(
-		@inject(REDIS_TYPES.Service) private readonly redisService: IRedisService,
-	) {}
+	constructor(@inject(REDIS_TYPES.Service) private readonly redisService: IRedisService) {}
 
 	getQueue(queueName: string, options?: Partial<QueueOptions>): Queue {
 		return new Queue(queueName, {

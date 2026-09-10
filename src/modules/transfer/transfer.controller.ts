@@ -1,12 +1,6 @@
+import type { NextFunction } from "express"
 import { inject } from "inversify"
-import {
-	controller,
-	httpGet,
-	httpPost,
-	principal,
-	queryParam,
-	requestBody,
-} from "inversify-express-utils"
+import { controller, httpGet, httpPost, next, principal, queryParam, requestBody } from "inversify-express-utils"
 import { AuthGuard } from "@/core/guards/auth.guard"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import type { UserPrincipal } from "@/providers/user-principal"
@@ -26,8 +20,8 @@ export class TransferController {
 	) {}
 
 	@httpGet("/search")
-	public async search(@queryParam("query") query: string) {
-		const result = await this.transferService.searchRecipients(query)
+	public async search(@queryParam("phoneOrUseId") phoneOrUseId: string) {
+		const result = await this.transferService.searchRecipients(phoneOrUseId)
 		return ApiResponse.success(result)
 	}
 
@@ -36,17 +30,20 @@ export class TransferController {
 	public async validateAmount(
 		@requestBody() body: ValidateAmountRequest,
 		@principal() authUser: UserPrincipal,
+		@next() nxt: NextFunction,
 	) {
-		const result = await this.transferService.validateAmount(authUser.details.id, body)
-		return ApiResponse.success(result)
+		try {
+			const userId = authUser?.details?.id
+			const result = await this.transferService.validateAmount(userId, body)
+			return ApiResponse.success(result)
+		} catch (error) {
+			nxt(error)
+		}
 	}
 
 	@httpPost("/execute")
 	@validateSchema(ExecuteTransferRequest)
-	public async execute(
-		@requestBody() body: ExecuteTransferRequest,
-		@principal() authUser: UserPrincipal,
-	) {
+	public async execute(@requestBody() body: ExecuteTransferRequest, @principal() authUser: UserPrincipal) {
 		const result = await this.transferService.executeTransfer(authUser.details.id, body)
 		return ApiResponse.success(result)
 	}

@@ -2,10 +2,7 @@ import type { AxiosInstance } from "axios"
 import axios from "axios"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
-import {
-	BadRequestException,
-	ServiceUnavailableException,
-} from "@/core/errors/exceptions"
+import { BadRequestException, ServiceUnavailableException } from "@/core/errors/exceptions"
 import type { ApiResponse } from "@/types/base"
 import { ErrorType } from "@/types/enum"
 import type { IVerificationService } from "../verification.types"
@@ -31,14 +28,11 @@ export class DojaService implements IVerificationService {
 	 */
 	public async verifyNIN(nin: string): Promise<IDojahNinResponse> {
 		try {
-			const res: ApiResponse<Pick<IDojahNinResponse, "entity">> = await this.api.get(
-				"/api/v1/kyc/nin",
-				{
-					params: {
-						nin,
-					},
+			const res: ApiResponse<Pick<IDojahNinResponse, "entity">> = await this.api.get("/api/v1/kyc/nin", {
+				params: {
+					nin,
 				},
-			)
+			})
 			return {
 				provider: "dojah",
 				entity: res.data.entity,
@@ -51,20 +45,15 @@ export class DojaService implements IVerificationService {
 
 				// Handle specific 404 or invalid lookup responses from Dojah
 				if (status === 404 || typeof errorMessage === "string") {
-					throw new BadRequestException(
-						"Your NIN does not exist, please enter a valid NIN",
-						{
-							errorType: ErrorType.NIN_DOES_NOT_EXIST,
-						},
-					)
+					throw new BadRequestException("Your NIN does not exist, please enter a valid NIN", {
+						errorType: ErrorType.NIN_DOES_NOT_EXIST,
+					})
 				}
 
 				// Handle other client-side errors (e.g., bad format, insufficient wallet balance, unauthorized)
 				throw new BadRequestException(errorMessage || "Invalid NIN verification request")
 			}
-			throw new ServiceUnavailableException(
-				"We are unable to verify your NIN now, please try again later",
-			)
+			throw new ServiceUnavailableException("We are unable to verify your NIN now, please try again later")
 		}
 	}
 
@@ -75,14 +64,11 @@ export class DojaService implements IVerificationService {
 	 */
 	public async verifyBVN(bvn: string): Promise<IDojahBvnFullResponse> {
 		try {
-			const res: ApiResponse<Pick<IDojahBvnFullResponse, "entity">> = await this.api.get(
-				"/api/v1/kyc/bvn/full",
-				{
-					params: {
-						bvn,
-					},
+			const res: ApiResponse<Pick<IDojahBvnFullResponse, "entity">> = await this.api.get("/api/v1/kyc/bvn/full", {
+				params: {
+					bvn,
 				},
-			)
+			})
 			// return res.data.entity;
 			return {
 				provider: "dojah",
@@ -92,17 +78,12 @@ export class DojaService implements IVerificationService {
 			pinoLogger.error({ err }, "BVN verification failed")
 			// 1. Extract the exact error string returned by Dojah (e.g., "Invalid BVN")
 			if (err.response) {
-				throw new BadRequestException(
-					"Your BVN does not exist, please enter a valid BVN",
-					{
-						errorType: ErrorType.BVN_DOES_NOT_EXIST,
-					},
-				)
+				throw new BadRequestException("Your BVN does not exist, please enter a valid BVN", {
+					errorType: ErrorType.BVN_DOES_NOT_EXIST,
+				})
 			}
 			// Case 2: Network error, timeout, or Dojah server is down (no response received)
-			throw new ServiceUnavailableException(
-				"We are unable to verify your BVN now, please try again later",
-			)
+			throw new ServiceUnavailableException("We are unable to verify your BVN now, please try again later")
 		}
 	}
 }

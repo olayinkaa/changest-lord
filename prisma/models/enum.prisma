@@ -46,6 +46,7 @@ enum TransactionType {
   TRANSFER_MYCHANGE
   TRANSFER_BANK
   GIVE_CHANGE
+  SETTLEMENT_SWEEP
 }
 
 enum ChargeType {

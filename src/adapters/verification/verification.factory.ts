@@ -4,9 +4,7 @@ import { DojaService } from "./dojah/dojah.service"
 import type { IVerificationService } from "./verification.types"
 import { YouVerifyService } from "./you-verify/youverify.service"
 
-export const VerificationFactory = (
-	_context: interfaces.Context,
-): IVerificationService => {
+export const VerificationFactory = (_context: interfaces.Context): IVerificationService => {
 	const provider = config.VERIFCATION_PROVIDER
 	switch (provider) {
 		case "dojah":

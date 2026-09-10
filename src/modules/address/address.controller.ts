@@ -1,12 +1,6 @@
 import type { NextFunction } from "express"
 import { inject } from "inversify"
-import {
-	BaseHttpController,
-	controller,
-	httpGet,
-	next,
-	queryParam,
-} from "inversify-express-utils"
+import { BaseHttpController, controller, httpGet, next, queryParam } from "inversify-express-utils"
 import { ApiResponse } from "@/utils/http-response"
 import { ADDRESS_TYPES, type IAddressService } from "./address.type"
 
