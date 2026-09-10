@@ -1,5 +1,5 @@
 import type { User } from "@/generated/prisma/client"
-import type { TransactionType } from "@/generated/prisma/enums"
+import type { TransactionStatus, TransactionType } from "@/generated/prisma/enums"
 import type { Decimal } from "@/types/prisma"
 
 export interface UserResponseDto {
