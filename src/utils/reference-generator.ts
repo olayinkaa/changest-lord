@@ -4,6 +4,7 @@ const TYPE_PREFIXES: Record<TransactionType, string> = {
 	TRANSFER_MYCHANGE: "TMB",
 	TRANSFER_BANK: "TBN",
 	GIVE_CHANGE: "GCH",
+	SETTLEMENT_SWEEP: "SSW",
 }
 
 /**
