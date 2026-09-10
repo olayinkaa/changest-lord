@@ -321,6 +321,34 @@ export class UserRepository implements IUserRepository {
 
 	/**
 	 * @param userId
+	 * @param reset
+	 * @returns
+	 */
+	async updatePinAttempts(userId: string, reset: boolean) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				pinAttempts: reset ? 0 : { increment: 1 },
+			},
+		})
+	}
+
+	/**
+	 * @param userId
+	 * @returns
+	 */
+	async blockUser(userId: string) {
+		return prisma.user.update({
+			where: { id: userId },
+			data: {
+				isBlocked: true,
+			},
+		})
+	}
+
+	/**
+	 * @param userId
+	 * @param data
 	 * @returns
 	 */
 	async deleteUser(userId: string): Promise<User> {

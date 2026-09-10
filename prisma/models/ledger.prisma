@@ -1,0 +1,24 @@
+model LedgerTransaction {
+    id              String   @id @default(uuid())
+    reference       String   @unique
+    transactionType TransactionType
+    description     String
+    createdAt       DateTime @default(now())
+    ledgers         Ledger[]
+
+    @@map("ledger_transactions")
+}
+
+model Ledger {
+    id              String   @id @default(uuid())
+    ledgerTransactionId String
+    transaction     LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id])
+    walletId        String
+    wallet          Wallet   @relation(fields: [walletId], references: [id])
+    amount          Decimal  @db.Decimal(18, 2)
+    type            LedgerType
+    description     String
+    createdAt       DateTime @default(now())
+
+    @@map("ledgers")
+}

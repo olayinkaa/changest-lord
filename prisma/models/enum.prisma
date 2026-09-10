@@ -36,3 +36,26 @@ enum OnboardingStep {
   LIVENESS_PASSED // Step 3: Face scan successfully verified by AWS Rekognition
   PIN_COMPLETED // Step 4: Security PIN is set. User is fully onboarded.
 }
+
+enum LedgerType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionType {
+  TRANSFER_MYCHANGE
+  TRANSFER_BANK
+  GIVE_CHANGE
+}
+
+enum ChargeType {
+  FIXED
+  PERCENTAGE
+}
+
+enum WalletType {
+  USER
+  SYSTEM_FEE
+  TRANSIT
+  SETTLEMENT
+}

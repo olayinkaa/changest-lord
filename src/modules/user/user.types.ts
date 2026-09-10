@@ -55,6 +55,8 @@ export interface IUserRepository {
 	updateBvnVerification(userId: string, bvn: string): Promise<any>
 	updateNinVerification(userId: string, nin: string): Promise<any>
 	deleteUser(userId: string): Promise<User>
+	updatePinAttempts(userId: string, reset: boolean): Promise<User>
+	blockUser(userId: string): Promise<User>
 }
 
 export interface IUserService {

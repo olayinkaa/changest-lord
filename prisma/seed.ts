@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker"
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../src/generated/prisma/client"
+import { PrismaClient, WalletType } from "../src/generated/prisma/client"
 
 const adapter = new PrismaPg({
 	connectionString: process.env.DATABASE_URL,
@@ -70,7 +70,25 @@ async function main() {
 		createdBusinessTypes.push(created)
 	}
 
-	// 2. Seed Users
+	// 2. Seed System Wallets
+	console.log("Seeding system wallets...")
+	const systemWalletTypes = [WalletType.SYSTEM_FEE, WalletType.TRANSIT]
+	for (const type of systemWalletTypes) {
+		const exists = await prisma.wallet.findFirst({
+			where: { type, userId: null },
+		})
+		if (!exists) {
+			await prisma.wallet.create({
+				data: {
+					type,
+					userId: null,
+					currency: "NGN",
+				},
+			})
+		}
+	}
+
+	// 3. Seed Users
 	console.log("Seeding users...")
 	const users = []
 	for (let i = 0; i < 20; i++) {
@@ -91,11 +109,10 @@ async function main() {
 		users.push(user)
 	}
 
-	// 3. Seed KYC
-	console.log("Seeding KYC records...")
+	// 4. Seed KYC & User Wallets
+	console.log("Seeding KYC and User wallets...")
 	for (let i = 0; i < users.length; i++) {
 		const user = users[i]
-		// Ensure at least the first user has completedProfile: true
 		const completedProfile = i === 0 || faker.datatype.boolean({ probability: 0.2 })
 
 		await prisma.userKyc.create({
@@ -109,6 +126,14 @@ async function main() {
 				locationVerified: faker.datatype.boolean(),
 				whatsappVerified: faker.datatype.boolean(),
 				pinCreated: completedProfile,
+			},
+		})
+
+		await prisma.wallet.create({
+			data: {
+				userId: user.id,
+				type: WalletType.USER,
+				currency: "NGN",
 			},
 		})
 	}

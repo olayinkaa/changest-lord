@@ -86,6 +86,7 @@ export class UserController extends BaseHttpController {
 				textBody: "This is a test email sent from AWS SES.",
 				htmlBody:
 					"<h1>Test Email</h1><p>If you see this, your AWS SES setup is working!</p>",
+				userId: "",
 			})
 			return result
 		} catch (error) {

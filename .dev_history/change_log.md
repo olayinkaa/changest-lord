@@ -297,3 +297,17 @@
   - `src/modules/sse/sse.module.ts` — Inversify module binding for the SSE slice.
 - **Rationale:** Enables real-time user notifications (e.g. "Email Sent", "Job Finished") that work across multiple server pods. Using `better-sse` reduces the boilerplate for HTTP keep-alives and connection cleanup.
 - **Verified:** Plan validated and implemented according to the architectural blueprint.
+
+## 2026-09-09
+
+### Feat: Implement PIN verification, account blocking and seed system wallets
+- **High-level description:** Completed the security implementation for fund transfers by replacing mocked PIN verification with `bcryptjs`, implementing automatic account blocking after 3 failed attempts, and updating the seed script to initialize mandatory system wallets (SYSTEM\_FEE, TRANSIT).
+- **Files modified:**
+  - `src/modules/wallet/wallet.types.ts` — export `WalletType` for use in repositories.
+  - `src/modules/wallet/wallet.repository.ts` — add `findByType` to support system wallet retrieval.
+  - `src/modules/user/user.types.ts` — add `updatePinAttempts` and `blockUser` to `IUserRepository`.
+  - `src/modules/user/user.repository.ts` — implement `updatePinAttempts` and `blockUser`.
+  - `src/modules/transfer/transfer.service.ts` — integrate `bcryptjs` for real PIN verification, implement account blocking logic, and inject `UserRepository`.
+  - `src/modules/transfer/transfer.repository.ts` — fix system wallet retrieval by filtering on `WalletType`.
+  - `prisma/seed.ts` — add initialization for `SYSTEM\_FEE`, `TRANSIT`, and `USER` wallets.
+- **Rationale:** To ensure financial security and integrity by preventing brute-force PIN attacks and ensuring the double-entry ledger has valid system wallets for fees and bank transfers.
