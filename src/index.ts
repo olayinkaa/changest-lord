@@ -99,7 +99,7 @@ export class App extends Application {
 					ctx: {
 						queues: queueService.getQueues().map((q) => ({
 							queue: q,
-							displayName: q.displayName,
+							displayName: (q as any).name || (q as any).displayName || "Unnamed Queue",
 							type: "bullmq" as const,
 						})),
 					},
