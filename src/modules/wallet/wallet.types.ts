@@ -10,12 +10,36 @@ export interface IWalletRepository {
 	findById(walletId: string): Promise<any | null>
 	findByType(type: WalletType): Promise<any | null>
 	topUp(userId: string, amount: Decimal): Promise<any>
-	executeTransitClaim(phone: string, userId: string, amount: Decimal): Promise<any>
+	executeTransitClaim(phone: string, userId: string, amount: Decimal, ledgerId: string): Promise<any>
+}
+
+export interface TransactionDetailDto {
+	id: string
+	title: string
+	amount: string
+	type: "in" | "out"
+	date: string
+	time: string
+	status: string
+	isFee: boolean
+}
+
+export interface TransactionSectionDto {
+	month: string
+	totalIn: string
+	totalOut: string
+	totalFees: string
+	data: TransactionDetailDto[]
+}
+
+export interface TransactionListResponseDto {
+	sections: TransactionSectionDto[]
 }
 
 export interface IWalletService {
 	getBalance(userId: string): Promise<{ balance: Decimal; currency: string }>
 	topUp(data: TopUpWalletDto): Promise<any>
+	getTransactionHistory(userId: string): Promise<TransactionListResponseDto>
 }
 
 export const WALLET_TYPES = {

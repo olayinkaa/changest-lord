@@ -4,9 +4,11 @@ model LedgerTransaction {
     transactionType TransactionType
     status          TransactionStatus @default(PENDING)
     description     String
+    recipientAccount String?
     createdAt       DateTime @default(now())
     ledgers         Ledger[]
 
+    @@index([recipientAccount])
     @@map("ledger_transactions")
 }
 
@@ -19,6 +21,7 @@ model Ledger {
     amount          Decimal  @db.Decimal(18, 2)
     type            LedgerType
     description     String
+    claimed         Boolean  @default(false)
     createdAt       DateTime @default(now())
 
     @@map("ledgers")

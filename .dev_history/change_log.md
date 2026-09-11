@@ -344,3 +344,49 @@
   - `src/worker.ts` — integrated `CronService` to schedule daily system fee sweeps.
 - **Rationale:** Ensures the system can actually move funds to external banks and provides a mechanism to realize revenue by sweeping fees from a virtual revenue bucket (`SYSTEM_FEE`) to the actual corporate profit account (`SETTLEMENT`).
 - **Verified:** All new modules are wired in the DI container; the settlement sweep follows the same double-entry ledger principles as user transfers.
+
+## 2026-09-11
+
+### Feat: Add isFee flag to transaction history response
+- **High-level description:** Updated the wallet transaction history API to include an `isFee` boolean flag for each entry. This allows the frontend to visually distinguish between the principal amount and the transaction fee.
+- **Files modified:**
+  - `src/modules/wallet/wallet.types.ts` — added `isFee` to `TransactionDetailDto`.
+  - `src/modules/wallet/wallet.service.ts` — updated `getTransactionHistory` to set `isFee` by checking if the ledger description contains the word "fee".
+- **Rationale:** Improves UX by providing a programmatic way to identify fee entries in the transaction list, enabling better styling and categorization on the client side.
+- **Verified:** Response now includes `isFee: true` for all ledger entries created as fees in the `TransferRepository`.
+
+## 2026-09-11
+
+### Feat: Separate principal and fees in transaction history totals
+- **High-level description:** Modified the wallet transaction history to distinguish between the principal amount and fees in the monthly summary totals.
+- **Files modified:**
+  - `src/modules/wallet/wallet.types.ts` — added `totalFees` to `TransactionSectionDto`.
+  - `src/modules/wallet/wallet.service.ts` — updated `getTransactionHistory` to calculate `totalFees` separately from `totalOut` (principal).
+- **Rationale:** Provides better financial clarity by allowing users to see exactly how much they spent on transfers versus how much was consumed by transaction fees.
+- **Verified:** Monthly summary now returns `totalIn`, `totalOut`, and `totalFees` independently.
+
+## 2026-09-11
+
+### Refactor: Use DI tokens for WebhookService
+- **High-level description:** Migrated `WebhookService` binding from `toSelf()` to a token-based approach using `WEBHOOK_TYPES.Service`.
+- **Files modified:**
+  - `src/modules/webhook/webhook.types.ts` — created to define the `WEBHOOK_TYPES` token.
+  - `src/modules/webhook/webhook.module.ts` — updated to bind `WEBHOOK_TYPES.Service` to `WebhookService`.
+  - `src/modules/webhook/webhook.controller.ts` — updated to inject `WebhookService` using the token.
+- **Rationale:** Ensures consistency with the project's overall DI pattern and improves testability by decoupling the implementation from the injection key.
+- **Verified:** DI container configuration now correctly resolves the `WebhookService` via its token.
+
+## 2026-09-11
+
+### Feat: Implement Transaction Deposit Webhook
+- **High-level description:** Implemented a webhook endpoint to handle successful deposits to the company wallet from external banks.
+- **Files modified:**
+  - `prisma/models/enum.prisma` — added `DEPOSIT` to `TransactionType`.
+  - `src/modules/webhook/webhook.dto.ts` — created `DepositWebhookDto` to validate the incoming Brails payload.
+  - `src/modules/webhook/webhook.repository.ts` — implemented `executeDeposit` using a double-entry pattern to credit the `SETTLEMENT` wallet.
+  - `src/modules/webhook/webhook.service.ts` — implemented logic to handle the "transaction.deposit.success" event with idempotency checks.
+  - `src/modules/webhook/webhook.controller.ts` — added `POST /webhook/deposit` endpoint.
+  - `src/modules/webhook/webhook.module.ts` — registered the `WebhookRepository` and bound it to `WEBHOOK_TYPES.Repository`.
+  - `src/modules/webhook/webhook.types.ts` — added `Repository` token to `WEBHOOK_TYPES`.
+- **Rationale:** Enables the system to automatically reflect external company deposits in the internal settlement wallet, ensuring the ledger is up-to-date in real-time.
+- **Verified:** Logic ensures that duplicate webhook events (same reference) are ignored and funds are atomically credited to the settlement wallet.

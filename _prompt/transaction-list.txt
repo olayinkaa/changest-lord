@@ -1,0 +1,69 @@
+---
+
+ I need an endpoints to return the list of transactions for a particular user,
+use the user Id in the authenticated token.
+It should be return in the format below:
+You can modified the property base on the schema in the project, like
+type can be "debit" or "credit"
+export const TRANSACTION_SECTIONS = [
+  {
+    month: "July",
+    totalIn: "₦45,000.00",
+    totalOut: "₦18,200.00",
+    data: [
+      {
+        id: "4",
+        title: "Transfer from Chioma Okoro",
+        amount: "₦20,000.00",
+        type: "in",
+        date: "July 10, 2026",
+        time: "16:45:00",
+        status: "Successful",
+      },
+      {
+        id: "5",
+        title: "Data Subscription",
+        amount: "₦2,500.00",
+        type: "out",
+        date: "July 12, 2026",
+        time: "08:05:12",
+        status: "Successful",
+      },
+    ],
+  },
+  {
+    month: "June",
+    totalIn: "₦65,000.00",
+    totalOut: "₦32,100.00",
+    data: [
+      {
+        id: "8",
+        title: "Give to John Grace",
+        amount: "₦1,200.00",
+        type: "out",
+        date: "June 01, 2026",
+        time: "10:11:00",
+        status: "Successful",
+      },
+      {
+        id: "9",
+        title: "Salary Advance",
+        amount: "₦50,000.00",
+        type: "in",
+        date: "June 04, 2026",
+        time: "07:30:00",
+        status: "Successful",
+      },
+      {
+        id: "10",
+        title: "Dinner with Friends",
+        amount: "₦12,500.00",
+        type: "out",
+        date: "June 10, 2026",
+        time: "21:15:30",
+        status: "Successful",
+      },
+    ],
+  },
+
+];

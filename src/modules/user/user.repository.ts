@@ -318,7 +318,6 @@ export class UserRepository implements IUserRepository {
 		})
 	}
 	//
-
 	/**
 	 * @param userId
 	 * @param reset
@@ -350,12 +349,12 @@ export class UserRepository implements IUserRepository {
 		return prisma.ledger.findMany({
 			where: {
 				type: "CREDIT",
+				claimed: false,
 				wallet: {
 					type: "TRANSIT",
 				},
-				description: {
-					contains: phone,
-					mode: "insensitive",
+				transaction: {
+					recipientAccount: phone,
 				},
 			},
 		})

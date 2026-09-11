@@ -20,8 +20,8 @@ export class TransferController {
 	) {}
 
 	@httpGet("/search")
-	public async search(@queryParam("phoneOrUseId") phoneOrUseId: string) {
-		const result = await this.transferService.searchRecipients(phoneOrUseId)
+	public async search(@queryParam("phoneOrUserId") phoneOrUserId: string) {
+		const result = await this.transferService.searchRecipients(phoneOrUserId)
 		return ApiResponse.success(result)
 	}
 

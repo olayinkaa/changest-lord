@@ -197,7 +197,7 @@ export class OnboardingService implements IOnboardingService {
 		// Claim any pending transit funds sent to this phone number during onboarding
 		const pendingCredits = await this.userRepo.findPendingTransitCredits(updatedUser.phone)
 		for (const credit of pendingCredits) {
-			await this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount)
+			await this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount, credit.id)
 		}
 
 		// Generate an access token for automatic login/dashboard access

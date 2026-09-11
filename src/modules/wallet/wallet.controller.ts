@@ -12,7 +12,15 @@ export class WalletController {
 
 	@httpGet("/balance")
 	public async getBalance(@principal() authUser: UserPrincipal) {
-		const result = await this.walletService.getBalance(authUser.details.id)
+		const userId = authUser.details?.id
+		const result = await this.walletService.getBalance(userId)
+		return ApiResponse.success(result)
+	}
+
+	@httpGet("/transactions")
+	public async getTransactions(@principal() authUser: UserPrincipal) {
+		const userId = authUser.details?.id
+		const result = await this.walletService.getTransactionHistory(userId)
 		return ApiResponse.success(result)
 	}
 }

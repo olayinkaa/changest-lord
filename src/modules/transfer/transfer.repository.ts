@@ -43,6 +43,7 @@ export class TransferRepository implements ITransferRepository {
 				data: {
 					reference,
 					transactionType,
+					recipientAccount: recipientAccount,
 					description: `Transfer ${transactionType} from ${userId} to ${recipientUserId || recipientAccount || "Bank"}`,
 				},
 			})
@@ -57,20 +58,39 @@ export class TransferRepository implements ITransferRepository {
 				throw new Error("Insufficient funds to complete the transfer")
 			}
 
+			// Debit Principal Amount
 			await tx.wallet.update({
 				where: { id: senderWallet.id },
-				data: { balance: { decrement: totalDebit } },
+				data: { balance: { decrement: amount } },
 			})
 
 			await tx.ledger.create({
 				data: {
 					ledgerTransactionId: ledgerTx.id,
 					walletId: senderWallet.id,
-					amount: totalDebit.mul(-1),
+					amount: amount.mul(-1),
 					type: "DEBIT",
 					description: `Debit for ${transactionType} - ${reference}`,
 				},
 			})
+
+			// Debit Fee (as a separate transaction item)
+			if (fee.gt(0)) {
+				await tx.wallet.update({
+					where: { id: senderWallet.id },
+					data: { balance: { decrement: fee } },
+				})
+
+				await tx.ledger.create({
+					data: {
+						ledgerTransactionId: ledgerTx.id,
+						walletId: senderWallet.id,
+						amount: fee.mul(-1),
+						type: "DEBIT",
+						description: `Transfer fee for ${transactionType} - ${reference}`,
+					},
+				})
+			}
 
 			// 3. Credit Recipient (or Transit Wallet)
 			let recipientWalletId: string

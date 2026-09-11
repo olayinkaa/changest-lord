@@ -10,6 +10,7 @@ export interface ILedgerRepository {
 		type: LedgerType
 		description: string
 	}): Promise<any>
+	findByUserId(userId: string): Promise<any[]>
 }
 
 export interface ILedgerService {

@@ -21,4 +21,21 @@ export class LedgerRepository implements ILedgerRepository {
 			data,
 		})
 	}
+
+	public async findByUserId(userId: string) {
+		return prisma.ledger.findMany({
+			where: {
+				wallet: {
+					userId,
+				},
+			},
+			include: {
+				transaction: true,
+				wallet: true,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		})
+	}
 }

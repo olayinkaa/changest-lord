@@ -55,8 +55,14 @@ export class WalletRepository implements IWalletRepository {
 		})
 	}
 
-	public async executeTransitClaim(phone: string, userId: string, amount: Prisma.Decimal) {
+	public async executeTransitClaim(phone: string, userId: string, amount: Prisma.Decimal, ledgerId: string) {
 		return prisma.$transaction(async (tx) => {
+			// Mark the original credit as claimed to prevent double-claiming
+			await tx.ledger.update({
+				where: { id: ledgerId },
+				data: { claimed: true },
+			})
+
 			// 1. Transaction Header
 			const ledgerTx = await tx.ledgerTransaction.create({
 				data: {
