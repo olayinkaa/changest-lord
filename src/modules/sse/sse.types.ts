@@ -5,6 +5,7 @@ export enum SseEvent {
 	TransactionReceived = "TRANSACTION_RECEIVED",
 	KycUpdated = "KYC_UPDATED",
 	SystemAlert = "SYSTEM_ALERT",
+	BalanceUpdated = "BALANCE_UPDATED",
 }
 
 export const SSE_TYPES = {

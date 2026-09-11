@@ -69,7 +69,13 @@ export class App extends Application {
 
 		server.setConfig((app) => {
 			app.set("trust proxy", 1)
-			app.use(express.json())
+			app.use(
+				express.json({
+					verify: (req: any, res, buf) => {
+						req.rawBody = buf
+					},
+				}),
+			)
 			app.use(configureCors())
 			app.use(
 				helmet({
@@ -93,7 +99,7 @@ export class App extends Application {
 					ctx: {
 						queues: queueService.getQueues().map((q) => ({
 							queue: q,
-							displayName: q.name,
+							displayName: q.displayName,
 							type: "bullmq" as const,
 						})),
 					},

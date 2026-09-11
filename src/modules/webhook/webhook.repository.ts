@@ -39,8 +39,8 @@ export class WebhookRepository {
 		bankReference: string,
 		description: string,
 		userId?: string,
-	): Promise<void> {
-		await prisma.$transaction(async (tx) => {
+	): Promise<Prisma.Decimal> {
+		return prisma.$transaction(async (tx) => {
 			// 1. Create Transaction Header
 			const ledgerTx = await tx.ledgerTransaction.create({
 				data: {
@@ -77,7 +77,7 @@ export class WebhookRepository {
 			}
 
 			// 3. Update Balance
-			await tx.wallet.update({
+			const wallet = await tx.wallet.update({
 				where: { id: targetWalletId },
 				data: { balance: { increment: amount } },
 			})
@@ -92,6 +92,8 @@ export class WebhookRepository {
 					description: `External Deposit: ${reference} (Bank Ref: ${bankReference})`,
 				},
 			})
+
+			return wallet.balance
 		})
 	}
 }

@@ -1,5 +1,7 @@
 import { inject, injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
+import type { SseService } from "@/modules/sse/sse.service"
+import { SSE_TYPES, SseEvent } from "@/modules/sse/sse.types"
 import { Prisma } from "@/types/prisma"
 import type { DepositWebhookDataDto } from "./webhook.dto"
 import type { WebhookRepository } from "./webhook.repository"
@@ -7,7 +9,10 @@ import { WEBHOOK_TYPES } from "./webhook.types"
 
 @injectable()
 export class WebhookService {
-	constructor(@inject(WEBHOOK_TYPES.Repository) private webhookRepo: WebhookRepository) {}
+	constructor(
+		@inject(WEBHOOK_TYPES.Repository) private webhookRepo: WebhookRepository,
+		@inject(SSE_TYPES.Service) private sseService: SseService,
+	) {}
 
 	public async handleWebhook(body: any) {
 		const { event } = body
@@ -20,9 +25,6 @@ export class WebhookService {
 					result = await this.handleDepositSuccess(body.data, log.id)
 					break
 				case "collection.success":
-					result = await this.handleCollectionSuccess(body.data, log.id)
-					break
-				case "collection.failed":
 					result = await this.handleCollectionSuccess(body.data, log.id)
 					break
 				default:
@@ -80,9 +82,29 @@ export class WebhookService {
 				? `${type} from ${bankAccountName} (Ref: ${reference})`
 				: `Company ${type} from ${bankAccountName} (Ref: ${reference})`
 
-			await this.webhookRepo.executeDeposit(new Prisma.Decimal(amount), reference, bankReference, description, userId)
+			const newBalance = await this.webhookRepo.executeDeposit(
+				new Prisma.Decimal(amount),
+				reference,
+				bankReference,
+				description,
+				userId,
+			)
 
-			pinoLogger.info({ reference, amount, userId, type }, `Successful ${type} processed`)
+			// Emit SSE event for real-time balance update
+			if (userId) {
+				await this.sseService.emitEvent(userId, SseEvent.BalanceUpdated, {
+					newBalance: newBalance.toString(),
+					currency: "NGN",
+					transactionId: reference,
+					changeAmount: amount,
+					changeType: "CREDIT",
+				})
+			}
+
+			pinoLogger.info(
+				{ reference, amount, userId, type, newBalance: newBalance.toString() },
+				`Successful ${type} processed`,
+			)
 
 			return { status: "success", reference }
 		} catch (error: any) {

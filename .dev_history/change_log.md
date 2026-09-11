@@ -431,3 +431,15 @@
   - `src/modules/webhook/webhook-service.ts` — refactored to use "Capture-then-Process" pattern, logging every request and its outcome (SUCCESS, FAILED, IGNORED).
 - **Rationale:** Financial signals from external providers must be immutable and queryable. This system allows for replaying failed events, auditing dispute cases, and provides a clear trail from webhook receipt to ledger entry.
 - **Verified:** Implemented the full lifecycle from receipt to finalization, including structured JSON error capture.
+
+## 2026-09-11
+
+### Feat: Implement Webhook Signature Verification (HMAC)
+- **High-level description:** Protected the public webhook endpoint by implementing HMAC-SHA256 signature verification. Requests are now verified against a shared secret provided by Brails.
+- **Files modified:**
+  - `src/config/env.ts` — added `BRAILS_WEBHOOK_SECRET`.
+  - `src/index.ts` — updated `express.json()` to preserve the raw request body for signature calculation.
+  - `src/core/middleware/webhook-auth.ts` — created middleware to verify the `x-brails-signature` header against the computed HMAC.
+  - `src/modules/webhook/webhook.controller.ts` — applied `WebhookAuthMiddleware` to the deposit endpoint.
+- **Rationale:** Prevents unauthorized users from forging webhook events to credit wallets. By using the raw body and a shared secret, the system ensures both the authenticity and integrity of the incoming data.
+- **Verified:** The endpoint now requires a valid signature; otherwise, it returns a 401 Unauthorized response.

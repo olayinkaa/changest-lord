@@ -1,7 +1,7 @@
-import type { NextFunction } from "express"
 import { inject } from "inversify"
-import { BaseHttpController, controller, httpPost, next, requestBody } from "inversify-express-utils"
+import { BaseHttpController, controller, httpPost, requestBody } from "inversify-express-utils"
 // import { validateSchema } from "@/core/middleware/validate-schema";
+// import { webhookAuth } from "@/core/middleware/webhook-auth";
 import { ApiResponse } from "@/utils/http-response"
 import type { DepositWebhookDto } from "./webhook.dto"
 import { WEBHOOK_TYPES } from "./webhook.types"
@@ -14,13 +14,10 @@ export class WebhookController extends BaseHttpController {
 	}
 
 	@httpPost("/deposit")
+	// @webhookAuth()
 	// @validateSchema(DepositWebhookDto)
-	public async handleDeposit(@requestBody() body: DepositWebhookDto, @next() nxt: NextFunction) {
-		try {
-			const result = await this.webhookService.handleWebhook(body)
-			return ApiResponse.success(result)
-		} catch (error) {
-			nxt(error)
-		}
+	public async handleDeposit(@requestBody() body: DepositWebhookDto) {
+		const result = await this.webhookService.handleWebhook(body)
+		return ApiResponse.success(result)
 	}
 }

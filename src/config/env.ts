@@ -45,6 +45,7 @@ const envSchema = z
 		// Other configuration
 		BRAILS_API_BASE_URL: z.string(),
 		BRAILS_API_KEY: z.string(),
+		BRAILS_WEBHOOK_SECRET: z.string(),
 	})
 	.superRefine((data, ctx) => {
 		// -----------------------------------------------------------------
@@ -73,7 +74,7 @@ const envSchema = z
 type EnvType = z.infer<typeof envSchema>
 
 export const config: EnvType = createEnv(envSchema, {
-	serviceName: "myChange-service",
+	serviceName: "mychange-service",
 })
 
 export type Env = typeof config
