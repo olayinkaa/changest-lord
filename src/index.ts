@@ -71,7 +71,7 @@ export class App extends Application {
 			app.set("trust proxy", 1)
 			app.use(
 				express.json({
-					verify: (req: any, res, buf) => {
+					verify: (req: any, _, buf) => {
 						req.rawBody = buf
 					},
 				}),
