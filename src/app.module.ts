@@ -18,6 +18,7 @@ import { TestModule } from "./modules/test/test.module"
 import { TransferModule } from "./modules/transfer/transfer.module"
 import { UserModule } from "./modules/user/user.module"
 import { WalletModule } from "./modules/wallet/wallet.module"
+import { WebhookModule } from "./modules/webhook/webhook.module"
 import { EmailModule } from "./modules/workers/email/email.module"
 
 const AppModules = [
@@ -36,6 +37,7 @@ const AppModules = [
 	NinModule,
 	BvnModule,
 	FileModule,
+	WebhookModule,
 	TestModule,
 	TransferModule,
 	WalletModule,

@@ -27,6 +27,10 @@ export class DepositWebhookDataDto {
 
 	@IsString()
 	@IsNotEmpty()
+	bankAccountNumber!: string
+
+	@IsString()
+	@IsNotEmpty()
 	sourceBankAccountName!: string
 
 	@IsString()

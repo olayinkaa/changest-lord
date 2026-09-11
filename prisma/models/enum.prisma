@@ -69,3 +69,10 @@ enum TransactionStatus {
   PARTIAL_SUCCESS
   REVERSED
 }
+
+enum WebhookStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  IGNORED
+}

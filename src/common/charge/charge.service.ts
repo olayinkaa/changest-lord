@@ -23,6 +23,10 @@ export class ChargeConfigService implements IChargeConfigService {
 			type: ChargeType.FIXED,
 			value: new Prisma.Decimal("0"),
 		},
+		[TransactionType.DEPOSIT]: {
+			type: ChargeType.FIXED,
+			value: new Prisma.Decimal("0"),
+		},
 	}
 
 	public async calculateFee(

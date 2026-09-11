@@ -9,6 +9,8 @@ dev-all:
 dev:
 	@echo "start local server [.env]..."
 	pnpm run dev
+server:
+	 ngrok http 6001 
 migrate:
 	@read -p "Enter migration name: " name; \
 	pnpm prisma migrate dev --name "$$name"

@@ -390,3 +390,44 @@
   - `src/modules/webhook/webhook.types.ts` — added `Repository` token to `WEBHOOK_TYPES`.
 - **Rationale:** Enables the system to automatically reflect external company deposits in the internal settlement wallet, ensuring the ledger is up-to-date in real-time.
 - **Verified:** Logic ensures that duplicate webhook events (same reference) are ignored and funds are atomically credited to the settlement wallet.
+
+## 2026-09-11
+
+### Feat: Implement User Resolution for Deposit Webhooks
+- **High-level description:** Updated the deposit webhook logic to resolve the recipient user based on the `bankAccountNumber` (virtual account number) provided in the payload.
+- **Files modified:**
+  - `src/modules/webhook/webhook.repository.ts` — added `findUserByVirtualAccount` and updated `executeDeposit` to handle both user-specific and company settlement credits.
+  - `src/modules/webhook/webhook-service.ts` — modified `handleDepositSuccess` to resolve the `userId` via the virtual account number before executing the deposit.
+- **Rationale:** Ensures that deposits sent to a user's virtual account are credited to their personal wallet, while deposits not tied to a known virtual account are credited to the company's settlement wallet.
+- **Verified:** The system now correctly distinguishes between user and company deposits based on the provided account number.
+
+## 2026-09-11
+
+### Fix: Resolve 404 Not Found for Deposit Webhook
+- **High-level description:** Fixed a 404 error when hitting the `/api/v1/webhook/deposit` endpoint by registering the `WebhookModule` in the main application container.
+- **Files modified:**
+  - `src/app.module.ts` — added `WebhookModule` to the `AppModules` array.
+- **Rationale:** The `WebhookController` routes were not being registered with the Express server because the module containing them was omitted from the bootstrap configuration.
+- **Verified:** The endpoint is now correctly registered and accessible.
+
+## 2026-09-11
+
+### Feat: Handle 'collection.success' webhook event
+- **High-level description:** Added support for the `collection.success` webhook event, allowing the system to process digital change collections as credits to the user's or company's wallet.
+- **Files modified:**
+  - `src/modules/webhook/webhook-service.ts` — implemented `handleCollectionSuccess` and refactored credit processing into a reusable `processWebhookCredit` method.
+- **Rationale:** Resolves the "Unhandled webhook event received" warning for `collection.success` and implements the core "change collection" feature by crediting the corresponding wallet.
+- **Verified:** Logic mirrors the successful deposit flow with a distinct description for change collections.
+
+## 2026-09-11
+
+### Feat: Implement Webhook Audit Log System
+- **High-level description:** Introduced a database-backed audit log for all incoming webhooks to ensure financial traceability and easier debugging.
+- **Files modified:**
+  - `prisma/models/enum.prisma` — added `WebhookStatus` enum.
+  - `prisma/models/webhook_log.prisma` — created new model to store raw payloads, responses, and errors.
+  - `prisma/models/user.prisma` — added relation to `WebhookLog`.
+  - `src/modules/webhook/webhook.repository.ts` — added `createLog` and `updateLog` methods.
+  - `src/modules/webhook/webhook-service.ts` — refactored to use "Capture-then-Process" pattern, logging every request and its outcome (SUCCESS, FAILED, IGNORED).
+- **Rationale:** Financial signals from external providers must be immutable and queryable. This system allows for replaying failed events, auditing dispute cases, and provides a clear trail from webhook receipt to ledger entry.
+- **Verified:** Implemented the full lifecycle from receipt to finalization, including structured JSON error capture.
