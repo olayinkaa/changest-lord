@@ -1,0 +1,14 @@
+model VirtualDepositAccount {
+    id             String               @id @default(uuid())
+    userId         String               @unique
+    user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accountName    String
+    accountNumber  String               @unique
+    bankName       String
+    currency       String               @default("NGN")
+    status         VirtualAccountStatus @default(ACTIVE)
+    createdAt      DateTime             @default(now())
+    updatedAt      DateTime             @updatedAt
+
+    @@map("virtual_deposit_accounts")
+}

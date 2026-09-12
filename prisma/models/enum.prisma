@@ -76,3 +76,9 @@ enum WebhookStatus {
   FAILED
   IGNORED
 }
+
+enum VirtualAccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}

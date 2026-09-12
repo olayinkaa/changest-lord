@@ -6,4 +6,5 @@ export const ADAPTER_TYPES = {
 	VerificationService: Symbol.for("VerificationService"),
 	AwsSesService: Symbol.for("AwsSesService"),
 	BankAdapter: Symbol.for("BankAdapter"),
+	BrailsService: Symbol.for("BrailsService"),
 }

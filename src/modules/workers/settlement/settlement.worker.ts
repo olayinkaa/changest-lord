@@ -1,13 +1,13 @@
 import type { Job } from "bullmq"
 import { inject, injectable } from "inversify"
 import { pinoLogger } from "@/config/pino-logger"
-import { BaseProcessor } from "@/core/queue/base.processor"
-import { QUEUE_NAMES } from "@/core/queue/queue-name"
+import { BaseProcessor } from "@/core/bullmq/base.processor"
+import { QUEUE_NAMES } from "@/core/bullmq/queue-name"
 import type { ISettlementService } from "@/modules/settlement/settlement.service"
 import { SETTLEMENT_TYPES } from "@/modules/settlement/settlement.types"
 
 @injectable()
-export class SettlementWorker extends BaseProcessor {
+export class SettlementWorker extends BaseProcessor<typeof QUEUE_NAMES.Settlement> {
 	public override readonly queueName = QUEUE_NAMES.Settlement
 	protected override readonly concurrency = 1
 	protected override readonly rateLimit = undefined

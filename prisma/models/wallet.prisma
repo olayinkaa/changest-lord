@@ -5,6 +5,7 @@ model Wallet {
     type      WalletType @default(USER)
     currency  String   @default("NGN")
     balance   Decimal  @db.Decimal(18, 2) @default(0)
+    bonusBalance   Decimal  @db.Decimal(18, 2) @default(0)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     ledgers   Ledger[]

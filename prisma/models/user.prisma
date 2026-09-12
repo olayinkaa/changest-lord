@@ -27,6 +27,7 @@ model User {
     isBlocked              Boolean        @default(false)
     pinAttempts            Int            @default(0)
     wallet                 Wallet?
+    virtualDepositAccount  VirtualDepositAccount?
     createdAt             DateTime       @default(now())
     updatedAt             DateTime       @updatedAt
     device                UserDevice?

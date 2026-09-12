@@ -4,11 +4,11 @@ import type { Container } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
 import { CronService } from "@/core/cron/cron.service"
-import { WorkerContainerModules } from "@/core/queue/worker.module"
-import { WorkerManager } from "@/core/queue/worker-manager"
 import type { ISettlementService } from "@/modules/settlement/settlement.service"
 import { SETTLEMENT_TYPES } from "@/modules/settlement/settlement.types"
 import { Application } from "@/utils/application"
+import { WorkerManager } from "./core/bullmq/worker-manager"
+import { WorkerContainerModules } from "./modules/workers/worker.module"
 
 class WorkerApp extends Application {
 	configureService(container: Container): void {

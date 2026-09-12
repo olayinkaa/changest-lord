@@ -15,6 +15,10 @@ export type QueuePayloadMap = {
 		bankCode: string
 		amount: string
 	}
+	[QUEUE_NAMES.Webhook]: {
+		logId: string
+		payload: any
+	}
 }
 
 export interface IQueueService {
@@ -28,8 +32,9 @@ export interface IBaseProcessor {
 	stop(): Promise<void>
 }
 
-export const TYPES = {
+export const QUEUE_TYPES = {
 	QueueService: Symbol.for("QueueService"),
+	WorkerProcessor: Symbol.for("WorkerProcessor"),
 } as const
 
 export type { JobsOptions, QueueOptions, WorkerOptions }

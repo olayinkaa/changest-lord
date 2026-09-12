@@ -3,4 +3,5 @@ export const QUEUE_NAMES = {
 	Cloudinary: "cloudinary",
 	Settlement: "settlement",
 	BankTransfer: "bank-transfer",
+	Webhook: "webhook",
 } as const

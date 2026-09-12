@@ -13,6 +13,8 @@ import type { ICloudinaryService } from "./cloudinary/cloudinary.types"
 import { GoogleMapsService } from "./google/google-map.service"
 import type { IGoogleMapsService } from "./google/google-map.type"
 import { BankAdapter, type IBankAdapter } from "./payment/bank.adapter"
+import { BrailsService } from "./payment/brails/brails.service"
+import type { IBrailsService } from "./payment/brails/brails.type"
 import { RedisService } from "./redis/redis.service"
 import { type IRedisService, REDIS_TYPES } from "./redis/redis.types"
 import { VerificationFactory } from "./verification/verification.factory"
@@ -30,4 +32,5 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	})
 	bind<IVerificationService>(ADAPTER_TYPES.VerificationService).toDynamicValue(VerificationFactory)
 	bind<IBankAdapter>(ADAPTER_TYPES.BankAdapter).to(BankAdapter)
+	bind<IBrailsService>(ADAPTER_TYPES.BrailsService).to(BrailsService)
 })

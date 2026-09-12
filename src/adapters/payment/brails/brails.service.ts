@@ -1,8 +1,11 @@
 import type { AxiosInstance } from "axios"
 import axios from "axios"
+import { injectable } from "inversify"
 import { config } from "@/config/env"
-import type { IBrailsService } from "./brails.type"
+import { pinoLogger } from "@/config/pino-logger"
+import type { createStaticVirtualAccountPayload, IBrailsService } from "./brails.type"
 
+@injectable()
 export class BrailsService implements IBrailsService {
 	private readonly api: AxiosInstance
 	constructor() {
@@ -15,5 +18,19 @@ export class BrailsService implements IBrailsService {
 	}
 
 	//
-	async createVirtualAccount() {}
+	async createStaticVirtualAccount(payload: createStaticVirtualAccountPayload) {
+		const data = {
+			...payload,
+			bank: "providus",
+			currency: "NGN",
+			type: "INDIVIDUAL",
+		}
+		try {
+			const res = await this.api.post("/virtual-accounts", data)
+			return res
+		} catch (e) {
+			pinoLogger.error({ error: e }, "Error in fetching place predictions")
+			throw e
+		}
+	}
 }

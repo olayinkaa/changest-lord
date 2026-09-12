@@ -1,7 +1,7 @@
 import { AdaptersModule } from "./adapters/adapters.module"
 import { CommonModule } from "./common/common.module"
 import { LoggerModule } from "./config/pino-logger"
-import { QueueModule } from "./core/queue/queue.module"
+import { QueueModule } from "./core/bullmq/queue.module"
 import { AddressModule } from "./modules/address/address.module"
 import { AuthModule } from "./modules/auth/auth.module"
 import { BusinessTypeModule } from "./modules/business-type/business-type.module"

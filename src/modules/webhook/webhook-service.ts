@@ -14,22 +14,32 @@ export class WebhookService {
 		@inject(SSE_TYPES.Service) private sseService: SseService,
 	) {}
 
+	public async createLog(data: { event: string; payload: any }) {
+		return this.webhookRepo.createLog(data)
+	}
+
 	public async handleWebhook(body: any) {
 		const { event } = body
 		const log = await this.webhookRepo.createLog({ event, payload: body })
+
+		return this.handleWebhookWithLogId(body, log.id)
+	}
+
+	public async handleWebhookWithLogId(body: any, logId: string) {
+		const { event } = body
 
 		try {
 			let result: any
 			switch (event) {
 				case "transaction.deposit.success":
-					result = await this.handleDepositSuccess(body.data, log.id)
+					result = await this.handleDepositSuccess(body.data, logId)
 					break
 				case "collection.success":
-					result = await this.handleCollectionSuccess(body.data, log.id)
+					result = await this.handleCollectionSuccess(body.data, logId)
 					break
 				default:
 					result = { status: "ignored", message: "Event not handled" }
-					await this.webhookRepo.updateLog(log.id, {
+					await this.webhookRepo.updateLog(logId, {
 						status: "IGNORED",
 						response: result,
 					})
@@ -38,10 +48,10 @@ export class WebhookService {
 			}
 
 			const status = result.status === "success" ? "SUCCESS" : "IGNORED"
-			await this.webhookRepo.updateLog(log.id, { status, response: result })
+			await this.webhookRepo.updateLog(logId, { status, response: result })
 			return result
 		} catch (error: any) {
-			await this.webhookRepo.updateLog(log.id, {
+			await this.webhookRepo.updateLog(logId, {
 				status: "FAILED",
 				error: this.formatError(error),
 			})
@@ -100,6 +110,8 @@ export class WebhookService {
 					changeType: "CREDIT",
 				})
 			}
+
+			//  send email notification
 
 			pinoLogger.info(
 				{ reference, amount, userId, type, newBalance: newBalance.toString() },

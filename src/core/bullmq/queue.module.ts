@@ -1,7 +1,7 @@
 import { ContainerModule } from "inversify"
 import { QueueService } from "./queue.service"
-import { TYPES } from "./queue.types"
+import { QUEUE_TYPES } from "./queue.types"
 
 export const QueueModule = new ContainerModule((bind) => {
-	bind<QueueService>(TYPES.QueueService).to(QueueService)
+	bind<QueueService>(QUEUE_TYPES.QueueService).to(QueueService)
 })
