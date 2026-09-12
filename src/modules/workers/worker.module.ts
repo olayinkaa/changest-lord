@@ -4,12 +4,15 @@ import { ContainerModule } from "inversify"
 import { AdaptersModule } from "@/adapters/adapters.module"
 import { WORKER_PROCESSOR_TAG } from "@/core/bullmq/worker.bootstrap"
 import { CronModule } from "@/core/cron/cron.module"
+import { SseModule } from "@/modules/sse/sse.module"
+import { WebhookModule } from "@/modules/webhook/webhook.module"
 import { SettlementModule } from "../settlement/settlement.module"
+import { TransferModule } from "../transfer/transfer.module"
+import { WalletModule } from "../wallet/wallet.module"
 import { EmailModule } from "./email/email.module"
 import { EmailProcessor } from "./email/email.processor"
 import { SettlementWorker } from "./settlement/settlement.worker"
 import { BankTransferWorker } from "./transfer/bank-transfer.worker"
-import { TransferWorkerModule } from "./transfer/transfer.worker.module"
 import { WebhookWorker } from "./webhook/webhook.worker"
 
 // WorkerBootstrap.start() can resolveAll and start them all.
@@ -26,10 +29,13 @@ export const WorkerBindings = new ContainerModule((bind) => {
 export const WorkerContainerModules = [
 	AdaptersModule,
 	EmailModule,
-	TransferWorkerModule,
 	WorkerBindings,
 	CronModule,
 	SettlementModule,
+	SseModule,
+	WebhookModule,
+	TransferModule,
+	WalletModule,
 ] as const
 
 export type { WORKER_PROCESSOR_TAG }

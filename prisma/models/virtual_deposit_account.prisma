@@ -5,6 +5,7 @@ model VirtualDepositAccount {
     accountName    String
     accountNumber  String               @unique
     bankName       String
+    reference      String               @unique
     currency       String               @default("NGN")
     status         VirtualAccountStatus @default(ACTIVE)
     createdAt      DateTime             @default(now())

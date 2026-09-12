@@ -43,7 +43,7 @@ export class UserService implements IUserService {
 		}
 	}
 
-	async getUser(id: string) {
+	async getUser(id: string): Promise<UserResponseDto> {
 		const result = await this.userRepository.findUser(id)
 		if (!result) {
 			throw new NotFoundException("User not found")

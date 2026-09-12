@@ -1,6 +1,6 @@
 import type { Container } from "inversify"
 import type { Redis } from "ioredis"
-import { type IRedisService, REDIS_TYPES } from "@/adapters/redis/redis.types"
+import type { IRedisService } from "@/adapters/redis/redis.types"
 import { pinoLogger } from "@/config/pino-logger"
 import type { IBaseProcessor } from "./queue.types"
 
@@ -36,5 +36,3 @@ export class WorkerBootstrap {
 		pinoLogger.info("Worker bootstrap stopped")
 	}
 }
-
-export { REDIS_TYPES }

@@ -16,7 +16,7 @@ import { BankAdapter, type IBankAdapter } from "./payment/bank.adapter"
 import { BrailsService } from "./payment/brails/brails.service"
 import type { IBrailsService } from "./payment/brails/brails.type"
 import { RedisService } from "./redis/redis.service"
-import { type IRedisService, REDIS_TYPES } from "./redis/redis.types"
+import type { IRedisService } from "./redis/redis.types"
 import { VerificationFactory } from "./verification/verification.factory"
 import type { IVerificationService } from "./verification/verification.types"
 
@@ -25,7 +25,7 @@ export const AdaptersModule = new ContainerModule((bind) => {
 	bind<IAwsRekognitionService>(ADAPTER_TYPES.AwsRekognitionService).to(AwsRekognitionService)
 	bind<IAwsSesService>(ADAPTER_TYPES.AwsSesService).to(AwsSesService)
 	bind<IAnchorApiSdk>(ADAPTER_TYPES.AnchorApiSdk).to(AnchorApiSdkService)
-	bind<IRedisService>(REDIS_TYPES.Service).to(RedisService)
+	bind<IRedisService>(ADAPTER_TYPES.RedisService).to(RedisService)
 	bind<IBullMQQueueService>(BULLMQ_TYPES.QueueService).to(BullMQQueueService)
 	bind<ICloudinaryService>(ADAPTER_TYPES.CloudinaryService).toDynamicValue(() => {
 		return new CloudinaryService(cloudinaryConfig)

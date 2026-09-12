@@ -3,7 +3,8 @@ import axios from "axios"
 import { injectable } from "inversify"
 import { config } from "@/config/env"
 import { pinoLogger } from "@/config/pino-logger"
-import type { createStaticVirtualAccountPayload, IBrailsService } from "./brails.type"
+import type { ApiResponse } from "@/types/base"
+import type { createStaticVirtualAccountPayload, IBrailsService, IStaticVirtualAccountResponse } from "./brails.type"
 
 @injectable()
 export class BrailsService implements IBrailsService {
@@ -26,8 +27,8 @@ export class BrailsService implements IBrailsService {
 			type: "INDIVIDUAL",
 		}
 		try {
-			const res = await this.api.post("/virtual-accounts", data)
-			return res
+			const res: ApiResponse<IStaticVirtualAccountResponse> = await this.api.post("/virtual-accounts", data)
+			return res.data
 		} catch (e) {
 			pinoLogger.error({ error: e }, "Error in fetching place predictions")
 			throw e

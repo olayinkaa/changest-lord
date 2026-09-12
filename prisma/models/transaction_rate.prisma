@@ -1,0 +1,43 @@
+enum Actor {
+  USER
+  MERCHANT
+  SEEDER
+}
+
+enum ActionType {
+  CASHBACK
+  CHARGE
+  COMMISSION
+}
+
+enum TxType {
+  FACE_PAYMENT
+  COLLECT
+  JAMB
+  TRANSFER
+  AIRTIME
+  INTERNET
+  WITHDRAW
+  STAMP_DUTY
+  DEPOSIT
+}
+
+enum RateType {
+  PERCENTAGE
+  FIXED
+}
+
+model TransactionRate {
+  id          String     @id @default(uuid())
+  actor       Actor
+  action      ActionType
+  txType      TxType
+  value       Float      // e.g., 1.5, 25
+  type        RateType   // PERCENTAGE or FIXED
+  cap         Float?     // Optional max cap
+  description String?
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([actor, action, txType]) // Ensures a unique rule per combination
+  @@map("transaction_rates")
+}

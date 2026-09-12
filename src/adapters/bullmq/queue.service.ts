@@ -1,12 +1,15 @@
 import { type Job, Queue, type QueueOptions } from "bullmq"
 import { inject, injectable } from "inversify"
 import type { IRedisService } from "@/adapters/redis/redis.types"
-import { REDIS_TYPES } from "@/adapters/redis/redis.types"
+import { ADAPTER_TYPES } from "../adapters.types"
 import type { IBullMQQueueService } from "./types"
 
 @injectable()
 export class BullMQQueueService implements IBullMQQueueService {
-	constructor(@inject(REDIS_TYPES.Service) private readonly redisService: IRedisService) {}
+	constructor(
+		@inject(ADAPTER_TYPES.RedisService)
+		private readonly redisService: IRedisService,
+	) {}
 
 	getQueue(queueName: string, options?: Partial<QueueOptions>): Queue {
 		return new Queue(queueName, {

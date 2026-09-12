@@ -12,8 +12,10 @@ import { LedgerModule } from "./modules/ledger/ledger.module"
 import { LivenessModule } from "./modules/liveness/liveness.module"
 import { NinModule } from "./modules/nin/nin.module"
 import { OnboardingModule } from "./modules/onboarding/onboarding.module"
+import { PaymentModule } from "./modules/payment/payment.module"
 import { SettlementModule } from "./modules/settlement/settlement.module"
 import { SseModule } from "./modules/sse/sse.module"
+import { SettingModule } from "./modules/system-setting/setting.module"
 import { TestModule } from "./modules/test/test.module"
 import { TransferModule } from "./modules/transfer/transfer.module"
 import { UserModule } from "./modules/user/user.module"
@@ -44,6 +46,8 @@ const AppModules = [
 	LedgerModule,
 	SettlementModule,
 	CommonModule,
+	SettingModule,
+	PaymentModule,
 ]
 
 export default AppModules

@@ -1,0 +1,10 @@
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique  // e.g., "transfer_fee_absolute"
+  name        String             // e.g., "Absolute Transfer Fee"
+  value       String             // e.g., "50"
+  description String?            // e.g., "Flat fee charged per transfer"
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}

@@ -11,6 +11,7 @@ import {
 	NotFoundException,
 } from "@/core/errors/exceptions"
 import { ErrorType } from "@/types/enum"
+import { type IPaymentService, PAYMENT_TYPES } from "../payment/payment.type"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
 import { BVN_TYPES, type IBvnRepository, type IBvnService } from "./bvn.types"
 
@@ -23,8 +24,10 @@ export class BvnService implements IBvnService {
 		@inject(BVN_TYPES.Repository) private readonly bvnRepo: IBvnRepository,
 		@inject(UTILITY_TYPES.Service)
 		private utilityService: IUtilityService,
-		@inject(ADAPTER_TYPES.AwsRekognitionService)
+		@inject(ADAPTER_TYPES.AwsRekognitionService) // Inject aws rekognition service here
 		private awsRekognitionService: IAwsRekognitionService,
+		@inject(PAYMENT_TYPES.Service) // Inject Payment Service here
+		private readonly paymentService: IPaymentService,
 	) {}
 
 	//
@@ -123,6 +126,9 @@ export class BvnService implements IBvnService {
 			// Update user table and KYC flags
 			await this.userRepo.updateBvnVerification(userId, bvn)
 
+			// Create virtual account
+			const virtualAccount = await this.paymentService.createUserVirtualAccount(userId, bvn)
+
 			return {
 				description: "BVN verified and face matched successfully",
 				similarityScore,
@@ -134,6 +140,7 @@ export class BvnService implements IBvnService {
 					phone: bvnData.phone,
 					image: bvnData.image,
 				},
+				virtualAccount,
 			}
 		} catch (error) {
 			// Re-throw NestJS HTTP exceptions so they retain their status codes (400, 404, etc.)

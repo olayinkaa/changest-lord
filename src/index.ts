@@ -13,6 +13,8 @@ import { isSwaggerEnabled, swaggerSpecPromise, swaggerUiOptions } from "@/config
 import type { QueueService } from "@/core/bullmq/queue.service"
 import { WorkerManager } from "@/core/bullmq/worker-manager"
 import { errorHandler } from "@/core/errors/error-handler"
+import type { SettingService } from "@/modules/system-setting/setting.service"
+import { SETTING_TYPES } from "@/modules/system-setting/setting.type"
 import { Application } from "@/utils/application"
 import { ADAPTER_TYPES } from "./adapters/adapters.types"
 import type { IAwsRekognitionService } from "./adapters/aws-rekognition/aws-rekognition.type"
@@ -38,6 +40,11 @@ export class App extends Application {
 		try {
 			await prisma.$connect()
 			pinoLogger.info("✅ Database connected")
+
+			// Seed system settings to ensure required keys exist
+			const settingService = this.container.get<SettingService>(SETTING_TYPES.Service)
+			await settingService.seedSettings()
+			pinoLogger.info("✅ System settings seeded")
 		} catch (error) {
 			pinoLogger.error({ error }, "❌ Database connection failed:")
 			process.exit(1)

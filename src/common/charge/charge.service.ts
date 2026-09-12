@@ -5,7 +5,6 @@ import type { IChargeConfigService } from "./charge.type"
 
 @injectable()
 export class ChargeConfigService implements IChargeConfigService {
-	// In a real scenario, these would be fetched from a SystemSettings table or .env
 	private readonly CONFIG = {
 		[TransactionType.TRANSFER_MYCHANGE]: {
 			type: ChargeType.FIXED,
@@ -14,6 +13,7 @@ export class ChargeConfigService implements IChargeConfigService {
 		[TransactionType.TRANSFER_BANK]: {
 			type: ChargeType.PERCENTAGE,
 			value: new Prisma.Decimal("1.5"),
+			cap: 500,
 		}, // 1.5%
 		[TransactionType.GIVE_CHANGE]: {
 			type: ChargeType.FIXED,
@@ -36,11 +36,20 @@ export class ChargeConfigService implements IChargeConfigService {
 		const config = this.CONFIG[type]
 		let fee: Prisma.Decimal
 
+		// 1. Calculate the base fee
 		if (config.type === ChargeType.FIXED) {
 			fee = config.value
 		} else {
 			// fee = amount * value / 100
 			fee = amount.mul(config.value).div(100)
+		}
+
+		// 2. Apply cap if it exists and is defined
+		if ("cap" in config && config.cap !== undefined && config.cap !== null) {
+			const capDecimal = new Prisma.Decimal(config.cap)
+			if (fee.greaterThan(capDecimal)) {
+				fee = capDecimal
+			}
 		}
 
 		return {

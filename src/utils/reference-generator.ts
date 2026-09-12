@@ -1,11 +1,12 @@
 import type { TransactionType } from "@/generated/prisma/enums"
 
-const TYPE_PREFIXES: Record<TransactionType, string> = {
+const TYPE_PREFIXES: Record<TransactionType | "GENERAL", string> = {
 	TRANSFER_MYCHANGE: "TMB",
 	TRANSFER_BANK: "TBN",
 	GIVE_CHANGE: "GCH",
 	SETTLEMENT_SWEEP: "SSW",
 	DEPOSIT: "DEP",
+	GENERAL: "GEN",
 }
 
 /**
@@ -13,7 +14,7 @@ const TYPE_PREFIXES: Record<TransactionType, string> = {
  * Format: MYCH-[TYPE]-[YYYYMMDD]-[RANDOM]
  * Example: MYCH-TMB-20260910-X7Y2P
  */
-export function generateTransactionReference(type: TransactionType): string {
+export function generateTransactionReference(type: TransactionType | "GENERAL"): string {
 	const prefix = TYPE_PREFIXES[type] || "GEN"
 	const date = new Date().toISOString().slice(0, 10).replace(/-/g, "")
 	const random = Math.random().toString(36).substring(2, 8).toUpperCase()

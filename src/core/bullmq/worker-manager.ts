@@ -1,5 +1,6 @@
 import type { Container } from "inversify"
-import { type IRedisService, REDIS_TYPES } from "@/adapters/redis/redis.types"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
+import type { IRedisService } from "@/adapters/redis/redis.types"
 import { pinoLogger } from "@/config/pino-logger"
 import { WORKER_PROCESSOR_TAG, WorkerBootstrap } from "./worker.bootstrap"
 
@@ -8,7 +9,7 @@ export class WorkerManager {
 	private redis?: IRedisService
 
 	async start(container: Container): Promise<void> {
-		this.redis = container.get<IRedisService>(REDIS_TYPES.Service)
+		this.redis = container.get<IRedisService>(ADAPTER_TYPES.RedisService)
 
 		try {
 			const pong = await this.redis.ping()

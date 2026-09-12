@@ -1,8 +1,8 @@
 import { createSession, type Session } from "better-sse"
 import type { Request, Response } from "express"
 import { inject, injectable } from "inversify"
+import { ADAPTER_TYPES } from "@/adapters/adapters.types"
 import type { IRedisService } from "@/adapters/redis/redis.types"
-import { REDIS_TYPES } from "@/adapters/redis/redis.types"
 import { pinoLogger } from "@/config/pino-logger"
 import type { ISseService, SseEvent } from "./sse.types"
 
@@ -11,7 +11,7 @@ export class SseService implements ISseService {
 	private readonly sessions = new Map<string, Session[]>()
 	private readonly activeSubscriptions = new Set<string>()
 
-	constructor(@inject(REDIS_TYPES.Service) private readonly redis: IRedisService) {}
+	constructor(@inject(ADAPTER_TYPES.RedisService) private readonly redis: IRedisService) {}
 
 	public async handleConnection(req: Request, res: Response, userId: string): Promise<void> {
 		try {
