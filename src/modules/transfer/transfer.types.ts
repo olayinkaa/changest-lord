@@ -23,6 +23,7 @@ export interface TransferResponseDto {
 	reference: string
 	status: string
 	message: string
+	transactionDate: Date
 }
 
 export interface ITransferService {
@@ -44,7 +45,7 @@ export interface ITransferRepository {
 		reference: string,
 		transactionType: TransactionType,
 		recipientAccount?: string,
-	): Promise<string>
+	): Promise<{ reference: string; createdAt: Date }>
 	executeSettlementSweep(amount: Decimal, reference: string): Promise<string>
 	updateTransactionStatus(reference: string, status: TransactionStatus): Promise<void>
 }

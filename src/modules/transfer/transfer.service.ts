@@ -172,9 +172,9 @@ export class TransferService implements ITransferService {
 		}
 
 		// 6. Atomic Double-Entry Transaction
-		let transactionReference: string
+		let transferResult: { reference: string; createdAt: Date }
 		try {
-			transactionReference = await this.transferRepo.executeDoubleEntryTransfer(
+			transferResult = await this.transferRepo.executeDoubleEntryTransfer(
 				userId,
 				recipientUserId || null,
 				amount,
@@ -191,6 +191,8 @@ export class TransferService implements ITransferService {
 			throw new HttpException(500, `Transfer failed: ${error.message}`)
 		}
 
+		const { reference: transactionReference, createdAt } = transferResult
+
 		// 7. External Bank Trigger (Async via Queue)
 		if (transactionType === "TRANSFER_BANK" && dto.bankDetails) {
 			const { accountNumber, bankCode } = dto.bankDetails
@@ -203,9 +205,10 @@ export class TransferService implements ITransferService {
 			})
 
 			return {
+				message: "Transfer is being processed and will be completed shortly",
 				reference: transactionReference,
 				status: "PROCESSING",
-				message: "Transfer is being processed and will be completed shortly",
+				transactionDate: createdAt,
 			}
 		}
 
@@ -213,9 +216,10 @@ export class TransferService implements ITransferService {
 		await this.transferRepo.updateTransactionStatus(transactionReference, TransactionStatus.SUCCESS)
 
 		return {
-			reference: transactionReference,
-			status: "SUCCESS",
 			message: "Transfer completed successfully",
+			status: "SUCCESS",
+			transactionDate: createdAt,
+			reference: transactionReference,
 		}
 	}
 }

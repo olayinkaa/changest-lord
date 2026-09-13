@@ -34,7 +34,7 @@ export class TransferRepository implements ITransferRepository {
 		reference: string,
 		transactionType: TransactionType,
 		recipientAccount?: string,
-	): Promise<string> {
+	): Promise<{ reference: string; createdAt: Date }> {
 		const totalDebit = amount.add(fee)
 
 		return prisma.$transaction(async (tx) => {
@@ -150,7 +150,10 @@ export class TransferRepository implements ITransferRepository {
 				})
 			}
 
-			return ledgerTx.reference
+			return {
+				reference: ledgerTx.reference,
+				createdAt: ledgerTx.createdAt,
+			}
 		})
 	}
 
