@@ -26,6 +26,8 @@
   
 
 # Sep 9th, 10th
-- [ ] create endpoints to simulate wallet topup
-- [ ] Endpoints to get wallet balance
-- [ ] Endpoint to search recipient
+- [X] create endpoints to simulate wallet topup
+- [X] Endpoints to get wallet balance
+- [X] Endpoint to search recipient
+- [ ] GIVE CHANGE: validate , seller cannot give change to self
+- [ ] Frontend: Search recipient should not return self

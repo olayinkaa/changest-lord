@@ -38,4 +38,10 @@ export class PaymentRepository implements IPaymentRepository {
 			})
 		})
 	}
+
+	async findByUserId(userId: string) {
+		return prisma.virtualDepositAccount.findUnique({
+			where: { userId },
+		})
+	}
 }

@@ -1,6 +1,6 @@
-import type { NextFunction } from "express"
+import type { NextFunction, Request, Response } from "express"
 import { inject } from "inversify"
-import { BaseHttpController, controller, httpPost, next, principal } from "inversify-express-utils"
+import { BaseHttpController, controller, httpGet, httpPost, next, principal } from "inversify-express-utils"
 import { NotFoundException } from "@/core/errors/exceptions"
 import { AuthGuard } from "@/core/guards/auth.guard"
 import type { UserPrincipal } from "@/providers/user-principal"
@@ -19,6 +19,16 @@ export class PaymentController extends BaseHttpController {
 		private readonly paymentService: IPaymentService,
 	) {
 		super()
+	}
+
+	@httpGet("/virtual-account/me")
+	public async getMyVirtualAccount(@next() nxt: NextFunction, @principal() authUser: UserPrincipal) {
+		try {
+			const account = await this.paymentService.getVirtualAccountByUserId(authUser.details.id)
+			return this.json(ApiResponse.success(account), 200)
+		} catch (error) {
+			nxt(error)
+		}
 	}
 
 	@httpPost("/static-account", blockEndpointMiddleware)

@@ -18,6 +18,8 @@
 		"lint:check:fix": "biome check --write ./src",
 		"docs:check": "tsx scripts/docs-check.ts",
 		"seed:system": "dotenv -e .env -- tsx prisma/seeds/run-system.ts",
+		"ngrok": "ngrok http 6001",
+		"dev:all:ngrok": "concurrently --kill-others -n \"API,WORKER,NGROK\" -c \"cyan,magenta,green\" \"pnpm run dev\" \"pnpm run worker:dev\" \"pnpm run ngrok\"",
 		"prepare": "husky"
 	},
 	"keywords": [],

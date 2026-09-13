@@ -61,4 +61,12 @@ export class PaymentService implements IPaymentService {
 			throw error
 		}
 	}
+
+	async getVirtualAccountByUserId(userId: string) {
+		const account = await this.paymentRepo.findByUserId(userId)
+		if (!account) {
+			throw new NotFoundException("Virtual deposit account not found for this user")
+		}
+		return account
+	}
 }

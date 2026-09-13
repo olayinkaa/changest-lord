@@ -14,6 +14,7 @@ import {
 } from "inversify-express-utils"
 import { OnboardingScopes } from "@/constants"
 import { UnauthorizedException } from "@/core/errors/exceptions"
+// import { apiKeyGuard } from "@/core/middleware/api-key";
 import { enforceOnboardingScope } from "@/core/middleware/enforce-onboarding-scope"
 import { validateSchema } from "@/core/middleware/validate-schema"
 import { ApiResponse } from "@/utils/http-response"
@@ -28,6 +29,7 @@ import {
 import { type IOnboardingService, ONBOARDING_TYPES } from "./onboarding.type"
 
 @controller("/onboarding")
+// @apiKeyGuard()
 export class OnboardingController extends BaseHttpController {
 	constructor(
 		@inject(ONBOARDING_TYPES.Service)

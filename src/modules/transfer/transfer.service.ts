@@ -51,6 +51,7 @@ export class TransferService implements ITransferService {
 
 		return {
 			id: user.id,
+			name: `${user?.firstName} ${user?.lastName}` || "",
 			firstName: user.firstName || "",
 			lastName: user.lastName || "",
 			phone: user.phone,

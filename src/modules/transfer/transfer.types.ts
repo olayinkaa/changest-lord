@@ -4,6 +4,7 @@ import type { Decimal } from "@/types/prisma"
 
 export interface UserResponseDto {
 	id: string
+	name: string
 	firstName: string
 	lastName: string
 	phone: string

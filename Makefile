@@ -5,7 +5,7 @@ secret:
 	openssl rand -base64 32
 dev-all:
 	@echo "start local server [.env]..."
-	pnpm run dev:all
+	pnpm run dev:all:ngrok
 dev:
 	@echo "start local server [.env]..."
 	pnpm run dev

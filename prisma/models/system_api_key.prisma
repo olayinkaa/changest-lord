@@ -1,0 +1,11 @@
+model SystemApiKey {
+    id          String   @id @default(uuid())
+    clientName  String   @unique
+    keyHash     String   @unique
+    isActive    Boolean  @default(true)
+    allowedIps  String[] @default([])
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@map("system_api_keys")
+}
