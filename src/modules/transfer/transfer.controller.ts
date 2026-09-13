@@ -8,6 +8,7 @@ import { ApiResponse } from "@/utils/http-response"
 import {
 	ExecuteTransferDto as ExecuteTransferRequest,
 	ValidateAmountDto as ValidateAmountRequest,
+	ValidateSearchDto,
 } from "./transfer.dto"
 import { type ITransferService, TRANSFER_TYPES } from "./transfer.types"
 
@@ -20,9 +21,34 @@ export class TransferController {
 	) {}
 
 	@httpGet("/search")
-	public async search(@queryParam("phoneOrUserId") phoneOrUserId: string) {
-		const result = await this.transferService.searchRecipients(phoneOrUserId)
-		return ApiResponse.success(result)
+	public async search(
+		@principal() authUser: UserPrincipal,
+		@queryParam("phoneOrUserId") phoneOrUserId: string,
+		@next() nxt: NextFunction,
+	) {
+		try {
+			const userId = authUser?.details?.id
+			const result = await this.transferService.searchRecipients(userId, phoneOrUserId)
+			return ApiResponse.success(result)
+		} catch (error) {
+			nxt(error)
+		}
+	}
+
+	@httpPost("/validate-search")
+	@validateSchema(ValidateSearchDto)
+	public async validateSearch(
+		@principal() authUser: UserPrincipal,
+		@next() nxt: NextFunction,
+		@requestBody() body: ValidateSearchDto,
+	) {
+		try {
+			const userId = authUser?.details?.id
+			const result = await this.transferService.validateRecipients(userId, body.phoneOrUserId)
+			return ApiResponse.success(result)
+		} catch (error) {
+			nxt(error)
+		}
 	}
 
 	@httpPost("/validate-amount")

@@ -5,6 +5,7 @@ import { type IQueueService, QUEUE_TYPES } from "@/core/bullmq/queue.types"
 import { QUEUE_NAMES } from "@/core/bullmq/queue-name"
 import { BadRequestException, HttpException, NotFoundException, UnauthorizedException } from "@/core/errors/exceptions"
 import { TransactionStatus, TransactionType } from "@/generated/prisma/enums"
+import { ErrorType } from "@/types/enum"
 import { Prisma } from "@/types/prisma"
 import { generateTransactionReference } from "@/utils/reference-generator"
 import { AUTH_TYPES, type IAuthUtils } from "../auth/auth.types"
@@ -38,7 +39,7 @@ export class TransferService implements ITransferService {
 		private queueService: IQueueService,
 	) {}
 
-	public async searchRecipients(query: string): Promise<UserResponseDto> {
+	public async searchRecipients(userId: string, query: string): Promise<UserResponseDto> {
 		if (!query) {
 			throw new BadRequestException("Query parameter 'phoneOrUserId' is required")
 		}
@@ -47,6 +48,37 @@ export class TransferService implements ITransferService {
 
 		if (!user) {
 			throw new NotFoundException("No account matches the ID. check the number and try again")
+		}
+
+		if (user.id === userId) {
+			throw new NotFoundException("You cannot transfer money to yourself.")
+		}
+
+		return {
+			id: user.id,
+			name: `${user?.firstName} ${user?.lastName}` || "",
+			firstName: user.firstName || "",
+			lastName: user.lastName || "",
+			phone: user.phone,
+			virtualAccountNo: user.userId5 || "",
+		}
+	}
+
+	public async validateRecipients(userId: string, data: string): Promise<UserResponseDto> {
+		if (!data) {
+			throw new BadRequestException("Phone or UserId is required")
+		}
+
+		const user = await this.transferRepo.searchRecipients(data)
+
+		if (!user) {
+			throw new NotFoundException("No account matches the ID. check the number and try again", {
+				errorType: ErrorType.USER_NOT_FOUND,
+			})
+		}
+
+		if (user.id === userId) {
+			throw new NotFoundException("You cannot transfer money to yourself.")
 		}
 
 		return {
@@ -88,12 +120,12 @@ export class TransferService implements ITransferService {
 
 		// 1. Security: Check for blocked account
 		const user = await this.userRepo.findUser(userId)
-		if (!user) throw new UnauthorizedException("User not found")
+		if (!user) throw new NotFoundException("User not found")
 		if (user.isBlocked) throw new UnauthorizedException("Your account is blocked. Please contact support.")
 
 		// 2. PIN Verification
 		if (!user.pinHash) {
-			throw new UnauthorizedException("Invalid phone number or PIN")
+			throw new BadRequestException("Invalid phone number or PIN")
 		}
 		const isPinCorrect = this.authUtils.verifyPin(pin, user.pinHash)
 		if (!isPinCorrect) {
@@ -106,7 +138,7 @@ export class TransferService implements ITransferService {
 				)
 			}
 
-			throw new UnauthorizedException(
+			throw new BadRequestException(
 				"Incorrect PIN. Please try again. After 3 failed attempts, your account will be blocked",
 			)
 		}

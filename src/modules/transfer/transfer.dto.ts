@@ -60,3 +60,8 @@ export class ExecuteTransferDto {
 	@Type(() => BankDetailsDto)
 	bankDetails?: BankDetailsDto
 }
+
+export class ValidateSearchDto {
+	@IsNotEmpty()
+	phoneOrUserId: string
+}

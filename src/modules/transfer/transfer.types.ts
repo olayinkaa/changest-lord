@@ -26,7 +26,8 @@ export interface TransferResponseDto {
 }
 
 export interface ITransferService {
-	searchRecipients(query: string): Promise<UserResponseDto>
+	searchRecipients(userId: string, query: string): Promise<UserResponseDto>
+	validateRecipients(userId: string, data: string): Promise<UserResponseDto>
 	validateAmount(userId: string, dto: ValidateAmountDto): Promise<ValidateAmountResponseDto>
 	executeTransfer(userId: string, dto: ExecuteTransferDto): Promise<TransferResponseDto>
 }
