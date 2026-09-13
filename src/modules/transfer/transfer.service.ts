@@ -134,7 +134,12 @@ export class TransferService implements ITransferService {
 			}
 		}
 
-		// 5. Atomic Double-Entry Transaction
+		// 5. Prevent self-transfer
+		if (recipientUserId === userId) {
+			throw new BadRequestException("You cannot transfer money to yourself.")
+		}
+
+		// 6. Atomic Double-Entry Transaction
 		let transactionReference: string
 		try {
 			transactionReference = await this.transferRepo.executeDoubleEntryTransfer(
@@ -154,7 +159,7 @@ export class TransferService implements ITransferService {
 			throw new HttpException(500, `Transfer failed: ${error.message}`)
 		}
 
-		// 6. External Bank Trigger (Async via Queue)
+		// 7. External Bank Trigger (Async via Queue)
 		if (transactionType === "TRANSFER_BANK" && dto.bankDetails) {
 			const { accountNumber, bankCode } = dto.bankDetails
 
