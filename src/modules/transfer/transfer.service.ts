@@ -4,7 +4,7 @@ import { pinoLogger } from "@/config/pino-logger"
 import { type IQueueService, QUEUE_TYPES } from "@/core/bullmq/queue.types"
 import { QUEUE_NAMES } from "@/core/bullmq/queue-name"
 import { BadRequestException, HttpException, NotFoundException, UnauthorizedException } from "@/core/errors/exceptions"
-import { TransactionStatus, TransactionType } from "@/generated/prisma/enums"
+import { TransactionType } from "@/generated/prisma/enums"
 import { ErrorType } from "@/types/enum"
 import { Prisma } from "@/types/prisma"
 import { generateTransactionReference } from "@/utils/reference-generator"
@@ -213,13 +213,14 @@ export class TransferService implements ITransferService {
 		}
 
 		// Finalize as SUCCESS for internal transfers
-		await this.transferRepo.updateTransactionStatus(transactionReference, TransactionStatus.SUCCESS)
+		// We no longer call updateTransactionStatus here because executeDoubleEntryTransfer
+		// already handles the atomic commit of the transaction.
 
 		return {
-			message: "Transfer completed successfully",
-			status: "SUCCESS",
-			transactionDate: createdAt,
 			reference: transactionReference,
+			status: "SUCCESS",
+			message: "Transfer completed successfully",
+			transactionDate: createdAt,
 		}
 	}
 }

@@ -58,12 +58,13 @@ export class TransferRepository implements ITransferRepository {
 				throw new Error("Insufficient funds to complete the transfer")
 			}
 
-			// Debit Principal Amount
+			// Debit total amount (Principal + Fee) in one atomic operation to prevent race conditions
 			await tx.wallet.update({
 				where: { id: senderWallet.id },
-				data: { balance: { decrement: amount } },
+				data: { balance: { decrement: totalDebit } },
 			})
 
+			// Create separate ledger entries for audit trail
 			await tx.ledger.create({
 				data: {
 					ledgerTransactionId: ledgerTx.id,
@@ -74,13 +75,8 @@ export class TransferRepository implements ITransferRepository {
 				},
 			})
 
-			// Debit Fee (as a separate transaction item)
+			// Debit Fee ledger entry
 			if (fee.gt(0)) {
-				await tx.wallet.update({
-					where: { id: senderWallet.id },
-					data: { balance: { decrement: fee } },
-				})
-
 				await tx.ledger.create({
 					data: {
 						ledgerTransactionId: ledgerTx.id,
