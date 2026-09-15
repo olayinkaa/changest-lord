@@ -92,7 +92,7 @@ export class WalletService implements IWalletService {
 			sectionsMap[month].data.push({
 				id: entry.id,
 				title: entry.description,
-				transaction: entry.transaction,
+				// transaction: entry.transaction,
 				amount: `₦${amount.abs().toFixed(2)}`,
 				type: isCredit ? "in" : "out",
 				date: dateStr,
@@ -116,5 +116,13 @@ export class WalletService implements IWalletService {
 		})
 
 		return { content }
+	}
+
+	public async createWalletForUser(userId: string) {
+		const wallet = await this.walletRepo.findByUserId(userId)
+		if (wallet) {
+			throw new BadRequestException("Wallet already exists for this user")
+		}
+		return this.walletRepo.createWallet(userId)
 	}
 }

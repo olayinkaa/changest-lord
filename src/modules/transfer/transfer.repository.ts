@@ -214,4 +214,59 @@ export class TransferRepository implements ITransferRepository {
 			data: { status },
 		})
 	}
+
+	public async findTransitTransactions2(recipientAccount?: string) {
+		return prisma.ledgerTransaction.findMany({
+			where: {
+				recipientAccount: recipientAccount,
+				ledgers: {
+					some: {
+						claimed: false,
+						type: "CREDIT",
+					},
+				},
+			},
+			include: {
+				ledgers: {
+					where: {
+						claimed: false,
+						type: "CREDIT",
+					},
+				},
+			},
+		})
+	}
+
+	public async findTransitTransactions(recipientAccount?: string) {
+		return prisma.ledgerTransaction.findMany({
+			where: {
+				// If a specific account is passed, filter by it.
+				// Otherwise, ensure recipientAccount is present (meaning it's for an unregistered account)
+				recipientAccount: recipientAccount ? recipientAccount : { not: null },
+				ledgers: {
+					some: {
+						claimed: false,
+						type: "CREDIT",
+						wallet: {
+							type: "TRANSIT", // Must belong to the TRANSIT wallet type
+						},
+					},
+				},
+			},
+			include: {
+				ledgers: {
+					include: {
+						wallet: true, // Includes the wallet details
+					},
+					where: {
+						claimed: false,
+						type: "CREDIT",
+						wallet: {
+							type: "TRANSIT",
+						},
+					},
+				},
+			},
+		})
+	}
 }

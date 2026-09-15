@@ -443,3 +443,24 @@
   - `src/modules/webhook/webhook.controller.ts` — applied `WebhookAuthMiddleware` to the deposit endpoint.
 - **Rationale:** Prevents unauthorized users from forging webhook events to credit wallets. By using the raw body and a shared secret, the system ensures both the authenticity and integrity of the incoming data.
 - **Verified:** The endpoint now requires a valid signature; otherwise, it returns a 401 Unauthorized response.
+
+## 2026-09-14
+
+### Fix: Protect Transfer Search Endpoint PII
+- **High-level description:** Updated the recipient search endpoint to use `POST` instead of `GET` to prevent Personally Identifiable Information (PII) such as phone numbers from appearing in server logs, load balancer logs, and browser history.
+- **Files modified:**
+  - `src/modules/transfer/transfer.controller.ts` — changed `@httpGet("/search")` to `@httpPost("/search")`, added `@validateSchema(ValidateSearchDto)`, and updated to use `@requestBody()`.
+- **Rationale:** Following the "Transfer Recipient Search Strategy" document, `POST` requests are mandatory for PII to ensure data is transmitted in the encrypted request body rather than the URL.
+- **Verified:** The endpoint now correctly receives the query in the request body and validates it using `ValidateSearchDto`.
+
+## 2026-09-14
+
+### Feat: Implement Transit Transaction Lookup
+- **High-level description:** Added functionality to retrieve transactions that are currently in transit (credited to the transit wallet but not yet claimed).
+- **Files modified:**
+  - `src/modules/transfer/transfer.repository.ts` — implemented `findTransitTransactions` to query `LedgerTransaction` entries with unclaimed credits.
+  - `src/modules/transfer/transfer.service.ts` — implemented `getTransitTransactions` as a pass-through to the repository.
+  - `src/modules/transfer/transfer.types.ts` — added the method definitions to the service and repository interfaces.
+- **Rationale:** Allows the system and administrators to identify and track funds that have been deposited but are awaiting a registered user to claim them.
+- **Verified:** Logic uses the `claimed` flag in the `Ledger` model to accurately identify transit funds.
+

@@ -18,4 +18,10 @@ export class DevWalletController {
 			newBalance: result.balance,
 		})
 	}
+
+	@httpPost("/create/test")
+	public async createWallet(@requestBody() body: { userId: string }) {
+		const result = await this.walletService.createWalletForUser(body.userId)
+		return ApiResponse.success(result)
+	}
 }

@@ -31,6 +31,7 @@ export interface ITransferService {
 	validateRecipients(userId: string, data: string): Promise<UserResponseDto>
 	validateAmount(userId: string, dto: ValidateAmountDto): Promise<ValidateAmountResponseDto>
 	executeTransfer(userId: string, dto: ExecuteTransferDto): Promise<TransferResponseDto>
+	getTransitTransactions(recipientAccount?: string): Promise<any[]>
 }
 
 export interface ITransferRepository {
@@ -48,6 +49,7 @@ export interface ITransferRepository {
 	): Promise<{ reference: string; createdAt: Date }>
 	executeSettlementSweep(amount: Decimal, reference: string): Promise<string>
 	updateTransactionStatus(reference: string, status: TransactionStatus): Promise<void>
+	findTransitTransactions(recipientAccount?: string): Promise<any[]>
 }
 
 export const TRANSFER_TYPES = {

@@ -213,8 +213,6 @@ export class TransferService implements ITransferService {
 		}
 
 		// Finalize as SUCCESS for internal transfers
-		// We no longer call updateTransactionStatus here because executeDoubleEntryTransfer
-		// already handles the atomic commit of the transaction.
 
 		return {
 			reference: transactionReference,
@@ -222,5 +220,9 @@ export class TransferService implements ITransferService {
 			message: "Transfer completed successfully",
 			transactionDate: createdAt,
 		}
+	}
+
+	public async getTransitTransactions(recipientAccount?: string): Promise<any[]> {
+		return this.transferRepo.findTransitTransactions(recipientAccount)
 	}
 }

@@ -26,6 +26,8 @@ db-seed:
 	pnpm prisma db seed
 db-push:
 	pnpm prisma db push
+system-wallet:
+	pnpm run seed:system 
 
 
 	
