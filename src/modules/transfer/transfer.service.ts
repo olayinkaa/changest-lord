@@ -9,6 +9,7 @@ import { ErrorType } from "@/types/enum"
 import { Prisma } from "@/types/prisma"
 import { generateTransactionReference } from "@/utils/reference-generator"
 import { AUTH_TYPES, type IAuthUtils } from "../auth/auth.types"
+import { type ISseService, SSE_TYPES, SseEvent } from "../sse/sse.types"
 import { type IUserRepository, USER_TYPES } from "../user/user.types"
 import { type IWalletRepository, WALLET_TYPES } from "../wallet/wallet.types"
 import {
@@ -37,6 +38,8 @@ export class TransferService implements ITransferService {
 		private authUtils: IAuthUtils,
 		@inject(QUEUE_TYPES.QueueService)
 		private queueService: IQueueService,
+		@inject(SSE_TYPES.Service)
+		private sseService: ISseService,
 	) {}
 
 	public async searchRecipients(userId: string, query: string): Promise<UserResponseDto> {
@@ -151,8 +154,10 @@ export class TransferService implements ITransferService {
 
 		// 4. Resolve Recipient to User ID
 		let recipientUserId: string | null = recipientAccount ?? null
+		let receiverId = null
 		if (recipientAccount && transactionType !== TransactionType.TRANSFER_BANK) {
 			const recipient = await this.transferRepo.searchRecipients(recipientAccount)
+			receiverId = recipient?.id
 			if (!recipient) {
 				// Allow unregistered recipients only for GIVE_CHANGE
 				if (transactionType === TransactionType.GIVE_CHANGE) {
@@ -193,7 +198,33 @@ export class TransferService implements ITransferService {
 
 		const { reference: transactionReference, createdAt } = transferResult
 
-		// 7. External Bank Trigger (Async via Queue)
+		// 7. SSE Notifications for Sender and Receiver
+		try {
+			// Notify Sender
+			await this.sseService.emitEvent(userId, SseEvent.TransferCompleted, {
+				reference: transactionReference,
+				amount: amount.toString(),
+				type: "DEBIT",
+				user: recipientAccount || "Unknown",
+				status: "SUCCESS",
+			})
+
+			// Notify Receiver if internal
+			if (receiverId) {
+				await this.sseService.emitEvent(receiverId, SseEvent.TransferCompleted, {
+					reference: transactionReference,
+					amount: amount.toString(),
+					type: "CREDIT",
+					user: userId,
+					status: "SUCCESS",
+				})
+			}
+		} catch (sseError) {
+			pinoLogger.error({ sseError }, "Failed to emit transfer SSE events")
+			// We don't throw here because the transaction is already committed
+		}
+
+		// 8. External Bank Trigger (Async via Queue)
 		if (transactionType === "TRANSFER_BANK" && dto.bankDetails) {
 			const { accountNumber, bankCode } = dto.bankDetails
 
@@ -213,7 +244,6 @@ export class TransferService implements ITransferService {
 		}
 
 		// Finalize as SUCCESS for internal transfers
-
 		return {
 			reference: transactionReference,
 			status: "SUCCESS",
