@@ -154,10 +154,8 @@ export class TransferService implements ITransferService {
 
 		// 4. Resolve Recipient to User ID
 		let recipientUserId: string | null = recipientAccount ?? null
-		let receiverId = null
 		if (recipientAccount && transactionType !== TransactionType.TRANSFER_BANK) {
 			const recipient = await this.transferRepo.searchRecipients(recipientAccount)
-			receiverId = recipient?.id
 			if (!recipient) {
 				// Allow unregistered recipients only for GIVE_CHANGE
 				if (transactionType === TransactionType.GIVE_CHANGE) {
@@ -210,8 +208,8 @@ export class TransferService implements ITransferService {
 			})
 
 			// Notify Receiver if internal
-			if (receiverId) {
-				await this.sseService.emitEvent(receiverId, SseEvent.TransferCompleted, {
+			if (recipientUserId) {
+				await this.sseService.emitEvent(recipientUserId, SseEvent.TransferCompleted, {
 					reference: transactionReference,
 					amount: amount.toString(),
 					type: "CREDIT",
