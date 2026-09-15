@@ -1,6 +1,6 @@
 import { injectable } from "inversify"
 import { prisma } from "@/core/database/db"
-import { Prisma, type WalletType } from "@/generated/prisma/client"
+import { Prisma, TransactionStatus, type WalletType } from "@/generated/prisma/client"
 import type { IWalletRepository } from "./wallet.types"
 
 @injectable()
@@ -69,6 +69,7 @@ export class WalletRepository implements IWalletRepository {
 					reference: `CLAIM-${Date.now()}-${phone}`,
 					transactionType: "TRANSFER_MYCHANGE",
 					description: `Claiming pending transit funds for phone ${phone}`,
+					status: TransactionStatus.SUCCESS,
 				},
 			})
 
