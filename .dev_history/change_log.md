@@ -464,3 +464,17 @@
 - **Rationale:** Allows the system and administrators to identify and track funds that have been deposited but are awaiting a registered user to claim them.
 - **Verified:** Logic uses the `claimed` flag in the `Ledger` model to accurately identify transit funds.
 
+
+## 2026-09-15
+
+### Feat: Add endpoint for recent transactions
+- **High-level description:** Implemented a new endpoint `GET /wallet/recent` that returns the most recent transactions for the authenticated user.
+- **Files modified:**
+  - `src/modules/ledger/ledger.types.ts` — added `findRecentByUserId` to `ILedgerRepository`.
+  - `src/modules/ledger/ledger.repository.ts` — implemented `findRecentByUserId` with `take` limit.
+  - `src/modules/wallet/wallet.types.ts` — added `getRecentTransactions` to `IWalletService`.
+  - `src/modules/wallet/wallet.service.ts` — implemented `getRecentTransactions` and extracted formatting logic into `formatEntry` helper.
+  - `src/modules/wallet/wallet.controller.ts` — added `GET /recent` endpoint with support for `limit` query parameter (5 or 10).
+- **Rationale:** Provides a lightweight way for the frontend to display a "Recent Activities" list without fetching the entire transaction history.
+- **Verified:** The endpoint correctly handles the `limit` parameter and returns formatted transaction data matching the requested shape.
+

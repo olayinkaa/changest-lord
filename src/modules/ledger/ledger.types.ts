@@ -11,6 +11,7 @@ export interface ILedgerRepository {
 		description: string
 	}): Promise<any>
 	findByUserId(userId: string): Promise<any[]>
+	findRecentByUserId(userId: string, limit: number): Promise<any[]>
 }
 
 export interface ILedgerService {

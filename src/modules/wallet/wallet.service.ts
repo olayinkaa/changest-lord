@@ -19,6 +19,24 @@ export class WalletService implements IWalletService {
 		private ledgerRepo: ILedgerRepository,
 	) {}
 
+	private formatEntry(entry: any) {
+		const date = new Date(entry.createdAt)
+		const isCredit = entry.type === "CREDIT"
+		const amount = entry.amount
+		// const sign = isCredit ? "+" : "-";
+
+		return {
+			id: entry.id,
+			title: entry.description,
+			//   amount: `${sign}₦${amount.abs().toFixed(2)}`,
+			amount: `₦${amount.abs().toFixed(2)}`,
+			type: isCredit ? "in" : "out",
+			date: format(date, "MMMM dd, yyyy"),
+			time: format(date, "HH:mm:ss"),
+			status: entry.transaction?.status || "Successful",
+		}
+	}
+
 	public async getBalance(userId: string) {
 		const wallet = await this.walletRepo.findByUserId(userId)
 		if (!wallet) {
@@ -60,8 +78,6 @@ export class WalletService implements IWalletService {
 		for (const entry of entries) {
 			const date = new Date(entry.createdAt)
 			const month = format(date, "MMMM")
-			const dateStr = format(date, "MMMM dd, yyyy")
-			const timeStr = format(date, "HH:mm:ss")
 
 			if (!sectionsMap[month]) {
 				sectionsMap[month] = {
@@ -89,21 +105,10 @@ export class WalletService implements IWalletService {
 				}
 			}
 
-			sectionsMap[month].data.push({
-				id: entry.id,
-				title: entry.description,
-				// transaction: entry.transaction,
-				amount: `₦${amount.abs().toFixed(2)}`,
-				type: isCredit ? "in" : "out",
-				date: dateStr,
-				time: timeStr,
-				status: entry.transaction?.status || "Successful",
-				isFee: entry.description?.toLowerCase().includes("fee") ?? false,
-			})
+			sectionsMap[month].data.push(this.formatEntry(entry))
 		}
 
 		const content = Object.values(sectionsMap).map((section: any) => {
-			// Calculate the sum of totalOut and totalFees
 			const combinedOut = section.totalOut.add(section.totalFees)
 
 			return {
@@ -116,6 +121,11 @@ export class WalletService implements IWalletService {
 		})
 
 		return { content }
+	}
+
+	public async getRecentTransactions(userId: string, limit: number): Promise<any[]> {
+		const entries = await this.ledgerRepo.findRecentByUserId(userId, limit)
+		return entries.map((entry) => this.formatEntry(entry))
 	}
 
 	public async createWalletForUser(userId: string) {

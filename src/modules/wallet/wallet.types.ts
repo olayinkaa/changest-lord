@@ -41,6 +41,7 @@ export interface IWalletService {
 	topUp(data: TopUpWalletDto): Promise<any>
 	getTransactionHistory(userId: string): Promise<TransactionListResponseDto>
 	createWalletForUser(userId: string): Promise<any>
+	getRecentTransactions(userId: string, limit: number): Promise<any[]>
 }
 
 export const WALLET_TYPES = {

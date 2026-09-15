@@ -38,4 +38,22 @@ export class LedgerRepository implements ILedgerRepository {
 			},
 		})
 	}
+
+	public async findRecentByUserId(userId: string, limit: number) {
+		return prisma.ledger.findMany({
+			where: {
+				wallet: {
+					userId,
+				},
+			},
+			include: {
+				transaction: true,
+				wallet: true,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+			take: limit,
+		})
+	}
 }
