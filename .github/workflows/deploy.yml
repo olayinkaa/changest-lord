@@ -13,7 +13,7 @@ permissions:
 
 env:
   GHCR_OWNER: borges-technology
-  IMAGE_REPO: mychangeBackendServer
+  IMAGE_REPO: mychange-backend-server
   IMAGE_TAG: ${{ github.ref_name }}
   SERVICE_NAME: api
   COMPOSE_PATH: /home/devops/apps/services/${{ github.ref_name }}-myChangeBackendServer/compose.yaml
