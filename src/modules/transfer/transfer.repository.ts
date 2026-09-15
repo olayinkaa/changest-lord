@@ -45,6 +45,7 @@ export class TransferRepository implements ITransferRepository {
 					transactionType,
 					recipientAccount: recipientAccount,
 					description: `Transfer ${transactionType} from ${userId} to ${recipientUserId || recipientAccount || "Bank"}`,
+					status: transactionType === TransactionType.TRANSFER_BANK ? "PENDING" : "SUCCESS",
 				},
 			})
 
