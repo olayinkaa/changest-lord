@@ -20,8 +20,6 @@ import type { IOnboardingService } from "./onboarding.type"
 
 @injectable()
 export class OnboardingService implements IOnboardingService {
-	livenessRedirectUrl: string = "myChange://"
-
 	constructor(
 		@inject(USER_TYPES.Repository) private readonly userRepo: IUserRepository,
 		@inject(BUSINESS_TYPES.Service)
@@ -37,11 +35,19 @@ export class OnboardingService implements IOnboardingService {
 		private readonly walletRepo: IWalletRepository,
 	) {}
 
-	/**
-	 *
-	 * @param phone
-	 * @returns
-	 */
+	private generateOnboardingToken(user: any) {
+		const nextScope = mapStepToNextScope(user.onboardingStep, user.userType ?? undefined)
+
+		const payload = {
+			userId: user.id,
+			phone: user.phone,
+			userType: user.userType,
+			scope: nextScope,
+		}
+
+		return this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
+	}
+
 	async validatePhone(phone: string): Promise<any> {
 		const existing = await this.userRepo.findByPhoneWithKyc(phone)
 
@@ -53,18 +59,7 @@ export class OnboardingService implements IOnboardingService {
 				})
 			}
 
-			const nextScope = mapStepToNextScope(existing.onboardingStep, existing?.userType)
-
-			// User exist but has not completed profile
-
-			const payload = {
-				userId: existing.id,
-				phone: existing.phone,
-				userType: existing.userType,
-				scope: nextScope,
-			}
-
-			const resumptionToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
+			const resumptionToken = this.generateOnboardingToken(existing)
 
 			return {
 				description: "Resuming incomplete registration",
@@ -92,12 +87,6 @@ export class OnboardingService implements IOnboardingService {
 		}
 	}
 
-	/**
-	 *
-	 * @param onboardingUser
-	 * @param data
-	 * @returns
-	 */
 	async onboardUserProfile(onboardingUser: IOnboardingUser, data: OnboardingProfileRequest) {
 		if (data.email) {
 			const existingEmailUser = await this.userRepo.findByEmail(data.email)
@@ -111,22 +100,11 @@ export class OnboardingService implements IOnboardingService {
 		const updatedUser = await this.userRepo.createUserProfile(onboardingUser, data)
 
 		if (!updatedUser.email) {
-			throw new Error("User email is required to send onboarding notification.")
+			throw new BadRequestException("User email is required to send onboarding notification.")
 		}
 
-		// 2. Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType ?? undefined)
-
-		// 3. Assemble structural JWT target payload parameters
-		const payload = {
-			userId: updatedUser.id,
-			phone: updatedUser.phone,
-			userType: updatedUser.userType,
-			scope: nextScope,
-		}
-
-		// 4. Generate the continuous sequential temporary transaction token
-		const stepToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
+		// 2. Generate token for the next step
+		const stepToken = this.generateOnboardingToken(updatedUser)
 
 		return {
 			description: "Profile details registered successfully.",
@@ -136,30 +114,13 @@ export class OnboardingService implements IOnboardingService {
 		}
 	}
 
-	/**
-	 *
-	 * @param onboardingUser
-	 * @param data
-	 * @returns
-	 */
 	async onboardBusinessProfile(onboardingUser: IOnboardingUser, data: OnboardingBusinessProfileRequest) {
 		await this.businessTypeService.getBusinessTypeById(data.businessTypeId)
 		// Process profile registration database logic
 		const updatedUser = await this.userRepo.updateBusinessProfile(onboardingUser.id, data)
 
-		// Compute the correct next progressive security access scope
-		const nextScope = mapStepToNextScope(updatedUser.onboardingStep, updatedUser.userType ?? undefined)
-
-		// Assemble structural JWT target payload parameters
-		const payload = {
-			userId: updatedUser.id,
-			phone: updatedUser.phone,
-			userType: updatedUser.userType,
-			scope: nextScope,
-		}
-
-		// Generate the continuous sequential temporary transaction token
-		const stepToken = this.authUtils.generateToken(payload, config.JWT_ONBOARDING_SECRET, "15m")
+		// Generate token for the next step
+		const stepToken = this.generateOnboardingToken(updatedUser)
 
 		return {
 			description: "Business details registered successfully.",
@@ -180,16 +141,14 @@ export class OnboardingService implements IOnboardingService {
 		}
 		let userId5 = user.userId5
 
-		// if (user.userType === UserType.seller && !userId5) {
 		if (!userId5) {
 			userId5 = await this.utilityService.generateUniqueUserId5()
 		}
 
-		// 3. Update pin and userId5 together
+		// Update pin and userId5 together
 		const updatedUser = await this.userRepo.updateUserPinAndUserId5(userId, pinHash, userId5)
 
 		// Automatically create the user wallet upon PIN completion
-		// We check for an existing wallet first to avoid duplicate errors
 		const existingWallet = await this.walletRepo.findByUserId(userId)
 		if (!existingWallet) {
 			await this.walletRepo.createWallet(userId)
@@ -198,9 +157,12 @@ export class OnboardingService implements IOnboardingService {
 		// Claim any pending transit funds sent to this phone number during onboarding
 		const pendingCredits = await this.userRepo.findPendingTransitCredits(updatedUser.phone)
 
-		for (const credit of pendingCredits) {
-			await this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount, credit.id)
-		}
+		// Process claims in parallel to improve response time
+		await Promise.all(
+			pendingCredits.map((credit) =>
+				this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount, credit.id),
+			),
+		)
 
 		// Generate an access token for automatic login/dashboard access
 		const payload = {
@@ -218,7 +180,7 @@ export class OnboardingService implements IOnboardingService {
 		)
 
 		if (!updatedUser.email) {
-			throw new Error("User email is required to send welcome notification.")
+			throw new BadRequestException("User email is required to send welcome notification.")
 		}
 
 		// Trigger the onboarding welcome email background task
@@ -230,7 +192,7 @@ export class OnboardingService implements IOnboardingService {
 					name: updatedUser.firstName ?? "there",
 					email: updatedUser.email,
 				}),
-				fromEmail: "olayinka@borgestech.co",
+				fromEmail: config.FROM_EMAIL,
 				userId: updatedUser.id,
 			})
 			.catch((err) => {
@@ -298,5 +260,4 @@ export class OnboardingService implements IOnboardingService {
 
 		return { exists: false, message: "Business name is available" }
 	}
-	//
 }

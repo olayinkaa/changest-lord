@@ -9,6 +9,7 @@ export interface UserResponseDto {
 	lastName: string
 	phone: string
 	virtualAccountNo: string
+	avatar: string
 }
 
 export interface ValidateAmountResponseDto {

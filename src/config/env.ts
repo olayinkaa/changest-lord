@@ -37,6 +37,8 @@ const envSchema = z
 		AWS_SECRET_ACCESS_KEY: z.string(),
 		AWS_REGION: z.string().default("eu-west-1"),
 		// Email configuration
+		FROM_EMAIL: z.string().default("olayinka@borgestech.co"),
+		LIVENESS_REDIRECT_URL: z.string().default("myChange://"),
 		// Verification configuration
 		VERIFCATION_PROVIDER: z.enum(["dojah", "youverify"]).default("dojah"),
 		DOJAH_API_URL: z.string().optional(),

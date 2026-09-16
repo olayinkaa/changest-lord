@@ -64,6 +64,7 @@ export class TransferService implements ITransferService {
 			lastName: user.lastName || "",
 			phone: user.phone,
 			virtualAccountNo: user.userId5 || "",
+			avatar: user?.livenessImageUrl || "",
 		}
 	}
 
@@ -91,6 +92,7 @@ export class TransferService implements ITransferService {
 			lastName: user.lastName || "",
 			phone: user.phone,
 			virtualAccountNo: user.userId5 || "",
+			avatar: user?.livenessImageUrl || "",
 		}
 	}
 
