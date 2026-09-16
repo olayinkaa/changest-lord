@@ -57,12 +57,37 @@ export class UtilityService implements IUtilityService {
 	/**
 	 * Loads, caches, replaces variables, and inlines CSS for any HTML email template.
 	 */
+	/**
+	 * Loads, caches, replaces variables, and inlines CSS for any HTML email template.
+	 */
 	renderEmailTemplate(templateFileName: string, variables: Record<string, string>): string {
 		try {
 			// 1. Read from disk once and store in cache map
 			if (!this.templateCache.has(templateFileName)) {
-				const filePath = path.join(__dirname, `../../../src/templates/${templateFileName}`)
-				const fileContent = fs.readFileSync(filePath, "utf8")
+				// Check multiple potential locations to support local and production builds safely
+				const possiblePaths = [
+					path.resolve(process.cwd(), `dist/src/templates/${templateFileName}`),
+					path.resolve(process.cwd(), `dist/templates/${templateFileName}`),
+					path.resolve(__dirname, `../../../src/templates/${templateFileName}`),
+					path.resolve(__dirname, `../../templates/${templateFileName}`),
+				]
+
+				let fileContent: string | null = null
+				let foundPath = ""
+
+				for (const p of possiblePaths) {
+					if (fs.existsSync(p)) {
+						fileContent = fs.readFileSync(p, "utf8")
+						foundPath = p
+						break
+					}
+				}
+
+				if (!fileContent) {
+					throw new Error(`Template ${templateFileName} could not be found in any expected directory.`)
+				}
+
+				pinoLogger.info({ foundPath }, "Email template loaded successfully")
 				this.templateCache.set(templateFileName, fileContent)
 			}
 
@@ -77,9 +102,8 @@ export class UtilityService implements IUtilityService {
 				...variables, // User-passed variables can still override if needed
 			}
 
-			// 2. Dynamically replace all placeholder tags (e.g. {{name}}, {{otp}}, etc.)
+			// 2. Dynamically replace all placeholder tags (e.g. {name}, etc.)
 			for (const [key, value] of Object.entries(mergedVariables)) {
-				// const regex = new RegExp(`{{${key}}}`, "g");
 				const regex = new RegExp(`\\{${key}\\}`, "g")
 				template = template.replace(regex, value)
 			}
