@@ -11,6 +11,7 @@ export interface IWalletRepository {
 	findByType(type: WalletType): Promise<any | null>
 	topUp(userId: string, amount: Decimal): Promise<any>
 	executeTransitClaim(phone: string, userId: string, amount: Decimal, ledgerId: string): Promise<any>
+	deleteByUserId(userId: string): Promise<void>
 }
 
 export interface TransactionDetailDto {
@@ -29,6 +30,7 @@ export interface TransactionSectionDto {
 	totalIn: string
 	totalOut: string
 	totalFees: string
+	totalOutWithFees: string
 	data: TransactionDetailDto[]
 }
 

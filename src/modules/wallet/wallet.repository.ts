@@ -118,4 +118,13 @@ export class WalletRepository implements IWalletRepository {
 			return ledgerTx.reference
 		})
 	}
+
+	public async deleteByUserId(userId: string): Promise<void> {
+		const wallet = await this.findByUserId(userId)
+		if (wallet) {
+			await prisma.wallet.delete({
+				where: { id: wallet.id },
+			})
+		}
+	}
 }

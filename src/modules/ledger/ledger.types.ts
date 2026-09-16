@@ -12,6 +12,7 @@ export interface ILedgerRepository {
 	}): Promise<any>
 	findByUserId(userId: string): Promise<any[]>
 	findRecentByUserId(userId: string, limit: number): Promise<any[]>
+	deleteByUserId(userId: string): Promise<void>
 }
 
 export interface ILedgerService {

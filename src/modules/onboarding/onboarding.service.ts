@@ -3,6 +3,7 @@ import { ADAPTER_TYPES } from "@/adapters/adapters.types"
 import type { IAwsSesService } from "@/adapters/aws-ses/aws-ses.types"
 import { type IUtilityService, UTILITY_TYPES } from "@/common/utility/utility.type"
 import { config } from "@/config/env"
+import { pinoLogger } from "@/config/pino-logger"
 import { OnboardingScopes } from "@/constants"
 import { BadRequestException, ConflictException } from "@/core/errors/exceptions"
 import { OnboardingStep } from "@/generated/prisma/enums"
@@ -196,6 +197,7 @@ export class OnboardingService implements IOnboardingService {
 
 		// Claim any pending transit funds sent to this phone number during onboarding
 		const pendingCredits = await this.userRepo.findPendingTransitCredits(updatedUser.phone)
+
 		for (const credit of pendingCredits) {
 			await this.walletRepo.executeTransitClaim(updatedUser.phone, updatedUser.id, credit.amount, credit.id)
 		}
@@ -220,16 +222,20 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		// Trigger the onboarding welcome email background task
-		await this.emailProducer.sendEmail({
-			to: updatedUser.email,
-			subject: "Welcome to MyChange. 👋",
-			htmlBody: this.utilityService.renderEmailTemplate("welcome-email.html", {
-				name: updatedUser.firstName ?? "there",
-				email: updatedUser.email,
-			}),
-			fromEmail: "olayinka@borgestech.co",
-			userId: updatedUser.id,
-		})
+		this.emailProducer
+			.sendEmail({
+				to: updatedUser.email,
+				subject: "Welcome to MyChange. 👋",
+				htmlBody: this.utilityService.renderEmailTemplate("welcome-email.html", {
+					name: updatedUser.firstName ?? "there",
+					email: updatedUser.email,
+				}),
+				fromEmail: "olayinka@borgestech.co",
+				userId: updatedUser.id,
+			})
+			.catch((err) => {
+				pinoLogger.error({ err, userId: updatedUser.id }, "Failed to queue welcome email background job")
+			})
 
 		return {
 			description: "PIN created successfully.",
