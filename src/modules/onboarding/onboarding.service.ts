@@ -222,20 +222,20 @@ export class OnboardingService implements IOnboardingService {
 		}
 
 		// Trigger the onboarding welcome email background task
-		this.emailProducer
-			.sendEmail({
-				to: updatedUser.email,
-				subject: "Welcome to MyChange. 👋",
-				htmlBody: this.utilityService.renderEmailTemplate("welcome-email.html", {
-					name: updatedUser.firstName ?? "there",
-					email: updatedUser.email,
-				}),
-				fromEmail: "olayinka@borgestech.co",
-				userId: updatedUser.id,
-			})
-			.catch((err) => {
-				pinoLogger.error({ err, userId: updatedUser.id }, "Failed to queue welcome email background job")
-			})
+		// this.emailProducer
+		// 	.sendEmail({
+		// 		to: updatedUser.email,
+		// 		subject: "Welcome to MyChange. 👋",
+		// 		htmlBody: this.utilityService.renderEmailTemplate("welcome-email.html", {
+		// 			name: updatedUser.firstName ?? "there",
+		// 			email: updatedUser.email,
+		// 		}),
+		// 		fromEmail: "olayinka@borgestech.co",
+		// 		userId: updatedUser.id,
+		// 	})
+		// 	.catch((err) => {
+		// 		pinoLogger.error({ err, userId: updatedUser.id }, "Failed to queue welcome email background job")
+		// 	})
 
 		return {
 			description: "PIN created successfully.",
