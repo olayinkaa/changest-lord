@@ -142,16 +142,33 @@ export class BvnService implements IBvnService {
 				},
 				virtualAccount,
 			}
-		} catch (error) {
+		} catch (error: any) {
 			// Re-throw NestJS HTTP exceptions so they retain their status codes (400, 404, etc.)
 			if (error instanceof HttpException) {
 				throw error
 			}
 
-			// Log unexpected internal errors or third-party failures
-			pinoLogger.error({ err: error, userId, bvn }, "Error during BVN validation process")
+			// Extract useful details if it's an Axios/External API error
+			const externalErrorDetails = error.response?.data || error.message
 
-			// Wrap unexpected errors into a generic internal or bad gateway exception
+			// Log unexpected internal errors with detailed external context
+			pinoLogger.error(
+				{
+					err: error,
+					externalError: externalErrorDetails,
+					userId,
+					bvn,
+				},
+				"Error during BVN validation process",
+			)
+
+			// Return a more descriptive error if it's a known third-party failure
+			if (error.isAxiosError) {
+				throw new InternalServerErrorException(
+					`External verification service failed: ${JSON.stringify(externalErrorDetails)}`,
+				)
+			}
+
 			throw new InternalServerErrorException("An error occurred while validating your BVN. Please try again later.")
 		}
 	}

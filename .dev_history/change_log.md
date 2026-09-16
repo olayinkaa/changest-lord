@@ -478,3 +478,15 @@
 - **Rationale:** Provides a lightweight way for the frontend to display a "Recent Activities" list without fetching the entire transaction history.
 - **Verified:** The endpoint correctly handles the `limit` parameter and returns formatted transaction data matching the requested shape.
 
+
+## 2026-09-16
+
+### Fix: Resolve constraint errors during user deletion
+- **High-level description:** Modified the user deletion flow to ensure that dependent records in the ledger and wallet modules are deleted before the user record, preventing database foreign key constraint errors.
+- **Files modified:**
+  - `src/modules/ledger/ledger.types.ts` — added `deleteByUserId` to `ILedgerRepository`.
+  - `src/modules/ledger/ledger.repository.ts` — implemented `deleteByUserId` to remove ledger entries and orphaned transactions.
+  - `src/modules/wallet/wallet.types.ts` — added `deleteByUserId` to `IWalletRepository`.
+  - `src/modules/wallet/wallet.repository.ts` — implemented `deleteByUserId` to remove user wallets.
+  - `src/modules/user/user.service.ts` — updated `deleteUser` to call ledger and wallet deletions before user deletion.
+- **Rationale:** User deletion was failing because of existing ledger entries and wallets tied to the user. Manually cleaning these records in the correct order resolves the constraint issues.
