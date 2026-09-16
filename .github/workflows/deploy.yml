@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 env:
-  GHCR_OWNER: borges-technology
+  GHCR_OWNER: face-mychange
   IMAGE_REPO: mychange-backend-server
   IMAGE_TAG: ${{ github.ref_name }}
   SERVICE_NAME: api
