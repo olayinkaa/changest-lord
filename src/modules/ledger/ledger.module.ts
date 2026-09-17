@@ -1,4 +1,5 @@
 import { ContainerModule } from "inversify"
+import { LedgerController } from "./ledger.controller"
 import { LedgerRepository } from "./ledger.repository"
 import { LedgerService } from "./ledger.service"
 import { type ILedgerRepository, type ILedgerService, LEDGER_TYPES } from "./ledger.types"
@@ -6,4 +7,5 @@ import { type ILedgerRepository, type ILedgerService, LEDGER_TYPES } from "./led
 export const LedgerModule = new ContainerModule((bind) => {
 	bind<ILedgerService>(LEDGER_TYPES.Service).to(LedgerService)
 	bind<ILedgerRepository>(LEDGER_TYPES.Repository).to(LedgerRepository)
+	bind<LedgerController>(LedgerController).toSelf()
 })

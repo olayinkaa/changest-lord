@@ -1,6 +1,7 @@
 import { injectable } from "inversify"
 import { prisma } from "@/core/database/db"
 import { type Prisma, TransactionType, type WebhookLog } from "@/generated/prisma/client"
+import { toTitleCase } from "@/utils/helper"
 
 @injectable()
 export class WebhookRepository {
@@ -38,6 +39,7 @@ export class WebhookRepository {
 		reference: string,
 		bankReference: string,
 		description: string,
+		sourceBankAccountName: string,
 		userId?: string,
 	): Promise<Prisma.Decimal> {
 		return prisma.$transaction(async (tx) => {
@@ -89,7 +91,8 @@ export class WebhookRepository {
 					walletId: targetWalletId,
 					amount: amount,
 					type: "CREDIT",
-					description: `External Deposit: ${reference} (Bank Ref: ${bankReference})`,
+					//   description: `External Deposit: ${reference} (Bank Ref: ${bankReference})`,
+					description: `Deposit from ${toTitleCase(sourceBankAccountName)} (Ref: ${bankReference})`,
 				},
 			})
 

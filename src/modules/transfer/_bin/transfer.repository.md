@@ -1,7 +1,6 @@
 import { injectable } from "inversify"
 import { prisma } from "@/core/database/db"
 import { type Prisma, TransactionType } from "@/generated/prisma/client"
-import { toTitleCase } from "@/utils/helper"
 import type { ITransferRepository } from "./transfer.types"
 
 @injectable()
@@ -39,44 +38,18 @@ export class TransferRepository implements ITransferRepository {
 		const totalDebit = amount.add(fee)
 
 		return prisma.$transaction(async (tx) => {
-			// 1. Resolve Names for Description
-			const senderUser = await tx.user.findUnique({ where: { id: userId } })
-			const senderName = senderUser ? `${senderUser.firstName || ""} ${senderUser.lastName || ""}`.trim() : "Unknown"
-
-			let recipientName = recipientAccount || "Bank"
-			if (recipientUserId) {
-				const recipientUser = await tx.user.findUnique({
-					where: { id: recipientUserId },
-				})
-				if (recipientUser) {
-					recipientName = `${recipientUser.firstName || ""} ${recipientUser.lastName || ""}`.trim()
-				}
-			}
-
-			let headerDescription = ""
-			if (transactionType === TransactionType.GIVE_CHANGE) {
-				headerDescription = `Give to ${recipientName}`
-			} else if (
-				transactionType === TransactionType.TRANSFER_MYCHANGE ||
-				transactionType === TransactionType.TRANSFER_BANK
-			) {
-				headerDescription = `Transfer from ${senderName}`
-			} else {
-				headerDescription = `Transfer ${transactionType} from ${senderName} to ${recipientName}`
-			}
-
-			// 2. Create the Transaction Header
+			// 1. Create the Transaction Header
 			const ledgerTx = await tx.ledgerTransaction.create({
 				data: {
 					reference,
 					transactionType,
 					recipientAccount: recipientAccount,
-					description: headerDescription,
+					description: `Transfer ${transactionType} from ${userId} to ${recipientUserId || recipientAccount || "Bank"}`,
 					status: transactionType === TransactionType.TRANSFER_BANK ? "PENDING" : "SUCCESS",
 				},
 			})
 
-			// 3. Lock and Debit Sender
+			// 2. Lock and Debit Sender
 			const senderWallet = await tx.wallet.findFirst({
 				where: { userId },
 			})
@@ -86,31 +59,20 @@ export class TransferRepository implements ITransferRepository {
 				throw new Error("Insufficient funds to complete the transfer")
 			}
 
+			// Debit total amount (Principal + Fee) in one atomic operation to prevent race conditions
 			await tx.wallet.update({
 				where: { id: senderWallet.id },
 				data: { balance: { decrement: totalDebit } },
 			})
 
-			// Resolve debit description
-			let debitDescription = ""
-			if (transactionType === TransactionType.GIVE_CHANGE) {
-				debitDescription = `Give to ${recipientName}`
-			} else if (
-				transactionType === TransactionType.TRANSFER_MYCHANGE ||
-				transactionType === TransactionType.TRANSFER_BANK
-			) {
-				debitDescription = `Transfer to ${recipientName}`
-			} else {
-				debitDescription = `Debit for ${transactionType}`
-			}
-
+			// Create separate ledger entries for audit trail
 			await tx.ledger.create({
 				data: {
 					ledgerTransactionId: ledgerTx.id,
 					walletId: senderWallet.id,
 					amount: amount.mul(-1),
 					type: "DEBIT",
-					description: debitDescription,
+					description: `Debit for ${transactionType} - ${reference}`,
 				},
 			})
 
@@ -122,12 +84,12 @@ export class TransferRepository implements ITransferRepository {
 						walletId: senderWallet.id,
 						amount: fee.mul(-1),
 						type: "DEBIT",
-						description: `Transfer fee for ${toTitleCase(transactionType)}`,
+						description: `Transfer fee for ${transactionType} - ${reference}`,
 					},
 				})
 			}
 
-			// 4. Credit Recipient (or Transit Wallet)
+			// 3. Credit Recipient (or Transit Wallet)
 			let recipientWalletId: string
 			let userWallet = null
 
@@ -153,35 +115,17 @@ export class TransferRepository implements ITransferRepository {
 				where: { id: recipientWalletId },
 				data: { balance: { increment: amount } },
 			})
-
-			// Resolve credit description
-			let creditDescription = ""
-			if (transactionType === TransactionType.GIVE_CHANGE) {
-				creditDescription = `Gift from ${senderName}`
-			} else if (
-				transactionType === TransactionType.TRANSFER_MYCHANGE ||
-				transactionType === TransactionType.TRANSFER_BANK
-			) {
-				creditDescription = `Transfer from ${senderName}`
-			} else {
-				creditDescription = `Credit for ${transactionType}`
-			}
-
-			if (!recipientUserId) {
-				creditDescription += ` (Pending Claim for ${recipientAccount || "Unknown"})`
-			}
-
 			await tx.ledger.create({
 				data: {
 					ledgerTransactionId: ledgerTx.id,
 					walletId: recipientWalletId,
 					amount: amount,
 					type: "CREDIT",
-					description: creditDescription,
+					description: `Credit for ${transactionType} - ${reference}${!recipientUserId ? ` (Pending Claim for ${recipientAccount || "Unknown"})` : ""}`,
 				},
 			})
 
-			// 5. Credit System Wallet (Fees)
+			// 4. Credit System Wallet (Fees)
 			if (fee.gt(0)) {
 				const systemWallet = await tx.wallet.findFirst({
 					where: { userId: null, type: "SYSTEM_FEE", currency: "NGN" },
@@ -198,7 +142,7 @@ export class TransferRepository implements ITransferRepository {
 						walletId: systemWallet.id,
 						amount: fee,
 						type: "CREDIT",
-						description: `System fee collection`,
+						description: `Fee for ${transactionType} - ${reference}`,
 					},
 				})
 			}
@@ -212,6 +156,7 @@ export class TransferRepository implements ITransferRepository {
 
 	public async executeSettlementSweep(amount: Prisma.Decimal, reference: string): Promise<string> {
 		return prisma.$transaction(async (tx) => {
+			// 1. Header
 			const ledgerTx = await tx.ledgerTransaction.create({
 				data: {
 					reference,
@@ -220,6 +165,7 @@ export class TransferRepository implements ITransferRepository {
 				},
 			})
 
+			// 2. Debit SYSTEM_FEE
 			const feeWallet = await tx.wallet.findFirst({
 				where: { userId: null, type: "SYSTEM_FEE", currency: "NGN" },
 			})
@@ -239,6 +185,7 @@ export class TransferRepository implements ITransferRepository {
 				},
 			})
 
+			// 3. Credit SETTLEMENT
 			const settlementWallet = await tx.wallet.findFirst({
 				where: { userId: null, type: "SETTLEMENT", currency: "NGN" },
 			})
@@ -294,13 +241,15 @@ export class TransferRepository implements ITransferRepository {
 	public async findTransitTransactions(recipientAccount?: string) {
 		return prisma.ledgerTransaction.findMany({
 			where: {
+				// If a specific account is passed, filter by it.
+				// Otherwise, ensure recipientAccount is present (meaning it's for an unregistered account)
 				recipientAccount: recipientAccount ? recipientAccount : { not: null },
 				ledgers: {
 					some: {
 						claimed: false,
 						type: "CREDIT",
 						wallet: {
-							type: "TRANSIT",
+							type: "TRANSIT", // Must belong to the TRANSIT wallet type
 						},
 					},
 				},
@@ -308,7 +257,7 @@ export class TransferRepository implements ITransferRepository {
 			include: {
 				ledgers: {
 					include: {
-						wallet: true,
+						wallet: true, // Includes the wallet details
 					},
 					where: {
 						claimed: false,

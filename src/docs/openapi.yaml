@@ -44,6 +44,9 @@ tags:
     description: NIN verification pipeline (planned — controller not yet wired).
   - name: Address
     description: Google Maps address autocomplete and geometry.
+  - name: Ledger
+    description: Ledger transactions and account entries.
+
 
 paths:
   /users:
@@ -84,6 +87,12 @@ paths:
     $ref: "./paths/address.yaml#/autocomplete"
   /address/geometry:
     $ref: "./paths/address.yaml#/geometry"
+  /ledger/transaction/reference/{reference}:
+    $ref: "./paths/ledger.yaml#/ledgerTransactionByReference"
+  /ledger/entry/{id}:
+    $ref: "./paths/ledger.yaml#/ledgerEntryDetails"
+
+
 
 components:
   securitySchemes:
@@ -165,3 +174,9 @@ components:
       $ref: "./schemas/address.yaml#/AddressAutocompleteResponse"
     AddressGeometry:
       $ref: "./schemas/address.yaml#/AddressGeometry"
+    TransactionDetails:
+      $ref: "./schemas/ledger.yaml#/TransactionDetails"
+    LedgerEntryDetails:
+      $ref: "./schemas/ledger.yaml#/LedgerEntryDetails"
+
+

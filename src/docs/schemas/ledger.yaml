@@ -1,0 +1,76 @@
+TransactionDetails:
+  type: object
+  properties:
+    transactionId:
+      type: string
+      format: uuid
+    reference:
+      type: string
+    status:
+      type: string
+      enum: [PENDING, SUCCESS, FAILED, PARTIAL_SUCCESS, REVERSED]
+    type:
+      type: string
+    date:
+      type: string
+      format: date-time
+    recipient:
+      type: object
+      properties:
+        account:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+    sender:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        userId:
+          type: string
+    isDebit:
+      type: boolean
+    isCredit:
+      type: boolean
+
+LedgerEntryDetails:
+  type: object
+  properties:
+    entryId:
+      type: string
+      format: uuid
+    amount:
+      type: string
+    type:
+      type: string
+      enum: [CREDIT, DEBIT]
+    description:
+      type: string
+    date:
+      type: string
+      format: date-time
+    transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        status:
+          type: string
+        type:
+          type: string
+    user:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        userId5:
+          type: string

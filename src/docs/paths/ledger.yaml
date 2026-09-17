@@ -1,0 +1,53 @@
+ledgerTransactionByReference:
+  get:
+    tags:
+      - Ledger
+    summary: Get transaction details by reference
+    description: Retrieves full details of a transaction (sender and recipient) using the transaction reference.
+    parameters:
+      - name: reference
+        in: path
+        required: true
+        description: Transaction Reference
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Successfully retrieved transaction details
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ApiResponse"
+      '404':
+        description: Transaction not found
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"
+
+ledgerEntryDetails:
+  get:
+    tags:
+      - Ledger
+    summary: Get individual ledger entry details by ID
+    description: Retrieves details of a specific ledger entry (the individual side of a transaction) using the ledger entry ID.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Ledger Entry ID
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Successfully retrieved ledger entry details
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ApiResponse"
+      '404':
+        description: Ledger entry not found
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/_shared.yaml#/ErrorResponse"

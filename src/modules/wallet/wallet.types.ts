@@ -41,9 +41,7 @@ export interface TransactionListResponseDto {
 export interface IWalletService {
 	getBalance(userId: string): Promise<{ balance: Decimal; currency: string }>
 	topUp(data: TopUpWalletDto): Promise<any>
-	getTransactionHistory(userId: string): Promise<TransactionListResponseDto>
 	createWalletForUser(userId: string): Promise<any>
-	getRecentTransactions(userId: string, limit: number): Promise<any[]>
 }
 
 export const WALLET_TYPES = {

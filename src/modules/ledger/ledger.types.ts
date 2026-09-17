@@ -1,5 +1,6 @@
 import type { LedgerType, TransactionType } from "@/generated/prisma/enums"
 import type { Decimal } from "@/types/prisma"
+import type { TransactionListResponseDto } from "../wallet/wallet.types"
 
 export interface ILedgerRepository {
 	createTransaction(data: { reference: string; transactionType: TransactionType; description: string }): Promise<any>
@@ -13,6 +14,8 @@ export interface ILedgerRepository {
 	findByUserId(userId: string): Promise<any[]>
 	findRecentByUserId(userId: string, limit: number): Promise<any[]>
 	deleteByUserId(userId: string): Promise<void>
+	findTransactionByReference(reference: string): Promise<any>
+	findLedgerById(id: string): Promise<any>
 }
 
 export interface ILedgerService {
@@ -24,6 +27,10 @@ export interface ILedgerService {
 		type: LedgerType
 		description: string
 	}): Promise<any>
+	getTransactionByReference(reference: string): Promise<any>
+	getLedgerEntryDetails(id: string): Promise<any>
+	getRecentTransactions(userId: string, limit: number): Promise<any[]>
+	getTransactionHistory(userId: string): Promise<TransactionListResponseDto>
 }
 
 export const LEDGER_TYPES = {

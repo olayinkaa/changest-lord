@@ -490,3 +490,28 @@
   - `src/modules/wallet/wallet.repository.ts` — implemented `deleteByUserId` to remove user wallets.
   - `src/modules/user/user.service.ts` — updated `deleteUser` to call ledger and wallet deletions before user deletion.
 - **Rationale:** User deletion was failing because of existing ledger entries and wallets tied to the user. Manually cleaning these records in the correct order resolves the constraint issues.
+
+## 2026-09-17
+
+### Refactor: Split transaction retrieval into Reference and Entry lookups
+- **High-level description:** Refactored the transaction retrieval logic to separate full transaction lookups by reference from individual ledger entry lookups by ID. This allows the API to explicitly surface the "individual" (debit or credit side) of a transaction.
+- **Files modified:**
+  - `src/modules/ledger/ledger.types.ts` — updated `ILedgerRepository` and `ILedgerService` contracts to replace `findTransactionByIdOrReference` with `findTransactionByReference` and `findLedgerById`.
+  - `src/modules/ledger/ledger.repository.ts` — implemented the split lookup methods using Prisma.
+  - `src/modules/ledger/ledger.service.ts` — implemented `getTransactionByReference` (full view) and `getLedgerEntryDetails` (individual view).
+  - `src/modules/ledger/ledger.controller.ts` — replaced the generic `/transaction/\{idOrRef\}` route with `/transaction/reference/\{reference\}` and `/entry/\{id\}`.
+  - `src/docs/openapi.yaml` — updated paths and registered the new `LedgerEntryDetails` schema.
+  - `src/docs/paths/ledger.yaml` — redefined the ledger paths to match the split endpoints.
+  - `src/docs/schemas/ledger.yaml` — added the `LedgerEntryDetails` schema.
+- **Rationale:** Improves clarity and allows the client to specifically target the debit or credit side of a transaction when using an ID, while maintaining the ability to look up the overall event via a reference.
+- **Verified:** Branch `feature/get-transaction-details`. Logic aligns with the double-entry ledger model.
+
+## 2026-09-17
+
+### Refactor: Update transaction descriptions for fund transfers and deposits
+- **High-level description:** Updated the transaction description logic in `TransferRepository` and `WebhookService` to use human-readable name-based patterns.
+- **Files modified:**
+  - `src/modules/transfer/transfer.repository.ts` — updated `executeDoubleEntryTransfer` to use "Give to [Recipient Name]" for `GIVE_CHANGE` and "Transfer from [Sender Name]" for `TRANSFER_MYCHANGE` and `TRANSFER_BANK`.
+  - `src/modules/webhook/webhook-service.ts` — updated `processWebhookCredit` to use "Deposit from [Bank Account Name]" for deposits and "Change Collection from [Bank Account Name]" for collections.
+- **Rationale:** Improves the user-facing transaction history by replacing technical IDs/types with actual names of the parties involved, making the ledger entries intuitive for the end user.
+- **Verified:** Logic fetches sender/recipient user details from the database to construct names before creating the `LedgerTransaction` header.

@@ -39,6 +39,49 @@ export class LedgerRepository implements ILedgerRepository {
 		})
 	}
 
+	public async findTransactionByReference(reference: string) {
+		return prisma.ledgerTransaction.findUnique({
+			where: { reference },
+			include: {
+				ledgers: {
+					include: {
+						wallet: {
+							include: {
+								user: true,
+							},
+						},
+					},
+				},
+			},
+		})
+	}
+
+	public async findLedgerById(id: string) {
+		return prisma.ledger.findUnique({
+			where: { id },
+			include: {
+				transaction: {
+					include: {
+						ledgers: {
+							include: {
+								wallet: {
+									include: {
+										user: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				wallet: {
+					include: {
+						user: true,
+					},
+				},
+			},
+		})
+	}
+
 	public async findRecentByUserId(userId: string, limit: number) {
 		return prisma.ledger.findMany({
 			where: {
@@ -75,11 +118,6 @@ export class LedgerRepository implements ILedgerRepository {
 			prisma.ledger.deleteMany({
 				where: { walletId: wallet.id },
 			}),
-			// We only delete transactions that no longer have any ledger entries
-			// This is complex in a single query, so we'll handle it by deleting
-			// those that only belong to this user if possible,
-			// but for now, let's just delete the ledger entries to resolve constraints.
-			// If the user wants the transactions gone too, we can try to delete them.
 		])
 
 		// Cleanup orphaned transactions

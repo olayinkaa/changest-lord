@@ -68,7 +68,7 @@ export class WebhookService {
 	}
 
 	private async processWebhookCredit(data: DepositWebhookDataDto, type: string, logId: string) {
-		const { reference, amount, bankReference, bankAccountName, bankAccountNumber } = data
+		const { reference, amount, bankReference, bankAccountName, bankAccountNumber, sourceBankAccountName } = data
 
 		pinoLogger.info({ webhookPayload: data, type })
 
@@ -88,15 +88,21 @@ export class WebhookService {
 				await this.webhookRepo.updateLog(logId, { userId })
 			}
 
-			const description = userId
-				? `${type} from ${bankAccountName} (Ref: ${reference})`
-				: `Company ${type} from ${bankAccountName} (Ref: ${reference})`
+			let description = ""
+			if (type === "Deposit") {
+				description = `Deposit from ${bankAccountName}`
+			} else if (type === "Change Collection") {
+				description = `Change Collection from ${bankAccountName}`
+			} else {
+				description = `${type} from ${bankAccountName} (Ref: ${reference})`
+			}
 
 			const newBalance = await this.webhookRepo.executeDeposit(
 				new Prisma.Decimal(amount),
 				reference,
 				bankReference,
 				description,
+				sourceBankAccountName,
 				userId,
 			)
 
