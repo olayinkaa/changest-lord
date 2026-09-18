@@ -7,7 +7,7 @@
 - [X] class validator
 - [X] helmet
 - [X] cors
-- [ ] Rate limiting
+- [X] Rate limiting
 - [X] Bullmq
 - [X] Redis
 - [X] Email / Email template
@@ -29,5 +29,5 @@
 - [X] create endpoints to simulate wallet topup
 - [X] Endpoints to get wallet balance
 - [X] Endpoint to search recipient
-- [ ] GIVE CHANGE: validate , seller cannot give change to self
-- [ ] Frontend: Search recipient should not return self
+- [X] GIVE CHANGE: validate , seller cannot give change to self
+- [X] Frontend: Search recipient should not return self

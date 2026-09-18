@@ -95,8 +95,6 @@ export class LedgerService implements ILedgerService {
 	public async getTransactionByReference(reference: string) {
 		const tx = await this.ledgerRepo.findTransactionByReference(reference)
 
-		pinoLogger.info({ tx })
-
 		if (!tx) {
 			throw new BadRequestException(`Transaction not found with reference: ${reference}`)
 		}
@@ -150,10 +148,26 @@ export class LedgerService implements ILedgerService {
 			userId5: user?.userId5 || "N/A",
 		}
 
+		// For external deposits, the sender is not a User but we can extract details from the description
+		let senderName = oppositeUser
+			? `${oppositeUser.firstName || ""} ${oppositeUser.lastName || ""}`.trim()
+			: "System/External"
+		const senderPhone = oppositeUser?.phone || "N/A"
+		const senderUserId5 = oppositeUser?.userId5 || "N/A"
+
+		if (!oppositeUser && entry.transaction) {
+			const desc = entry.description || ""
+			// Pattern: "Deposit from [Name] (Ref: ...)" or "Change Collection from [Name] (Ref: ...)"
+			const match = desc.match(/(?:Deposit|Change Collection) from (.*?) \(Ref: /)
+			if (match?.[1]) {
+				senderName = match[1].trim()
+			}
+		}
+
 		const counterPartyDetails = {
-			name: oppositeUser ? `${oppositeUser.firstName || ""} ${oppositeUser.lastName || ""}`.trim() : "System/External",
-			phone: oppositeUser?.phone || "N/A",
-			userId5: oppositeUser?.userId5 || "N/A",
+			name: senderName,
+			phone: senderPhone,
+			userId5: senderUserId5,
 		}
 
 		return {

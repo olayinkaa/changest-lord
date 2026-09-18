@@ -70,8 +70,6 @@ export class WebhookService {
 	private async processWebhookCredit(data: DepositWebhookDataDto, type: string, logId: string) {
 		const { reference, amount, bankReference, bankAccountName, bankAccountNumber, sourceBankAccountName } = data
 
-		pinoLogger.info({ webhookPayload: data, type })
-
 		// 1. Idempotency check
 		const existingTx = await this.webhookRepo.findTransactionByReference(reference)
 		if (existingTx) {

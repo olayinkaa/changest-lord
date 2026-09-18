@@ -1,6 +1,5 @@
 import { inject } from "inversify"
 import { BaseHttpController, controller, httpPost, requestBody } from "inversify-express-utils"
-import { pinoLogger } from "@/config/pino-logger"
 import type { QueueService } from "@/core/bullmq/queue.service"
 import { QUEUE_TYPES } from "@/core/bullmq/queue.types"
 import { QUEUE_NAMES } from "@/core/bullmq/queue-name"
@@ -23,7 +22,6 @@ export class WebhookController extends BaseHttpController {
 	// @validateSchema(DepositWebhookDto)
 	public async handleDeposit(@requestBody() body: DepositWebhookDto) {
 		// 1. Capture raw event in Audit Log immediately
-		pinoLogger.info({ bodyRR: body })
 		const log = await this.webhookService.createLog({
 			event: body.event,
 			payload: body,
