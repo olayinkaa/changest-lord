@@ -79,9 +79,12 @@ export class WalletRepository implements IWalletRepository {
 			})
 			if (!transitWallet) throw new Error("Transit wallet not configured")
 
+			const transitPrevBalance = transitWallet.balance
+			const transitNewBalance = transitPrevBalance.sub(amount)
+
 			await tx.wallet.update({
 				where: { id: transitWallet.id },
-				data: { balance: { decrement: amount } },
+				data: { balance: transitNewBalance },
 			})
 
 			await tx.ledger.create({
@@ -91,6 +94,8 @@ export class WalletRepository implements IWalletRepository {
 					amount: amount.mul(-1),
 					type: "DEBIT",
 					description: `Debit transit for claim ${ledgerTx.reference}`,
+					previousBalance: transitPrevBalance,
+					newBalance: transitNewBalance,
 				},
 			})
 
@@ -100,9 +105,12 @@ export class WalletRepository implements IWalletRepository {
 			})
 			if (!userWallet) throw new Error("User wallet not found")
 
+			const userPrevBalance = userWallet.balance
+			const userNewBalance = userPrevBalance.add(amount)
+
 			await tx.wallet.update({
 				where: { id: userWallet.id },
-				data: { balance: { increment: amount } },
+				data: { balance: userNewBalance },
 			})
 
 			await tx.ledger.create({
@@ -112,6 +120,8 @@ export class WalletRepository implements IWalletRepository {
 					amount: amount,
 					type: "CREDIT",
 					description: `Credit user for claim ${ledgerTx.reference}`,
+					previousBalance: userPrevBalance,
+					newBalance: userNewBalance,
 				},
 			})
 

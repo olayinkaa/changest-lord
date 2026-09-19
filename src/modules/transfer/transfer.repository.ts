@@ -86,9 +86,12 @@ export class TransferRepository implements ITransferRepository {
 				throw new Error("Insufficient funds to complete the transfer")
 			}
 
+			const senderPrevBalance = senderWallet.balance
+			const senderNewBalance = senderPrevBalance.sub(totalDebit)
+
 			await tx.wallet.update({
 				where: { id: senderWallet.id },
-				data: { balance: { decrement: totalDebit } },
+				data: { balance: senderNewBalance },
 			})
 
 			// Resolve debit description
@@ -111,6 +114,8 @@ export class TransferRepository implements ITransferRepository {
 					amount: amount.mul(-1),
 					type: "DEBIT",
 					description: debitDescription,
+					previousBalance: senderPrevBalance,
+					newBalance: senderNewBalance,
 				},
 			})
 
@@ -123,6 +128,8 @@ export class TransferRepository implements ITransferRepository {
 						amount: fee.mul(-1),
 						type: "DEBIT",
 						description: `Transfer fee for ${toTitleCase(transactionType)}`,
+						previousBalance: senderPrevBalance, // a fee entry is part of the same balance change event
+						newBalance: senderNewBalance,
 					},
 				})
 			}
@@ -149,9 +156,17 @@ export class TransferRepository implements ITransferRepository {
 				throw new Error("Recipient wallet not found")
 			}
 
+			const recipientWallet = await tx.wallet.findUnique({
+				where: { id: recipientWalletId },
+			})
+			if (!recipientWallet) throw new Error("Recipient wallet not found")
+
+			const recipientPrevBalance = recipientWallet.balance
+			const recipientNewBalance = recipientPrevBalance.add(amount)
+
 			await tx.wallet.update({
 				where: { id: recipientWalletId },
-				data: { balance: { increment: amount } },
+				data: { balance: recipientNewBalance },
 			})
 
 			// Resolve credit description
@@ -178,6 +193,8 @@ export class TransferRepository implements ITransferRepository {
 					amount: amount,
 					type: "CREDIT",
 					description: creditDescription,
+					previousBalance: recipientPrevBalance,
+					newBalance: recipientNewBalance,
 				},
 			})
 
@@ -188,9 +205,12 @@ export class TransferRepository implements ITransferRepository {
 				})
 				if (!systemWallet) throw new Error("System wallet not configured")
 
+				const systemPrevBalance = systemWallet.balance
+				const systemNewBalance = systemPrevBalance.add(fee)
+
 				await tx.wallet.update({
 					where: { id: systemWallet.id },
-					data: { balance: { increment: fee } },
+					data: { balance: systemNewBalance },
 				})
 				await tx.ledger.create({
 					data: {
@@ -199,6 +219,8 @@ export class TransferRepository implements ITransferRepository {
 						amount: fee,
 						type: "CREDIT",
 						description: `System fee collection`,
+						previousBalance: systemPrevBalance,
+						newBalance: systemNewBalance,
 					},
 				})
 			}
@@ -225,9 +247,12 @@ export class TransferRepository implements ITransferRepository {
 			})
 			if (!feeWallet) throw new Error("SYSTEM_FEE wallet not configured")
 
+			const feePrevBalance = feeWallet.balance
+			const feeNewBalance = feePrevBalance.sub(amount)
+
 			await tx.wallet.update({
 				where: { id: feeWallet.id },
-				data: { balance: { decrement: amount } },
+				data: { balance: feeNewBalance },
 			})
 			await tx.ledger.create({
 				data: {
@@ -236,6 +261,8 @@ export class TransferRepository implements ITransferRepository {
 					amount: amount.mul(-1),
 					type: "DEBIT",
 					description: `Sweep debit: ${reference}`,
+					previousBalance: feePrevBalance,
+					newBalance: feeNewBalance,
 				},
 			})
 
@@ -244,9 +271,12 @@ export class TransferRepository implements ITransferRepository {
 			})
 			if (!settlementWallet) throw new Error("SETTLEMENT wallet not configured")
 
+			const settlementPrevBalance = settlementWallet.balance
+			const settlementNewBalance = settlementPrevBalance.add(amount)
+
 			await tx.wallet.update({
 				where: { id: settlementWallet.id },
-				data: { balance: { increment: amount } },
+				data: { balance: settlementNewBalance },
 			})
 			await tx.ledger.create({
 				data: {
@@ -255,6 +285,8 @@ export class TransferRepository implements ITransferRepository {
 					amount: amount,
 					type: "CREDIT",
 					description: `Sweep credit: ${reference}`,
+					previousBalance: settlementPrevBalance,
+					newBalance: settlementNewBalance,
 				},
 			})
 

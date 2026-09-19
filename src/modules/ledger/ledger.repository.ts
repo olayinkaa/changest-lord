@@ -16,9 +16,19 @@ export class LedgerRepository implements ILedgerRepository {
 		amount: any
 		type: any
 		description: string
+		previousBalance?: any
+		newBalance?: any
 	}) {
 		return prisma.ledger.create({
-			data,
+			data: {
+				ledgerTransactionId: data.ledgerTransactionId,
+				walletId: data.walletId,
+				amount: data.amount,
+				type: data.type,
+				description: data.description,
+				previousBalance: data.previousBalance ?? 0,
+				newBalance: data.newBalance ?? 0,
+			},
 		})
 	}
 

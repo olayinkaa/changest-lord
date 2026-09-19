@@ -1,5 +1,6 @@
 import { format } from "date-fns"
 import { inject, injectable } from "inversify"
+import { toNumber } from "lodash-es"
 import { pinoLogger } from "@/config/pino-logger"
 import { BadRequestException } from "@/core/errors/exceptions"
 import { Prisma } from "@/types/prisma"
@@ -129,6 +130,8 @@ export class LedgerService implements ILedgerService {
 	public async getLedgerEntryDetails(id: string) {
 		const entry = await this.ledgerRepo.findLedgerById(id)
 
+		pinoLogger.info({ entry })
+
 		if (!entry) {
 			throw new BadRequestException(`Ledger entry not found with ID: ${id}`)
 		}
@@ -172,9 +175,11 @@ export class LedgerService implements ILedgerService {
 
 		return {
 			entryId: entry.id,
-			amount: entry.amount,
+			amount: Math.abs(toNumber(entry.amount)),
 			type: entry.type,
 			description: entry.description,
+			previousBalance: entry.previousBalance,
+			newBalance: entry.newBalance,
 			date: entry.createdAt,
 			transaction: {
 				id: entry.transaction?.id,

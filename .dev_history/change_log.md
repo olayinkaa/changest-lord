@@ -515,3 +515,13 @@
   - `src/modules/webhook/webhook-service.ts` — updated `processWebhookCredit` to use "Deposit from [Bank Account Name]" for deposits and "Change Collection from [Bank Account Name]" for collections.
 - **Rationale:** Improves the user-facing transaction history by replacing technical IDs/types with actual names of the parties involved, making the ledger entries intuitive for the end user.
 - **Verified:** Logic fetches sender/recipient user details from the database to construct names before creating the `LedgerTransaction` header.
+
+## 2026-09-18
+
+### Feat: Implement balance snapshotting (previousBalance and newBalance) in ledger entries
+- **High-level description:** Added logic to record the wallet balance immediately before and after every fund movement. This ensures that every ledger entry provides a historical snapshot of the account state at the exact moment the transaction occurred.
+- **Files modified:**
+  - `src/modules/transfer/transfer.repository.ts` — updated `executeDoubleEntryTransfer` and `executeSettlementSweep` to capture and store `previousBalance` and `newBalance` for all involved wallets (sender, recipient, system fee, and settlement).
+  - `src/modules/webhook/webhook.repository.ts` — updated `executeDeposit` to capture and store `previousBalance` and `newBalance` for the target wallet.
+- **Rationale:** Essential for financial auditing and troubleshooting. Recording snapshots prevents the need to reconstruct balances from the beginning of time and allows for immediate verification of a specific ledger entry's impact on the wallet balance.
+- **Verified:** Logic correctly calculates the new balance based on the current balance and the transaction amount, ensuring the snapshots are atomically persisted along with the wallet update and ledger entry.

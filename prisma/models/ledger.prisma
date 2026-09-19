@@ -21,6 +21,8 @@ model Ledger {
     amount          Decimal  @db.Decimal(18, 2)
     type            LedgerType
     description     String
+    previousBalance Decimal  @db.Decimal(18, 2)
+    newBalance      Decimal  @db.Decimal(18, 2)
     claimed         Boolean  @default(false)
     createdAt       DateTime @default(now())
 

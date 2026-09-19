@@ -78,10 +78,19 @@ export class WebhookRepository {
 				targetWalletId = settlementWallet.id
 			}
 
-			// 3. Update Balance
-			const wallet = await tx.wallet.update({
+			// 3. Update Balance and Capture Snapshot
+			const wallet = await tx.wallet.findUnique({
 				where: { id: targetWalletId },
-				data: { balance: { increment: amount } },
+			})
+
+			if (!wallet) throw new Error("Target wallet not found")
+
+			const prevBalance = wallet.balance
+			const newBalance = prevBalance.add(amount)
+
+			const updatedWallet = await tx.wallet.update({
+				where: { id: targetWalletId },
+				data: { balance: newBalance },
 			})
 
 			// 4. Create Ledger Entry
@@ -91,12 +100,13 @@ export class WebhookRepository {
 					walletId: targetWalletId,
 					amount: amount,
 					type: "CREDIT",
-					//   description: `External Deposit: ${reference} (Bank Ref: ${bankReference})`,
 					description: `Deposit from ${toTitleCase(sourceBankAccountName)} (Ref: ${bankReference})`,
+					previousBalance: prevBalance,
+					newBalance: newBalance,
 				},
 			})
 
-			return wallet.balance
+			return updatedWallet.balance
 		})
 	}
 }

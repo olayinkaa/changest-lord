@@ -25,12 +25,6 @@ export const mapStepToNextScope = (step: OnboardingStep, userType?: UserType): s
 	}
 }
 
-/**
- * Converts a snake_case, constant_case, or messy string into Title Case.
- *
- * @param {string} str - The string to convert (e.g., "GIVE_CHANGE")
- * @returns {string} The formatted title-case string (e.g., "Give Change")
- */
 export const toTitleCase = (str: string) => {
 	if (!str || typeof str !== "string") return ""
 	return startCase(lowerCase(str))
