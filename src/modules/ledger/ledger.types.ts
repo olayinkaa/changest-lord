@@ -28,7 +28,7 @@ export interface ILedgerService {
 		description: string
 	}): Promise<any>
 	getTransactionByReference(reference: string): Promise<any>
-	getLedgerEntryDetails(id: string): Promise<any>
+	getLedgerEntryDetails(id: string, userId: string): Promise<any>
 	getRecentTransactions(userId: string, limit: number): Promise<any[]>
 	getTransactionHistory(userId: string): Promise<TransactionListResponseDto>
 }

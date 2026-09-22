@@ -1,10 +1,12 @@
 import { inject } from "inversify"
 import { controller, httpGet, principal, queryParam, requestParam } from "inversify-express-utils"
+import { AuthGuard } from "@/core/guards/auth.guard"
 import type { UserPrincipal } from "@/providers/user-principal"
 import { ApiResponse } from "@/utils/http-response"
 import { type ILedgerService, LEDGER_TYPES } from "./ledger.types"
 
 @controller("/ledger")
+@AuthGuard()
 export class LedgerController {
 	constructor(
 		@inject(LEDGER_TYPES.Service)
@@ -25,8 +27,9 @@ export class LedgerController {
 	}
 
 	@httpGet("/transaction/entry/:id")
-	public async getLedgerEntryDetails(@requestParam("id") id: string) {
-		const details = await this.ledgerService.getLedgerEntryDetails(id)
+	public async getLedgerEntryDetails(@requestParam("id") id: string, @principal() authUser: UserPrincipal) {
+		const userId = authUser.details?.id
+		const details = await this.ledgerService.getLedgerEntryDetails(id, userId)
 		return ApiResponse.success(details)
 	}
 

@@ -41,7 +41,6 @@ export class LedgerService implements ILedgerService {
 
 	public async getTransactionHistory(userId: string): Promise<any> {
 		const entries = await this.ledgerRepo.findByUserId(userId)
-		pinoLogger.info({ entries })
 
 		const sectionsMap: Record<string, any> = {}
 
@@ -127,13 +126,17 @@ export class LedgerService implements ILedgerService {
 		}
 	}
 
-	public async getLedgerEntryDetails(id: string) {
+	public async getLedgerEntryDetails(id: string, userId: string) {
 		const entry = await this.ledgerRepo.findLedgerById(id)
 
 		pinoLogger.info({ entry })
 
 		if (!entry) {
 			throw new BadRequestException(`Ledger entry not found with ID: ${id}`)
+		}
+
+		if (entry.wallet?.user?.id !== userId) {
+			throw new BadRequestException(`You do not have permission to view this entry`)
 		}
 
 		// The current user for this specific ledger entry
