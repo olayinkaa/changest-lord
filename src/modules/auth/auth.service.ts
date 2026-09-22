@@ -19,6 +19,10 @@ export class AuthService implements IAuthService {
 	async login(data: LoginRequest) {
 		const user = await this.userRepo.findUserByPhone(data.phone)
 
+		if (user?.isBlocked) {
+			throw new UnauthorizedException("Your account has been blocked. Contact support")
+		}
+
 		if (!user) {
 			throw new UnauthorizedException("Invalid phone number or PIN")
 		}
@@ -27,7 +31,7 @@ export class AuthService implements IAuthService {
 			throw new UnauthorizedException("Invalid phone number or PIN")
 		}
 
-		const isPinMatch = await this.authUtils.verifyPin(data.pin, user.pinHash)
+		const isPinMatch = this.authUtils.verifyPin(data.pin, user.pinHash)
 
 		if (!isPinMatch) {
 			throw new UnauthorizedException("Invalid phone number or PIN")
