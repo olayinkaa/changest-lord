@@ -57,3 +57,11 @@ the login input field is: phone number and pin
 generate an access token and refresh token
 
 you can use the authUtils to generate the access token
+
+
+---
+ why the transaction endpoint is okay "/transactions" @src/modules/ledger/ledger.controller.ts
+needs few adjustment.
+when  a user give change or send money, there is debit for the user, there is fee debit and their is credit to the receiver.
+when the transactions endpoints to get all transactions is called, the user is suppose to see only the debit and the fee debit.
+The credit is for the receiver to see.
